@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { executeCode } from './execution';
+import { executeCode } from '../src/execution';
 
 describe('scratchpad execution', () => {
   it('streams logs and waits for explicitly awaited work', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canUseFeature, createProject, isProject } from './index';
+import { canUseFeature, createProject, isProject } from '../src/index';
 
 describe('project persistence boundary', () => {
   it('accepts a serialized project and rejects malformed files', () => {

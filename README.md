@@ -85,6 +85,26 @@ Automated tests cover shared project validation, feature policy, output capture,
 execution failures, output limits, timeout, and cancellation. Editor typing and
 draft retention have also been checked in the browser.
 
+Each application or package keeps its tests in a `tests/` folder alongside
+`src/`. Mirror source subdirectories inside `tests/` as modules grow:
+
+```text
+apps/web/
+  src/
+  tests/
+    execution.test.ts
+    runtime.test.ts
+packages/core/
+  src/
+  tests/
+    index.test.ts
+```
+
+The root `vitest.config.mts` discovers `.test.ts`, `.test.tsx`, `.spec.ts`, and
+`.spec.tsx` files recursively under these per-module test folders. Type checks
+include the test folders. Run all suites with `pnpm test`, or one module's tests
+with `pnpm test apps/web/tests` or `pnpm test packages/core/tests`.
+
 The production build currently reports a large Monaco bundle. Loading only
 needed language features and splitting the editor bundle are follow-up work.
 

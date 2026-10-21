@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { BrowserRuntime } from './runtime';
-import type { ExecutionMessage } from './execution';
+import { BrowserRuntime } from '../src/runtime';
+import type { ExecutionMessage } from '../src/execution';
 
 class TestWorker {
   static instances: TestWorker[] = [];
