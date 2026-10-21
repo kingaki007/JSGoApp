@@ -15,7 +15,8 @@ TypeScript is compiled using Monaco's bundled TypeScript language worker.
 JavaScript and TypeScript drafts and the selected language are automatically
 saved on this device and restored after a refresh, without an account.
 
-DOM previews, Node execution, npm imports, project file saving, cloud accounts,
+Web document mode renders DOM code in a sandboxed iframe with console capture.
+Node execution, npm imports, project file saving, cloud accounts,
 and desktop packaging are not connected yet. Await asynchronous work explicitly;
 the worker ends when the top-level async function completes. Type annotations
 are stripped before running; semantic type errors remain visible in Monaco
@@ -35,9 +36,35 @@ stacked panes on compact screens. The right pane has Web, Console, and Split
 views for the browser environment. The shared results component forces Console
 and hides the view selector for Node, ready for its future runtime integration.
 
-Console execution works now. The Web panel is a clearly labeled placeholder;
-DOM rendering is a separate next step. Changing the result view does not rerun
-code or discard console output. Split places the Web panel above Console.
+Choose **Worker script** for console-only code or **Web document** for DOM code,
+then Run. Both JavaScript and TypeScript work in either mode. The same execution
+feeds Web and Console; changing views does not rerun code or discard output.
+Split places the Web panel above Console. For example, in Web document mode:
+
+```js
+const button = document.createElement('button');
+button.textContent = 'Click me';
+button.onclick = () => console.log('Clicked!');
+document.body.append(button);
+```
+
+The preview stays interactive after top-level code completes. Run replaces it;
+Reset preview, switching language, or switching runtime disposes its document.
+Console Clear only clears displayed output. Late interaction logs are captured
+until the preview is disposed, including after Clear output. Output is capped at 500
+lines. Uncaught event errors and rejected promises appear as console text.
+
+The iframe uses `sandbox="allow-scripts"` without same-origin access, so preview
+code cannot read the app's DOM or local storage. Its CSP blocks external resource
+loads, fetch requests, form submission, and nested frames; inline styles and data/blob
+images are supported. Module imports and frameworks are deferred. This follows
+the [iframe sandbox guidance](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox).
+
+Document mode cannot guarantee CPU isolation: a synchronous infinite loop may
+freeze the browser tab. Its five-second deadline handles pending asynchronous
+work only. Use Worker script for code that needs reliable termination. A separate
+preview origin and stronger execution isolation remain prerequisites for shared,
+untrusted projects. The execution mode is session-only; drafts still persist.
 
 ## Local draft recovery
 

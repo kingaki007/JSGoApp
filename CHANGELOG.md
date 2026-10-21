@@ -5,6 +5,20 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.3.0] - 2026-10-22
+
+### Parked experiment — draft PR only
+
+- Preserve sandboxed Web document execution for JavaScript and TypeScript,
+  interactive DOM output, console capture, reset, and runtime boundary tests.
+- This experiment is deferred and must not be merged until the execution and
+  results UI has been reconsidered with the owner.
+- Worker script and Web document are browser execution mechanisms, not the
+  planned Node and Web environments; their current labels are confusing.
+- Web/Console/Split controls appear even when the selected runner cannot render
+  a document. Revisit when these controls should be shown before resuming.
+- Version 0.3.0 identifies this branch snapshot; it is not a published release.
+
 ## [0.2.0] - 2026-10-22
 
 ### Added
