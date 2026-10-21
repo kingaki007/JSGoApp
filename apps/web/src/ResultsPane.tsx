@@ -1,5 +1,5 @@
 /** Displays environment-aware Web, Console, and Split result views beside the editor. */
-import { useId, useState } from 'react';
+import { useId, useState, type RefCallback } from 'react';
 import type { Environment } from '@code-editor/core';
 import OutputPanel from './OutputPanel';
 import type { ExecutionView } from './useExecution';
@@ -17,6 +17,9 @@ interface ResultsPaneProps {
   isRunning: boolean;
   /** Clears finished console output without changing drafts or the selected view. */
   onClear(): void;
+  previewRef?: RefCallback<HTMLIFrameElement>;
+  /** Disposes the preview document and its remaining event handlers. */
+  onResetPreview?(): void;
 }
 
 /**
@@ -25,8 +28,17 @@ interface ResultsPaneProps {
  * @param props.result Latest console output and execution state.
  * @param props.isRunning Whether execution is in progress.
  * @param props.onClear Clears console output without modifying the editor draft.
+ * @param props.previewRef Connects the mounted iframe to the document runner.
+ * @param props.onResetPreview Disposes the rendered document.
  */
-export default function ResultsPane({ environment, result, isRunning, onClear }: ResultsPaneProps) {
+export default function ResultsPane({
+  environment,
+  result,
+  isRunning,
+  onClear,
+  previewRef,
+  onResetPreview,
+}: ResultsPaneProps) {
   const [preferredView, setPreferredView] = useState<ResultView>('console');
   const groupId = useId();
   const view = environment === 'node' ? 'console' : preferredView;
@@ -66,18 +78,20 @@ export default function ResultsPane({ environment, result, isRunning, onClear }:
             <header className="preview-toolbar">
               <span className="preview-dot" aria-hidden="true" />
               Web preview
+              <button type="button" className="preview-reset" onClick={onResetPreview}>
+                Reset preview
+              </button>
             </header>
-            <div className="preview-empty">
-              <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" focusable="false">
-                <rect x="5" y="9" width="38" height="30" rx="4" />
-                <path d="M5 18h38M11 14h1m4 0h1m2 12-5 4 5 4m10-8 5 4-5 4" />
-              </svg>
-              <h2>A space for your web ideas</h2>
-              <p>Web preview is coming next. Run your code in Console for now.</p>
-              <span className="preview-note">
-                JavaScript &amp; TypeScript · no framework setup yet
-              </span>
-            </div>
+            <p className="preview-hint">
+              Select Web document, then Run. Use document.body to build your page.
+            </p>
+            <iframe
+              ref={previewRef}
+              className="preview-frame"
+              title="Scratchpad web document"
+              sandbox="allow-scripts"
+              referrerPolicy="no-referrer"
+            />
           </section>
         )}
         <div className="console-slot" hidden={view === 'web'}>

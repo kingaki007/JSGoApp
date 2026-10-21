@@ -5,7 +5,7 @@ import { languages, type Language } from '@code-editor/core';
 import { useTheme } from './theme';
 import ThemeSwitcher from './ThemeSwitcher';
 import ResultsPane from './ResultsPane';
-import { useExecution } from './useExecution';
+import { useExecution, type BrowserTarget } from './useExecution';
 import { useDrafts } from './useDrafts';
 
 const initialDrafts: Record<Language, string> = {
@@ -22,7 +22,8 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const { preference, setPreference, resolved } = useTheme();
   const editorRef = useRef<CodeEditorHandle | null>(null);
-  const execution = useExecution(language, drafts[language]);
+  const [target, setTarget] = useState<BrowserTarget>('worker');
+  const execution = useExecution(language, drafts[language], target);
 
   return (
     <div className="workspace">
@@ -105,6 +106,16 @@ export default function App() {
         </div>
         <div className="editor-breadcrumb">
           Scratchpads <span aria-hidden="true">/</span> scratch.{languages[language].extension}
+          <label className="runtime-selector">
+            <span className="visually-hidden">Browser execution</span>
+            <select
+              value={target}
+              onChange={(event) => setTarget(event.target.value as BrowserTarget)}
+            >
+              <option value="worker">Worker script</option>
+              <option value="document">Web document</option>
+            </select>
+          </label>
         </div>
         <div className="editor-surface" aria-label={`${languages[language].label} code editor`}>
           <CodeEditor
@@ -133,6 +144,8 @@ export default function App() {
         result={execution.result}
         isRunning={execution.isRunning}
         onClear={execution.clear}
+        previewRef={execution.attachPreview}
+        onResetPreview={execution.stop}
       />
 
       <footer className="status-bar">

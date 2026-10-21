@@ -12,6 +12,8 @@ describe('environment-specific result views', () => {
     expect(markup).toContain('value="web"');
     expect(markup).toContain('value="console"');
     expect(markup).toContain('value="split"');
+    expect(markup).toContain('sandbox="allow-scripts"');
+    expect(markup).not.toContain('allow-same-origin');
   });
 
   it('keeps Node console-only with no Web pane or view selector', () => {
