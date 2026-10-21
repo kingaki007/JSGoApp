@@ -1,0 +1,23 @@
+{
+  "name": "@code-editor/editor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@code-editor/core": "workspace:*",
+    "@monaco-editor/react": "4.7.0",
+    "monaco-editor": "0.57.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "react": "19.3.1",
+    "vite": "8.3.4"
+  }
+}

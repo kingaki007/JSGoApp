@@ -127,12 +127,9 @@ importers:
       '@code-editor/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@monaco-editor/react':
-        specifier: latest
-        version: 4.7.0(monaco-editor@0.57.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      monaco-editor:
-        specifier: latest
-        version: 0.57.0
+      '@code-editor/editor':
+        specifier: workspace:*
+        version: link:../../packages/editor
       react:
         specifier: latest
         version: 19.3.1
@@ -157,6 +154,28 @@ importers:
         version: 8.3.4(@types/node@22.20.5)
 
   packages/core: {}
+
+  packages/editor:
+    dependencies:
+      '@code-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@monaco-editor/react':
+        specifier: 4.7.0
+        version: 4.7.0(monaco-editor@0.57.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      monaco-editor:
+        specifier: 0.57.0
+        version: 0.57.0
+    devDependencies:
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      react:
+        specifier: 19.3.1
+        version: 19.3.1
+      vite:
+        specifier: 8.3.4
+        version: 8.3.4(@types/node@22.20.5)
 
 packages:
 

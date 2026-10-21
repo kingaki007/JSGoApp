@@ -53,7 +53,9 @@ Hosting and deployment decisions are deferred.
 
 ## Current structure
 
-- apps/web: web editor and local Monaco language workers.
+- apps/web: application layout, drafts, theme selection, and browser execution.
+- packages/editor: reusable editor component, Monaco configuration, language
+  workers, theme mapping, and TypeScript compilation.
 - packages/core: shared project types, runtime contracts,
   and feature policy.
 
@@ -82,7 +84,8 @@ pnpm format:check
 ```
 
 Automated tests cover shared project validation, feature policy, output capture,
-execution failures, output limits, timeout, and cancellation. Editor typing and
+execution failures, output limits, timeout, cancellation, and compiler snapshot
+cleanup. Editor typing and
 draft retention have also been checked in the browser.
 
 Each application or package keeps its tests in a `tests/` folder alongside
@@ -98,6 +101,10 @@ packages/core/
   src/
   tests/
     index.test.ts
+packages/editor/
+  src/
+  tests/
+    compile.test.ts
 ```
 
 The root `vitest.config.mts` discovers `.test.ts`, `.test.tsx`, `.spec.ts`, and

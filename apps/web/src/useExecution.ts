@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Monaco } from '@monaco-editor/react';
+import type { CodeEditorHandle } from '@code-editor/editor';
 import type { Language, RunResult } from '@code-editor/core';
-import { compileSource } from './compile';
 import { BrowserRuntime } from './runtime';
 
 export interface ExecutionView extends RunResult {
@@ -24,14 +23,14 @@ export function useExecution(language: Language, source: string) {
     };
   }, [language, runtime]);
 
-  async function run(monaco: Monaco | null) {
-    if (!monaco || requestId.current) return;
+  async function run(editor: CodeEditorHandle | null) {
+    if (!editor || requestId.current) return;
     const id = crypto.randomUUID();
     requestId.current = id;
     setRunning(true);
     setResult({ id, language, lines: [], status: 'running' });
     try {
-      const code = await compileSource(monaco, source, language);
+      const code = await editor.compile(source, language);
       if (requestId.current !== id) return;
       const output = await runtime.run({ id, code, environment: 'browser' }, (line) => {
         if (requestId.current !== id) return;

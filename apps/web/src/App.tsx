@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import Editor, { type Monaco } from '@monaco-editor/react';
+import { useRef, useState } from 'react';
+import { CodeEditor, type CodeEditorHandle } from '@code-editor/editor';
 import { languages, type Language } from '@code-editor/core';
-import './monaco';
-import { applyEditorTheme, readEditorTypography, useTheme } from './theme';
+import { useTheme } from './theme';
 import ThemeSwitcher from './ThemeSwitcher';
 import OutputPanel from './OutputPanel';
 import { useExecution } from './useExecution';
@@ -19,12 +18,8 @@ export default function App() {
   const [drafts, setDrafts] = useState(initialDrafts);
   const [ready, setReady] = useState(false);
   const { preference, setPreference, resolved } = useTheme();
-  const monacoRef = useRef<Monaco | null>(null);
+  const editorRef = useRef<CodeEditorHandle | null>(null);
   const execution = useExecution(language, drafts[language]);
-
-  useEffect(() => {
-    if (monacoRef.current) applyEditorTheme(monacoRef.current, resolved);
-  }, [resolved, ready]);
 
   return (
     <div className="workspace">
@@ -88,7 +83,7 @@ export default function App() {
                 type="button"
                 className="run-button"
                 disabled={!ready}
-                onClick={() => void execution.run(monacoRef.current)}
+                onClick={() => void execution.run(editorRef.current)}
               >
                 <span aria-hidden="true">▶</span> Run
               </button>
@@ -96,10 +91,9 @@ export default function App() {
           </div>
         </div>
         <div className="editor-surface" aria-label={`${languages[language].label} code editor`}>
-          <Editor
-            height="100%"
-            theme="jsgoapp"
-            beforeMount={(monaco) => applyEditorTheme(monaco, resolved)}
+          <CodeEditor
+            ref={editorRef}
+            theme={resolved}
             language={language}
             path={`scratch.${languages[language].extension}`}
             value={drafts[language]}
@@ -109,21 +103,8 @@ export default function App() {
                 [language]: value ?? '',
               }))
             }
-            onMount={(editor, monaco) => {
-              monacoRef.current = monaco;
-              editor.updateOptions(readEditorTypography());
-              setReady(true);
-            }}
+            onReady={() => setReady(true)}
             loading={<p className="editor-loading">Loading editor…</p>}
-            options={{
-              ariaLabel: `${languages[language].label} code editor`,
-              automaticLayout: true,
-              minimap: { enabled: false },
-              padding: { top: 24, bottom: 24 },
-              scrollBeyondLastLine: false,
-              tabSize: 2,
-              insertSpaces: true,
-            }}
           />
         </div>
         <OutputPanel

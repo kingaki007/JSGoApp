@@ -5,12 +5,13 @@ is required. This is a small foundation that will grow with the editor.
 
 ## Layers
 
-| File                             | Responsibility                                                         |
-| -------------------------------- | ---------------------------------------------------------------------- |
-| `apps/web/src/styles/tokens.css` | Theme-independent spacing, typography, radii, sizing, and motion       |
-| `apps/web/src/styles/themes.css` | Semantic colors for the app shell, status indicators, and editor       |
-| `apps/web/src/style.css`         | Base styles, component rules, and responsive layout                    |
-| `apps/web/src/theme.ts`          | System preference detection, theme persistence, and Monaco integration |
+| File                             | Responsibility                                                   |
+| -------------------------------- | ---------------------------------------------------------------- |
+| `apps/web/src/styles/tokens.css` | Theme-independent spacing, typography, radii, sizing, and motion |
+| `apps/web/src/styles/themes.css` | Semantic colors for the app shell, status indicators, and editor |
+| `apps/web/src/style.css`         | Base styles, component rules, and responsive layout              |
+| `apps/web/src/theme.ts`          | System preference detection and theme persistence                |
+| `packages/editor/src/theme.ts`   | Shared editor theme and typography mapping                       |
 
 ## Tokens
 
