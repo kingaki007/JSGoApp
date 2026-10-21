@@ -1,3 +1,4 @@
+/** Configures React bundling, relative build paths, and the local development server. */
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 

@@ -1,3 +1,4 @@
+/** Wraps Monaco with shared defaults, semantic theming, and a public compilation handle. */
 import {
   forwardRef,
   useEffect,
@@ -13,6 +14,11 @@ import { compileSource } from './compile';
 import { applyEditorTheme, readEditorTypography, type EditorTheme } from './theme';
 
 export interface CodeEditorHandle {
+  /**
+   * Compiles a source snapshot after the editor reports readiness.
+   * @param source Complete source text to compile independently of subsequent edits.
+   * @param language Language of the snapshot.
+   */
   compile(source: string, language: Language): Promise<string>;
 }
 
@@ -21,12 +27,18 @@ export interface CodeEditorProps {
   path: string;
   value: string;
   theme: EditorTheme;
+  /** @param value Complete edited text; an empty string is a valid draft. */
   onChange(value: string): void;
+  /** Notifies the host when the editor and compilation handle are ready to use. */
   onReady?(): void;
   loading?: ReactNode;
 }
 
-// Keep Monaco's implementation details behind the application's editor API.
+/**
+ * Renders a controlled editor while keeping source and project state in the host application.
+ * @param props Editor language, model path, code, resolved theme, and host callbacks.
+ * @param ref Receives the public compilation handle without exposing Monaco to the host.
+ */
 const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEditor(
   { language, path, value, theme, onChange, onReady, loading },
   ref,
@@ -37,6 +49,11 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
   useImperativeHandle(
     ref,
     () => ({
+      /**
+       * Compiles code through the mounted editor's language service.
+       * @param source Source snapshot captured when execution was requested.
+       * @param sourceLanguage Language used to interpret that snapshot.
+       */
       async compile(source, sourceLanguage) {
         if (!monacoRef.current) throw new Error('The editor is not ready yet.');
         return compileSource(monacoRef.current, source, sourceLanguage);

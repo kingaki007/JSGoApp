@@ -1,3 +1,4 @@
+# Excludes dependencies, build outputs, local secrets, and operating-system artifacts from Git.
 node_modules/
 dist/
 release/

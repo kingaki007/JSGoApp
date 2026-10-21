@@ -1,10 +1,16 @@
+/** Maps host CSS tokens to Monaco colors and resolves editor font settings from shared typography. */
 import type { Monaco } from '@monaco-editor/react';
 
 export type EditorTheme = 'light' | 'dark';
 
-// The host's semantic CSS tokens style both its shell and the shared editor.
+/**
+ * Activates the document-wide editor theme from the host's semantic CSS tokens.
+ * @param monaco Monaco API whose theme registry will be updated.
+ * @param theme Resolved light/dark appearance used for inherited widget colors.
+ */
 export function applyEditorTheme(monaco: Monaco, theme: EditorTheme) {
   const styles = getComputedStyle(document.documentElement);
+  /** @param name Semantic custom-property name to read from the host document. */
   const token = (name: string) => styles.getPropertyValue(name).trim();
   monaco.editor.defineTheme('jsgoapp', {
     base: theme === 'dark' ? 'vs-dark' : 'vs',
@@ -33,6 +39,7 @@ export function applyEditorTheme(monaco: Monaco, theme: EditorTheme) {
   monaco.editor.setTheme('jsgoapp');
 }
 
+/** Resolves the host's rem-based font-size and line-height tokens into Monaco pixel settings. */
 export function readEditorTypography() {
   const styles = getComputedStyle(document.documentElement);
   // Font-size primitives use rem; resolve them against the actual root size.

@@ -1,6 +1,14 @@
+/** Compiles TypeScript snapshots through Monaco and releases temporary models on every exit path. */
 import type { Language } from '@code-editor/core';
 import type { Monaco } from '@monaco-editor/react';
 
+/**
+ * Passes JavaScript through or emits JavaScript from an isolated TypeScript model.
+ * @param monaco Initialized Monaco API used to create the snapshot and obtain its language worker.
+ * @param source Complete source text captured for this run.
+ * @param language Determines whether compilation is necessary.
+ * @returns Executable JavaScript; rejects on syntax, emission, or language-service failures.
+ */
 export async function compileSource(
   monaco: Monaco,
   source: string,

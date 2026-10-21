@@ -1,3 +1,4 @@
+/** Defines shared language/project models, runtime contracts, and feature-access rules for all apps. */
 export type Language = 'javascript' | 'typescript';
 export type Environment = 'browser' | 'node';
 
@@ -36,7 +37,9 @@ export interface RunResult {
 }
 
 export interface RuntimeAdapter {
+  /** @param request Unique run identifier, compiled JavaScript, and target environment. */
   run(request: RunRequest): Promise<RunResult>;
+  /** Cancels an active run and releases its execution resources. */
   stop(): void;
 }
 
@@ -46,6 +49,12 @@ export interface FeaturePolicy {
   restricted: Feature[];
 }
 
+/**
+ * Evaluates feature access independently of the UI.
+ * @param policy Open/paid mode and the features restricted in paid mode.
+ * @param feature Capability the caller wants to access.
+ * @param entitlements Features granted to the current user or installation.
+ */
 export function canUseFeature(
   policy: FeaturePolicy,
   feature: Feature,
@@ -56,6 +65,7 @@ export function canUseFeature(
   );
 }
 
+/** Creates a starter project with a TypeScript example and new project/file identifiers. */
 export function createProject(): Project {
   return {
     schemaVersion: 1,
@@ -76,7 +86,10 @@ export function createProject(): Project {
   };
 }
 
-// Imported projects and browser storage are untrusted input.
+/**
+ * Checks the supported project schema before imported data is used by the application.
+ * @param value Untrusted project data from storage or an imported file.
+ */
 export function isProject(value: unknown): value is Project {
   if (!value || typeof value !== 'object') return false;
   const p = value as Partial<Project>;

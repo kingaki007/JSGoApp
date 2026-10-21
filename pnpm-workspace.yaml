@@ -1,3 +1,4 @@
+# Registers runnable apps and reusable packages and limits dependency install scripts.
 packages:
   - apps/*
   - packages/*

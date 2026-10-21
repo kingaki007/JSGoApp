@@ -1,3 +1,5 @@
+<!-- Explains the product scope, workspace architecture, local commands, and development conventions. -->
+
 # JSGoApp
 
 A JavaScript and TypeScript playground for web and desktop,
@@ -10,9 +12,10 @@ with JavaScript and TypeScript scratchpads. Each language retains its
 draft while switching. Run executes the active scratchpad in a disposable
 browser worker, with console output, Stop, and a five-second timeout.
 TypeScript is compiled using Monaco's bundled TypeScript language worker.
-Refreshing the page clears the drafts.
+JavaScript and TypeScript drafts and the selected language are automatically
+saved on this device and restored after a refresh, without an account.
 
-DOM previews, Node execution, npm imports, local saving, cloud accounts,
+DOM previews, Node execution, npm imports, project file saving, cloud accounts,
 and desktop packaging are not connected yet. Await asynchronous work explicitly;
 the worker ends when the top-level async function completes. Type annotations
 are stripped before running; semantic type errors remain visible in Monaco
@@ -24,6 +27,33 @@ execution origin and stricter isolation are required before running untrusted
 shared projects or adding accounts.
 
 Hosting and deployment decisions are deferred.
+
+## Workspace layout
+
+The explorer, editor, and results appear side by side on wide screens, with
+stacked panes on compact screens. The right pane has Web, Console, and Split
+views for the browser environment. The shared results component forces Console
+and hides the view selector for Node, ready for its future runtime integration.
+
+Console execution works now. The Web panel is a clearly labeled placeholder;
+DOM rendering is a separate next step. Changing the result view does not rerun
+code or discard console output. Split places the Web panel above Console.
+
+## Local draft recovery
+
+The web app stores both scratchpads and the selected language in a versioned
+`jsgoapp.drafts` local-storage entry after 500ms without edits. It also attempts
+to flush pending edits when the page is hidden or closed. The save message
+reports success or storage failures. Empty drafts are preserved.
+
+Invalid or inaccessible stored data does not prevent the app from opening.
+It shows a recovery message and leaves stored data untouched until a user
+edits or changes language. Storage errors leave the current code in memory.
+
+This is browser recovery, not file export or cloud backup. Clearing browser
+data can remove drafts. Only drafts and language are persisted; console
+output and undo history are not. Multiple tabs use the same entry, so the
+last successful save wins; cross-tab merging is not implemented.
 
 ## Planned capabilities
 
@@ -61,6 +91,13 @@ Hosting and deployment decisions are deferred.
 
 Desktop and backend applications are planned but not scaffolded.
 
+Applications are runnable products; packages are libraries imported by them.
+`pnpm-workspace.yaml` links `@code-editor/core` and `@code-editor/editor` to their
+local source folders. `pnpm dev` starts Vite for `apps/web`; Vite bundles the
+shared packages into the app and emits worker scripts separately. The packages
+do not run as separate servers. `pnpm typecheck` checks every workspace package,
+`pnpm test` discovers their test folders, and `pnpm build` builds the web app.
+
 ## Development requirements
 
 - Node.js 22.14 or newer.
@@ -84,7 +121,7 @@ pnpm format:check
 ```
 
 Automated tests cover shared project validation, feature policy, output capture,
-execution failures, output limits, timeout, cancellation, and compiler snapshot
+execution failures, output limits, timeout, cancellation, local draft recovery, and compiler snapshot
 cleanup. Editor typing and
 draft retention have also been checked in the browser.
 
@@ -126,6 +163,41 @@ the shared style, and VS Code formats on save when the recommended Prettier
 extension is installed.
 
 ## Contribution workflow
+
+Every new commit updates [CHANGELOG.md](CHANGELOG.md), increments the synchronized
+root/app/package version, and receives an annotated Git tag `v<version>`.
+Earlier commits remain unchanged. Prepare a version with:
+
+```sh
+pnpm version:next patch "Describe the change"
+pnpm version:check
+```
+
+Use `patch` for fixes, documentation, tests, and refactors; use `minor` for new
+capabilities and `major` for a deliberate major release. Review the generated
+changelog entry and run `pnpm check`. Version preparation does not commit, tag,
+or push automatically. Git tags connect each version's changelog to its exact
+commit; GitHub release publication and deployment are separate decisions.
+
+Start source files with a short purpose comment. Document named functions,
+classes, and methods with intent and parameter descriptions; use JSDoc for
+TypeScript APIs. Keep callback names and test descriptions expressive rather
+than explaining every syntax detail. Document non-obvious lifecycle and
+cancellation behavior where it happens.
+
+JSON files must remain valid JSON. Their purposes are documented here instead
+of inserting unsupported comments:
+
+| File                                           | Purpose                                                     |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| `package.json` and workspace package manifests | Package identity, scripts, and dependency boundaries        |
+| `tsconfig.base.json`                           | Shared TypeScript and JSX compiler settings                 |
+| Each module's `tsconfig.json`                  | Source and test files included in that module's type checks |
+| `.prettierrc.json`                             | Shared formatting rules                                     |
+| `.vscode/settings.json`                        | Workspace editor settings and format-on-save                |
+| `.vscode/extensions.json`                      | Recommended development extensions                          |
+
+Generated files such as `pnpm-lock.yaml` are maintained by their tools.
 
 Develop one small capability at a time and verify it before expanding.
 Keep changes uncommitted until the owner requests a milestone commit

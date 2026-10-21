@@ -1,3 +1,4 @@
+/** Verifies console capture, awaited execution, error reporting, and output flood limits. */
 import { describe, expect, it, vi } from 'vitest';
 import { executeCode } from '../src/execution';
 

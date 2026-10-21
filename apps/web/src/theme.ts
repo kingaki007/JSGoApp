@@ -1,9 +1,11 @@
+/** Persists the host's theme preference and resolves System to a light or dark editor theme. */
 import { useLayoutEffect, useState } from 'react';
 import type { EditorTheme } from '@code-editor/editor';
 
 export type ThemePreference = 'system' | EditorTheme;
 const storageKey = 'jsgoapp.theme';
 
+/** Reads a valid stored preference, falling back to System when storage is unavailable or invalid. */
 function readPreference(): ThemePreference {
   try {
     const value = localStorage.getItem(storageKey);
@@ -14,6 +16,7 @@ function readPreference(): ThemePreference {
   return 'system';
 }
 
+/** Synchronizes the resolved document theme with the saved preference and operating-system changes. */
 export function useTheme() {
   const [preference, setPreference] = useState<ThemePreference>(readPreference);
   const [systemTheme, setSystemTheme] = useState<EditorTheme>(() =>

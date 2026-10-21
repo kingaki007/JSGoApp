@@ -1,9 +1,16 @@
+<!-- Defines design tokens, theme behavior, component conventions, and formatting rules. -->
+
 # JSGoApp design system
 
 We use plain CSS with custom properties. No CSS framework or component library
 is required. This is a small foundation that will grow with the editor.
 
 ## Layers
+
+`apps/web/src/styles/workspace.css` is loaded after the base stylesheet and
+owns the explorer/editor/results composition and result-view controls. The
+panes are side by side above 1000px; smaller layouts stack results below the
+editor and then collapse the explorer into a compact language strip below 700px.
 
 | File                             | Responsibility                                                   |
 | -------------------------------- | ---------------------------------------------------------------- |

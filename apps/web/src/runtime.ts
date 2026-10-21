@@ -1,11 +1,17 @@
+/** Implements the browser execution lifecycle with disposable workers, streamed logs, and time limits. */
 import type { RunRequest, RunResult, RuntimeAdapter } from '@code-editor/core';
 import type { ExecutionMessage } from './execution';
 
-// A worker keeps CPU-bound snippets off the UI thread. No DOM preview yet.
+/** Keeps CPU-bound snippets off the UI thread; this adapter does not provide DOM or Node APIs. */
 export class BrowserRuntime implements RuntimeAdapter {
   private worker?: Worker;
   private cancel?: () => void;
 
+  /**
+   * Replaces any previous execution and resolves when the new run completes, fails, or is stopped.
+   * @param request Unique run ID, executable JavaScript, and target environment.
+   * @param onOutput Optional callback receiving each captured console line as it arrives.
+   */
   run(request: RunRequest, onOutput?: (line: string) => void): Promise<RunResult> {
     this.stop();
     if (request.environment !== 'browser') {
@@ -16,6 +22,7 @@ export class BrowserRuntime implements RuntimeAdapter {
       let finished = false;
       const worker = new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' });
       this.worker = worker;
+      /** @param result Final output or failure to resolve after the worker and timer are cleaned up. */
       const finish = (result: RunResult) => {
         if (finished) return;
         finished = true;
@@ -59,6 +66,7 @@ export class BrowserRuntime implements RuntimeAdapter {
     });
   }
 
+  /** Terminates the active worker and resolves its pending run with the output already received. */
   stop() {
     this.cancel?.();
   }

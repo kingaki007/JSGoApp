@@ -1,10 +1,12 @@
+/** Composes the explorer, shared editor, execution controls, draft recovery, and results pane. */
 import { useRef, useState } from 'react';
 import { CodeEditor, type CodeEditorHandle } from '@code-editor/editor';
 import { languages, type Language } from '@code-editor/core';
 import { useTheme } from './theme';
 import ThemeSwitcher from './ThemeSwitcher';
-import OutputPanel from './OutputPanel';
+import ResultsPane from './ResultsPane';
 import { useExecution } from './useExecution';
+import { useDrafts } from './useDrafts';
 
 const initialDrafts: Record<Language, string> = {
   javascript:
@@ -13,9 +15,10 @@ const initialDrafts: Record<Language, string> = {
     '// Your TypeScript scratchpad\nconst message: string = "Hello from JSGoApp";\nconsole.log(message);\n',
 };
 
+/** Builds the browser workspace; application state stays outside the reusable editor package. */
 export default function App() {
-  const [language, setLanguage] = useState<Language>('typescript');
-  const [drafts, setDrafts] = useState(initialDrafts);
+  const { language, drafts, setLanguage, updateDraft, saveState, saveMessage } =
+    useDrafts(initialDrafts);
   const [ready, setReady] = useState(false);
   const { preference, setPreference, resolved } = useTheme();
   const editorRef = useRef<CodeEditorHandle | null>(null);
@@ -33,13 +36,19 @@ export default function App() {
           </span>
         </a>
         <div className="header-actions">
-          <span className="milestone">02 / RUN YOUR IDEAS</span>
+          <span className="environment-label">
+            <span className="status-dot ready" />
+            Browser environment
+          </span>
           <ThemeSwitcher value={preference} onChange={setPreference} />
         </div>
       </header>
 
       <aside className="sidebar" aria-label="Workspace">
-        <p className="section-label">SCRATCHPADS</p>
+        <p className="section-label">EXPLORER</p>
+        <div className="explorer-root">
+          <span aria-hidden="true">⌄</span> SCRATCHPADS
+        </div>
         <nav aria-label="Select language">
           {(Object.keys(languages) as Language[]).map((id) => (
             <button
@@ -70,8 +79,12 @@ export default function App() {
       <main className="editor-panel">
         <div className="editor-toolbar">
           <div>
-            <h1>{languages[language].label} scratchpad</h1>
-            <p>Browser worker · {languages[language].label}</p>
+            <h1>
+              <span className={`language-badge ${language}`} aria-hidden="true">
+                {language === 'typescript' ? 'TS' : 'JS'}
+              </span>{' '}
+              scratch.{languages[language].extension}
+            </h1>
           </div>
           <div className="run-actions">
             {execution.isRunning ? (
@@ -90,6 +103,9 @@ export default function App() {
             )}
           </div>
         </div>
+        <div className="editor-breadcrumb">
+          Scratchpads <span aria-hidden="true">/</span> scratch.{languages[language].extension}
+        </div>
         <div className="editor-surface" aria-label={`${languages[language].label} code editor`}>
           <CodeEditor
             ref={editorRef}
@@ -97,26 +113,27 @@ export default function App() {
             language={language}
             path={`scratch.${languages[language].extension}`}
             value={drafts[language]}
-            onChange={(value) =>
-              setDrafts((current) => ({
-                ...current,
-                [language]: value ?? '',
-              }))
-            }
+            onChange={(value) => updateDraft(language, value)}
             onReady={() => setReady(true)}
             loading={<p className="editor-loading">Loading editor…</p>}
           />
         </div>
-        <OutputPanel
-          result={execution.result}
-          isRunning={execution.isRunning}
-          onClear={execution.clear}
-        />
         <div className="draft-notice" role="note">
-          Runs locally in a Web Worker. No DOM, Node, or imports yet. Await async work explicitly.
-          Refreshing clears drafts.
+          <span
+            className={`draft-save-state ${saveState === 'error' ? 'draft-save-error' : ''}`}
+            role="status"
+          >
+            {saveMessage}
+          </span>
         </div>
       </main>
+
+      <ResultsPane
+        environment="browser"
+        result={execution.result}
+        isRunning={execution.isRunning}
+        onClear={execution.clear}
+      />
 
       <footer className="status-bar">
         <span role="status">

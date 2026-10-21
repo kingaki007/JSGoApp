@@ -1,5 +1,12 @@
+/** Presents console output, execution status, errors, and a clear-output action. */
 import type { ExecutionView } from './useExecution';
 
+/**
+ * Renders output as text so logged HTML cannot become active page content.
+ * @param props.result Output and status of the latest run; null means no run to display.
+ * @param props.isRunning Whether the clear action should be disabled during execution.
+ * @param props.onClear Callback that clears output without changing source code.
+ */
 export default function OutputPanel({
   result,
   isRunning,
@@ -9,15 +16,13 @@ export default function OutputPanel({
   isRunning: boolean;
   onClear(): void;
 }) {
-  const status = !result
-    ? 'Ready'
-    : result.status === 'running'
-      ? 'Running…'
-      : result.status === 'complete'
-        ? 'Finished'
-        : result.status === 'stopped'
-          ? 'Stopped'
-          : 'Error';
+  const statusLabels = {
+    running: 'Running…',
+    complete: 'Finished',
+    stopped: 'Stopped',
+    error: 'Error',
+  };
+  const status = result ? statusLabels[result.status] : 'Ready';
   return (
     <section className="output-panel" aria-label="Execution output">
       <header className="output-header">

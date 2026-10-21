@@ -1,3 +1,4 @@
+# Defines text encoding, indentation, whitespace, and line endings across editors.
 root = true
 
 [*]

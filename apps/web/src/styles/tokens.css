@@ -1,3 +1,4 @@
+/* Defines shared spacing, typography, dimensions, radii, and motion primitives for the application. */
 :root {
   /* Theme-independent primitives. Prefer semantic tokens in components. */
   --font-family-ui: 'Segoe UI', system-ui, sans-serif;
@@ -35,8 +36,8 @@
   --ease-standard: ease-out;
   --ease-slide: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --layout-sidebar-width: 13.75rem;
-  --layout-header-height: 4.75rem;
+  --layout-sidebar-width: 12.5rem;
+  --layout-header-height: 3.75rem;
   --layout-header-height-compact: 4rem;
   --layout-status-height: 2.125rem;
   --layout-min-height: 40rem;
@@ -49,4 +50,7 @@
   --layout-output-height: 12rem;
   --layout-output-height-compact: 9rem;
   --layout-editor-min-height: 8rem;
+  --layout-pane-toolbar-height: 3.25rem;
+  --layout-breadcrumb-height: 2rem;
+  --layout-preview-min-height: 12rem;
 }

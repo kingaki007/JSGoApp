@@ -1,16 +1,20 @@
+/** Verifies worker timeout, cancellation, and stale-message handling without starting browser workers. */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BrowserRuntime } from '../src/runtime';
 import type { ExecutionMessage } from '../src/execution';
 
+/** Records lifecycle operations and delivers controlled worker messages to the runtime under test. */
 class TestWorker {
   static instances: TestWorker[] = [];
   onmessage?: (event: { data: ExecutionMessage }) => void;
   onerror?: (event: { message: string }) => void;
   terminate = vi.fn();
   postMessage = vi.fn();
+  /** Registers this instance so a test can address the worker created by the runtime. */
   constructor() {
     TestWorker.instances.push(this);
   }
+  /** @param data Worker event to deliver to the runtime under test. */
   send(data: ExecutionMessage) {
     this.onmessage?.({ data });
   }

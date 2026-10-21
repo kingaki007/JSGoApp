@@ -1,3 +1,4 @@
+# Keeps generated files and package-manager output outside hand-maintained formatting.
 node_modules/
 dist/
 release/

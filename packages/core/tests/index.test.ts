@@ -1,3 +1,4 @@
+/** Verifies shared project validation and open/paid feature entitlement decisions. */
 import { describe, expect, it } from 'vitest';
 import { canUseFeature, createProject, isProject } from '../src/index';
 

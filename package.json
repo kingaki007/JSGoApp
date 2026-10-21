@@ -1,6 +1,6 @@
 {
   "name": "code-editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "packageManager": "pnpm@12.3.4",
   "engines": {
@@ -15,7 +15,9 @@
     "test": "vitest run --config vitest.config.mts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm format:check && pnpm typecheck && pnpm test && pnpm build"
+    "version:next": "node scripts/version.mjs",
+    "version:check": "node scripts/version.mjs --check",
+    "check": "pnpm version:check && pnpm format:check && pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -1,3 +1,4 @@
+/** Discovers app/package test folders and runs their non-browser suites in Node. */
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({

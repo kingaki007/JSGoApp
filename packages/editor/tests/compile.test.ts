@@ -1,7 +1,9 @@
+/** Verifies compiler pass-through, TypeScript emission, syntax errors, and temporary-model cleanup. */
 import { describe, expect, it, vi } from 'vitest';
 import type { Monaco } from '@monaco-editor/react';
 import { compileSource } from '../src/compile';
 
+/** Creates a controlled Monaco service; each test selects its emission or failure behavior. */
 function compilerFixture() {
   const model = { dispose: vi.fn(), getPositionAt: () => ({ lineNumber: 2, column: 4 }) };
   const worker = {

@@ -1,3 +1,4 @@
+/* Supplies semantic shell/editor colors for dark and light themes. */
 :root,
 :root[data-theme='dark'] {
   color-scheme: dark;

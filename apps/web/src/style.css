@@ -1,3 +1,4 @@
+/* Supplies global styles, shared controls, and console presentation using design tokens. */
 @import './styles/tokens.css';
 @import './styles/themes.css';
 
@@ -283,6 +284,12 @@ select:focus-visible {
   font-size: var(--font-size-sm);
   line-height: var(--line-height-body);
   color: var(--color-text-muted);
+}
+.draft-save-state {
+  font-weight: var(--font-weight-medium);
+}
+.draft-save-error {
+  color: var(--editor-error);
 }
 
 .run-actions {

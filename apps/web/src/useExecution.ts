@@ -1,3 +1,4 @@
+/** Coordinates source compilation, worker execution, streamed output, and cancellation for the active draft. */
 import { useEffect, useRef, useState } from 'react';
 import type { CodeEditorHandle } from '@code-editor/editor';
 import type { Language, RunResult } from '@code-editor/core';
@@ -8,6 +9,11 @@ export interface ExecutionView extends RunResult {
   status: 'running' | 'complete' | 'error' | 'stopped';
 }
 
+/**
+ * Keeps run state separate from the editor and ignores results from canceled runs.
+ * @param language Active scratchpad language; changing it cancels the current run.
+ * @param source Current source code captured when Run is requested.
+ */
 export function useExecution(language: Language, source: string) {
   const [runtime] = useState(() => new BrowserRuntime());
   const requestId = useRef<string | null>(null);
@@ -23,6 +29,10 @@ export function useExecution(language: Language, source: string) {
     };
   }, [language, runtime]);
 
+  /**
+   * Compiles a source snapshot and starts one browser-worker execution.
+   * @param editor Ready shared-editor handle; null prevents running before initialization.
+   */
   async function run(editor: CodeEditorHandle | null) {
     if (!editor || requestId.current) return;
     const id = crypto.randomUUID();
@@ -57,6 +67,7 @@ export function useExecution(language: Language, source: string) {
     }
   }
 
+  /** Cancels compilation results and terminates an active worker while keeping existing output. */
   function stop() {
     requestId.current = null;
     runtime.stop();
@@ -66,13 +77,16 @@ export function useExecution(language: Language, source: string) {
     );
   }
 
+  /** Clears finished output; active runs keep their output until they finish or stop. */
+  function clear() {
+    if (!requestId.current) setResult(null);
+  }
+
   return {
     result: result?.language === language ? result : null,
     isRunning,
     run,
     stop,
-    clear: () => {
-      if (!requestId.current) setResult(null);
-    },
+    clear,
   };
 }

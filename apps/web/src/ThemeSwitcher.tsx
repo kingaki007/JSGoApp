@@ -1,3 +1,4 @@
+/** Provides the accessible System/Light/Dark switch and its animated selection indicator. */
 import { useId, type CSSProperties } from 'react';
 import type { ThemePreference } from './theme';
 
@@ -7,6 +8,10 @@ const choices = [
   { value: 'dark', label: 'Dark' },
 ] as const;
 
+/**
+ * Draws the icon associated with a theme choice.
+ * @param props.theme Theme preference represented by the decorative icon.
+ */
 function ThemeIcon({ theme }: { theme: ThemePreference }) {
   return (
     <svg
@@ -37,6 +42,11 @@ function ThemeIcon({ theme }: { theme: ThemePreference }) {
   );
 }
 
+/**
+ * Uses native radio behavior to support keyboard selection without a custom menu implementation.
+ * @param props.value Currently selected theme preference, including System.
+ * @param props.onChange Receives the newly selected preference.
+ */
 export default function ThemeSwitcher({
   value,
   onChange,

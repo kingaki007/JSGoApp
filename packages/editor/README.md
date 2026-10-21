@@ -1,3 +1,5 @@
+<!-- Documents the reusable editor API, host responsibilities, and internal module boundaries. -->
+
 # Shared editor
 
 `@code-editor/editor` owns the JSGoApp editor integration. It is a private,
