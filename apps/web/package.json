@@ -1,25 +1,25 @@
 {
-    "name": "@code-editor/web",
-    "version": "0.1.0",
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "dev": "vite --host 127.0.0.1",
-        "build": "vite build",
-        "typecheck": "tsc -p tsconfig.json"
-    },
-    "dependencies": {
-        "@code-editor/core": "workspace:*",
-        "react": "latest",
-        "react-dom": "latest",
-        "monaco-editor": "latest",
-        "@monaco-editor/react": "latest",
-        "typescript": "latest"
-    },
-    "devDependencies": {
-        "vite": "latest",
-        "@vitejs/plugin-react": "latest",
-        "@types/react": "latest",
-        "@types/react-dom": "latest"
-    }
+  "name": "@code-editor/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@code-editor/core": "workspace:*",
+    "react": "latest",
+    "react-dom": "latest",
+    "monaco-editor": "latest",
+    "@monaco-editor/react": "latest",
+    "typescript": "latest"
+  },
+  "devDependencies": {
+    "vite": "latest",
+    "@vitejs/plugin-react": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest"
+  }
 }

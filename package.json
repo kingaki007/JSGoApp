@@ -1,23 +1,26 @@
 {
-    "name": "code-editor",
-    "version": "0.1.0",
-    "private": true,
-    "packageManager": "pnpm@12.3.4",
-    "engines": {
-        "node": ">=22.14.0"
-    },
-    "scripts": {
-        "dev": "pnpm --filter @code-editor/web dev",
-        "dev:desktop": "pnpm --filter @code-editor/desktop dev",
-        "dev:api": "pnpm --filter @code-editor/api dev",
-        "build": "pnpm -r build",
-        "typecheck": "pnpm -r typecheck",
-        "test": "vitest run",
-        "check": "pnpm typecheck && pnpm test && pnpm build"
-    },
-    "devDependencies": {
-        "typescript": "latest",
-        "vitest": "latest",
-        "@types/node": "^22.0.0"
-    }
+  "name": "code-editor",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @code-editor/web dev",
+    "dev:desktop": "pnpm --filter @code-editor/desktop dev",
+    "dev:api": "pnpm --filter @code-editor/api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm format:check && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prettier": "3.9.10",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
 }
