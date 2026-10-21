@@ -14,7 +14,8 @@ Hosting and deployment decisions are deferred.
 
 - JavaScript and TypeScript editing with Monaco.
 - Browser and Node.js execution environments.
-- npm package installation and dependency management.
+- Install, load, and import npm modules in supported execution environments,
+  with package version and dependency management.
 - JavaScript framework support, starting with React,
   then Vue, Svelte, and others through framework adapters.
 - Projects with files and nested folders.
