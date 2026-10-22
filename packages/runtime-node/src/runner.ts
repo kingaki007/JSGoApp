@@ -1,31 +1,40 @@
 /** Executes trusted local code inside a disposable Node/Electron utility process using one wire protocol. */
-const ts = require('typescript');
-const { inspect } = require('node:util');
-const { isBuiltin } = require('node:module');
-const port = process.parentPort;
+import ts from 'typescript';
+import { inspect } from 'node:util';
+import { isBuiltin, createRequire } from 'node:module';
+import type { RunRequest } from '@code-editor/core';
+const require = createRequire(import.meta.url);
+const port = (
+  process as NodeJS.Process & {
+    parentPort?: {
+      postMessage(message: unknown): void;
+      once(event: 'message', listener: (event: { data: RunRequest }) => void): void;
+    };
+  }
+).parentPort;
 /** @param message Structured output sent through Electron message ports or Node IPC. */
-function send(message) {
+function send(message: unknown) {
   if (port) port.postMessage(message);
-  else if (process.connected) process.send(message);
+  else if (process.connected) process.send?.(message);
 }
 
 /** @param request Compiled source and run identifier; the owning host validates size and environment. */
-async function execute(request) {
+async function execute(request: RunRequest) {
   let count = 0;
   let size = 0;
   let finished = false;
   /** @param error Optional top-level or asynchronous error; completion is emitted exactly once. */
-  function finish(error) {
+  function finish(error?: unknown) {
     if (finished) return;
     finished = true;
     send({
       type: 'complete',
       id: request.id,
-      ...(error ? { error: String(error.message ?? error) } : {}),
+      ...(error ? { error: error instanceof Error ? error.message : String(error) } : {}),
     });
   }
   /** @param values Console arguments formatted safely and bounded before sending to the host. */
-  function log(...values) {
+  function log(...values: unknown[]) {
     if (finished || count >= 500) return;
     const limited = count === 499 || size >= 90_000;
     const line = limited
@@ -48,7 +57,7 @@ async function execute(request) {
     send({ type: 'output', id: request.id, line });
   }
   /** @param name Built-in Node module; third-party package and project resolution are deferred. */
-  function requireBuiltin(name) {
+  function requireBuiltin(name: string) {
     if (!isBuiltin(name))
       throw new Error('Only Node built-in modules are supported in this milestone.');
     return require(name);
@@ -86,4 +95,4 @@ async function execute(request) {
 }
 
 if (port) port.once('message', (event) => void execute(event.data));
-else process.once('message', (request) => void execute(request));
+else process.once('message', (request: RunRequest) => void execute(request));

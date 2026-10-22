@@ -1,0 +1,429 @@
+/* Builds the lightweight home page with shared semantic colors, spacing, typography, and motion. */
+.landing {
+  --landing-width: 74rem;
+  --landing-hero-size: clamp(2.8rem, 5.5vw, 4.75rem);
+  --landing-section-gap: clamp(3.5rem, 7vw, 7rem);
+  max-width: var(--landing-width);
+  margin: auto;
+  padding: 0 var(--space-8);
+}
+.landing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding-block: var(--space-6);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+.landing-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-left: auto;
+}
+.landing a {
+  color: inherit;
+  text-decoration: none;
+}
+.landing-nav a,
+.landing-footer > a:last-child {
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+}
+.landing-nav a:hover,
+.landing-footer > a:last-child:hover {
+  color: var(--color-text);
+}
+.landing-skip {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 20;
+  transform: translateY(-200%);
+  padding: var(--space-3);
+  background: var(--color-surface);
+}
+.landing-skip:focus {
+  transform: translateY(0);
+}
+.landing-hero {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4rem);
+  padding-block: var(--landing-section-gap);
+}
+.landing-eyebrow {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-label);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-6);
+}
+.landing-hero h1 {
+  margin: 0;
+  font-size: var(--landing-hero-size);
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+  font-weight: var(--font-weight-semibold);
+}
+.landing-hero h1 > span {
+  color: var(--color-accent);
+}
+.hero-description {
+  max-width: 35ch;
+  color: var(--color-text-muted);
+  line-height: 1.8;
+  font-size: 1rem;
+  margin-block: var(--space-6) var(--space-8);
+}
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.landing-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 2.9rem;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  transition:
+    transform var(--duration-fast),
+    background-color var(--duration-fast);
+}
+.landing .landing-button.primary,
+.route-message .landing-button.primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  text-decoration: none;
+}
+.landing .landing-button.primary:hover {
+  background: var(--color-action-hover);
+  transform: translateY(-2px);
+}
+.landing-button.secondary {
+  color: var(--color-text);
+  background: transparent;
+  border-color: var(--color-border);
+}
+.landing-button.secondary:not(:disabled):hover {
+  background: var(--color-surface-hover);
+  transform: translateY(-2px);
+}
+.landing-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.hero-footnote {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin: var(--space-4) 0 0;
+}
+.landing-demo {
+  position: relative;
+  overflow: hidden;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--editor-background);
+  box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--color-accent) 7%, transparent);
+  transform: rotate(-1deg);
+}
+.demo-chrome {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+.demo-lights {
+  display: flex;
+  gap: var(--space-1);
+}
+.demo-lights i {
+  display: block;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+}
+.demo-language {
+  margin-left: auto;
+  color: var(--color-language-javascript);
+  font: var(--font-size-xs) var(--font-family-code);
+}
+.demo-code {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-6) var(--space-5);
+  font: var(--font-size-sm)/1.4 var(--font-family-code);
+  overflow-x: auto;
+  color: var(--editor-foreground);
+}
+.demo-code code {
+  font: inherit;
+  white-space: pre;
+}
+.demo-line {
+  color: var(--editor-line-number);
+  text-align: right;
+}
+.demo-comment {
+  color: var(--syntax-comment);
+}
+.demo-keyword {
+  color: var(--syntax-keyword);
+}
+.demo-number {
+  color: var(--syntax-number);
+}
+.demo-cursor::before {
+  content: '';
+  display: inline-block;
+  height: 1em;
+  border-left: var(--border-width) solid var(--color-accent);
+}
+.demo-output {
+  padding: var(--space-4) var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+}
+.demo-output p {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  letter-spacing: var(--letter-spacing-label);
+  margin: 0 0 var(--space-4);
+}
+.demo-output p > span:last-child {
+  float: right;
+  letter-spacing: normal;
+}
+.demo-output > code {
+  color: var(--color-accent);
+  font: var(--font-size-body)/var(--line-height-code) var(--font-family-code);
+}
+.demo-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-8);
+  padding-block: var(--space-8);
+  border-block: var(--border-width) solid var(--color-border);
+}
+.feature-index {
+  font: var(--font-size-xs) var(--font-family-code);
+  letter-spacing: var(--letter-spacing-label);
+  color: var(--color-accent);
+}
+.landing-features h2 {
+  font-size: 1rem;
+  font-weight: var(--font-weight-medium);
+  margin: var(--space-4) 0 var(--space-2);
+}
+.landing-features p {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  max-width: 31ch;
+  margin: 0;
+}
+.landing-desktop {
+  padding-block: var(--landing-section-gap);
+  scroll-margin-top: var(--space-8);
+}
+.desktop-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+.desktop-intro .landing-eyebrow {
+  margin-bottom: var(--space-4);
+}
+.desktop-intro h2 {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.2;
+  letter-spacing: var(--letter-spacing-heading);
+  font-weight: var(--font-weight-medium);
+  margin: 0;
+  max-width: 18ch;
+}
+.desktop-intro > p {
+  max-width: 36ch;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  margin: 0;
+}
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.download-option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.platform-symbol {
+  font-size: 2rem;
+  line-height: 1;
+}
+.download-option h3 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+}
+.download-option p {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin: 0;
+  line-height: var(--line-height-body);
+}
+.download-option .landing-button {
+  width: 100%;
+  margin-top: auto;
+  justify-content: space-between;
+}
+.download-note {
+  margin: var(--space-6) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+.download-note a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: var(--space-1);
+}
+.landing-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding-block: var(--space-6);
+  border-top: var(--border-width) solid var(--color-border);
+}
+.landing-footer > span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+.footer-dot {
+  color: var(--color-accent);
+  margin-left: calc(-1 * var(--space-2));
+}
+.route-message {
+  min-height: 100dvh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  text-align: center;
+}
+.route-message h1,
+.route-message p {
+  margin: 0;
+}
+@media (max-width: 1000px) {
+  .landing-header {
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+  .landing-nav {
+    margin-left: 0;
+    margin-right: auto;
+  }
+  .landing-hero {
+    grid-template-columns: 1fr;
+  }
+  .hero-description {
+    max-width: 48ch;
+  }
+  .landing-demo {
+    max-width: 40rem;
+    width: 100%;
+    justify-self: center;
+    transform: none;
+  }
+}
+@media (max-width: 700px) {
+  .landing {
+    padding-inline: var(--space-5);
+  }
+  .landing-header > .theme-switch {
+    width: var(--size-theme-switch-compact);
+  }
+  .landing-header .theme-option-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .landing-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    padding-top: var(--space-2);
+  }
+  .landing-hero {
+    padding-top: 3.5rem;
+  }
+  .landing-features,
+  .download-grid {
+    grid-template-columns: 1fr;
+  }
+  .landing-features {
+    gap: var(--space-8);
+  }
+  .landing-features p {
+    max-width: none;
+  }
+  .desktop-intro {
+    flex-direction: column;
+    align-items: start;
+    gap: var(--space-4);
+  }
+  .download-option {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+  .download-option .landing-button {
+    grid-column: 1 / -1;
+  }
+  .landing-footer {
+    flex-wrap: wrap;
+  }
+  .landing-footer > span {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-button {
+    transition: none;
+  }
+}

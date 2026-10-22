@@ -1,7 +1,8 @@
 {
   "name": "code-editor",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@12.3.4",
   "engines": {
     "node": ">=22.14.0"
@@ -10,17 +11,19 @@
     "dev": "pnpm --filter @code-editor/web dev",
     "dev:desktop": "pnpm --filter @code-editor/desktop dev",
     "dev:api": "pnpm --filter @code-editor/api dev",
-    "dev:runner": "pnpm --filter @code-editor/runner dev",
+    "dev:runner": "pnpm --filter @code-editor/runtime-node build && pnpm --filter @code-editor/runner dev",
     "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck",
-    "test": "vitest run --config vitest.config.mts",
+    "typecheck": "tsc -p tsconfig.scripts.json && pnpm -r typecheck",
+    "test": "pnpm --filter @code-editor/runtime-node build && vitest run --config vitest.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "version:next": "node scripts/version.mjs",
-    "version:check": "node scripts/version.mjs --check",
+    "version:next": "tsx scripts/version.ts",
+    "version:check": "tsx scripts/version.ts --check",
     "check": "pnpm version:check && pnpm format:check && pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
+    "tsx": "4.23.15",
+    "esbuild": "0.28.2",
     "@types/node": "^22.0.0",
     "prettier": "3.9.10",
     "typescript": "latest",

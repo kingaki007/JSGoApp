@@ -1,7 +1,16 @@
 /** Boots the shared UI in Electron and owns disposable Node utility processes behind validated IPC. */
-const { app, BrowserWindow, ipcMain, utilityProcess, protocol, net } = require('electron');
-const path = require('node:path');
-const { pathToFileURL } = require('node:url');
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  utilityProcess,
+  protocol,
+  net,
+  type IpcMainInvokeEvent,
+} from 'electron';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import type { NodeRuntime, RunnerProcess } from '@code-editor/runtime-node';
 
 // A standard app origin lets bundled Monaco workers and local storage work without file-origin exceptions.
 protocol.registerSchemesAsPrivileged([
@@ -11,8 +20,8 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-let mainWindow;
-let runtime;
+let mainWindow: BrowserWindow | undefined;
+let activeRuntime: NodeRuntime | undefined;
 
 /** Starts the desktop host after Electron is ready and loads the same UI used by the browser app. */
 async function start() {
@@ -22,10 +31,9 @@ async function start() {
     try {
       const url = new URL(request.url);
       if (url.host !== 'app') return new Response('Unknown app host.', { status: 403 });
-      const file = path.resolve(
-        pageDirectory,
-        '.' + decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname),
-      );
+      const route = url.pathname.replace(/\/+$/, '') || '/';
+      const assetPath = route === '/' || route === '/playground' ? '/index.html' : url.pathname;
+      const file = path.resolve(pageDirectory, '.' + decodeURIComponent(assetPath));
       const relative = path.relative(pageDirectory, file);
       if (relative.startsWith('..') || path.isAbsolute(relative))
         return new Response('Invalid asset path.', { status: 403 });
@@ -37,7 +45,7 @@ async function start() {
   const { NodeRuntime, runnerPath, validRequest, runnerEnvironment } =
     await import('@code-editor/runtime-node');
   /** Creates a Node utility process and adapts Electron message ports to the shared runner protocol. */
-  function launch() {
+  function launch(): RunnerProcess {
     const child = utilityProcess.fork(runnerPath, [], {
       stdio: 'ignore',
       env: runnerEnvironment(),
@@ -66,7 +74,8 @@ async function start() {
       onError: (listener) => child.on('error', (type) => listener(new Error(String(type)))),
     };
   }
-  runtime = new NodeRuntime({ launch });
+  const runtime = new NodeRuntime({ launch });
+  activeRuntime = runtime;
   if (process.argv.includes('--smoke-test')) {
     const result = await runtime.run({
       id: 'smoke',
@@ -78,15 +87,29 @@ async function start() {
       environment: 'node',
       code: 'while (true) {}',
     });
-    const asset = await net.fetch('jsgoapp://app/index.html');
+    const asset = await net.fetch('jsgoapp://app/playground');
     const validAsset = asset.ok && (await asset.text()).includes('id="root"');
     console.log(JSON.stringify({ execution: result, timeout: timeout.error, assets: validAsset }));
     app.exit(result.error || !timeout.error?.includes('exceeded') || !validAsset ? 1 : 0);
     return;
   }
   const development = process.argv.includes('--dev');
+  /** @param target Navigation destination; only the app's two routes may load in this window. */
+  function isAppPage(target: string) {
+    try {
+      const url = new URL(target);
+      const correctHost = development
+        ? url.protocol === 'http:' && url.host === '127.0.0.1:5173'
+        : url.protocol === 'jsgoapp:' && url.host === 'app';
+      return (
+        correctHost && ['/', '/index.html', '/playground', '/playground/'].includes(url.pathname)
+      );
+    } catch {
+      return false;
+    }
+  }
   /** @param event IPC sender; only our top-level application frame may invoke Node execution. */
-  function trusted(event) {
+  function trusted(event: IpcMainInvokeEvent) {
     return (
       mainWindow &&
       event.sender === mainWindow.webContents &&
@@ -115,14 +138,16 @@ async function start() {
       title: 'JSGoApp',
       show: false,
       webPreferences: {
-        preload: path.join(__dirname, 'preload.cjs'),
+        preload: path.join(__dirname, 'preload.js'),
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: true,
       },
     });
     mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
+    mainWindow.webContents.on('will-navigate', (event, target) => {
+      if (!isAppPage(target)) event.preventDefault();
+    });
     mainWindow.webContents.on('will-redirect', (event) => event.preventDefault());
     mainWindow.webContents.on('did-start-navigation', () => runtime.stop());
     mainWindow.webContents.on('render-process-gone', () => runtime.stop());
@@ -131,8 +156,8 @@ async function start() {
       mainWindow = undefined;
     });
     mainWindow.once('ready-to-show', () => mainWindow?.show());
-    if (development) void mainWindow.loadURL('http://127.0.0.1:5173/');
-    else void mainWindow.loadURL('jsgoapp://app/index.html');
+    if (development) void mainWindow.loadURL('http://127.0.0.1:5173/playground');
+    else void mainWindow.loadURL('jsgoapp://app/playground');
   }
   createWindow();
   app.on('activate', () => {
@@ -147,7 +172,7 @@ app
     console.error(error);
     app.exit(1);
   });
-app.on('before-quit', () => runtime?.stop());
+app.on('before-quit', () => activeRuntime?.stop());
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });

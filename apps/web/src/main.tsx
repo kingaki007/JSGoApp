@@ -1,12 +1,11 @@
-/** Mounts the web application and loads its base styles before workbench overrides. */
+/** Mounts page routing and global styles; the playground loads its own editor and workbench styles. */
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App';
+import Root from './Root';
 import './style.css';
-import './styles/workspace.css';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <Root />
   </React.StrictMode>,
 );

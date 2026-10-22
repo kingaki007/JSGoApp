@@ -14,6 +14,10 @@
 - Start maintained source files with a short purpose comment. Document named
   functions, classes, methods, and parameters with concise intent-focused comments.
   JSON must remain valid; explain JSON configuration in the README instead.
+- Use `.tsx` for React components and `.ts` for maintained non-React source,
+  scripts, and configuration. Do not introduce `.cjs`, `.mjs`, `.cts`, or `.mts`
+  source files. Electron and Node build outputs are generated `.js` files in
+  ignored `dist/` directories; keep their module format explicit in package metadata.
 - Keep tests in each app/package's `tests/` folder alongside `src/`.
 - Use the shared design tokens and plain CSS. Keep Monaco integration in `packages/editor`.
 - Hosting and deployment are deferred until the owner asks to revisit them.

@@ -1,6 +1,6 @@
 /** Exercises actual disposable Node processes, including module loading, output limits, and cancellation. */
 import { describe, expect, it, vi } from 'vitest';
-import { NodeRuntime, validRequest } from '../src/index.mjs';
+import { NodeRuntime, validRequest } from '@code-editor/runtime-node';
 
 /** @param code Source for a unique Node execution request. */
 function request(code: string) {

@@ -1,10 +1,10 @@
-/** Configures React bundling, relative build paths, and the local development server. */
+/** Configures React, root-relative assets for public routes, and the local Node runner proxy. */
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: '/',
   server: {
     port: 5173,
     strictPort: true,

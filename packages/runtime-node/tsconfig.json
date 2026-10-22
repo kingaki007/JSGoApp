@@ -1,1 +1,5 @@
-{ "extends": "../../tsconfig.base.json", "include": ["src/**/*.mts", "tests"] }
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "types": ["node"] },
+  "include": ["src", "tests"]
+}

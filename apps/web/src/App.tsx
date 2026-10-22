@@ -8,6 +8,7 @@ import ThemeSwitcher from './ThemeSwitcher';
 import ResultsPane from './ResultsPane';
 import { useExecution } from './useExecution';
 import { useDrafts } from './useDrafts';
+import './styles/workspace.css';
 
 const initialDrafts: Record<Language, string> = {
   javascript:
@@ -29,7 +30,7 @@ export default function App() {
   return (
     <div className="workspace">
       <header className="app-header">
-        <a className="brand" href="#" aria-label="JSGoApp home">
+        <a className="brand" href="/" aria-label="JSGoApp home">
           <span className="brand-mark" aria-hidden="true">
             JS
           </span>

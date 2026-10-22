@@ -5,6 +5,37 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.5.0] - 2026-10-22
+
+### Added
+
+- A responsive landing page at `/` with a short introduction, shared themes,
+  playground links, and Windows/macOS/Linux desktop download sections.
+- A dedicated `/playground` route with lazy editor loading and direct-refresh
+  support. Desktop opens the playground directly.
+- Central installer URL configuration; download options remain disabled and
+  show Coming soon until actual installers are published.
+- Route coverage, bringing the automated suite to 36 tests.
+
+### Changed
+
+- Migrated maintained Electron, Node runner, HTTP service, version scripts, and
+  test configuration from CJS/MJS variants to TypeScript. React components use
+  TSX; non-React sources use TS.
+- Added type checks for desktop, service, and build scripts. Build tools emit
+  ESM or CommonJS JavaScript into ignored `dist/` directories as each host needs.
+- Updated desktop asset handling and allowed navigation for the home and
+  playground routes, while keeping external navigation blocked.
+- Documented source conventions, routes, build steps, and installer availability.
+
+### Validation and limitations
+
+- Formatting, type checks, 36 tests, production builds, and Electron's execution,
+  timeout, and asset smoke checks pass. Browser checks covered both environments,
+  direct refresh, home navigation, themes, and mobile layout.
+- Desktop installers remain unpublished; hosting remains deferred. Existing
+  Monaco and Node declaration bundle-size warnings remain follow-up work.
+
 ## [0.4.0] - 2026-10-22
 
 ### Added

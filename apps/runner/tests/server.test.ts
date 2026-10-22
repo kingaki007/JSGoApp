@@ -1,8 +1,6 @@
 /** Verifies HTTP execution and the local service's cross-origin request boundary. */
 import { afterEach, expect, it } from 'vitest';
-// The HTTP service is executable JavaScript; its behavior is checked through the real socket interface.
-// @ts-expect-error This host intentionally exports plain JavaScript without a separate declaration package.
-import { createRunnerServer } from '../src/server.mjs';
+import { createRunnerServer } from '../src/server';
 import type { Server } from 'node:http';
 
 const servers: Server[] = [];

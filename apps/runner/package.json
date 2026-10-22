@@ -1,10 +1,11 @@
 {
   "name": "@code-editor/runner",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node src/server.mjs"
+    "dev": "tsx src/server.ts",
+    "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@code-editor/runtime-node": "workspace:*"

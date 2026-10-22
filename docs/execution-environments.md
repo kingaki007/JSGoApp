@@ -110,6 +110,18 @@ run, stop, and output subscription. Main validates IPC requests and only accepts
 calls from its own top-level frame. Navigation and new-window creation are blocked.
 It does not expose generic IPC or unrestricted Electron APIs to the UI.
 
+Maintained desktop and runner files are TypeScript. `scripts/build-node.ts`
+generates the runtime's ESM JavaScript, while `scripts/build-desktop.ts` generates
+CommonJS JavaScript for Electron main and its sandboxed preload. Output is in
+ignored `dist/` directories. Source extensions remain `.ts`; package metadata
+sets the runtime module format. Desktop development builds these entries before
+launching. `pnpm build` builds all workspace entries in dependency order.
+
+Desktop opens `/playground` directly in development and from its built app
+origin. Home and playground links work within that window; other navigation
+remains blocked. The web app's root `/` is the landing page. When hosting is
+revisited, its static host must serve `index.html` for the `/playground` route.
+
 To exercise the built UI locally:
 
 ```sh

@@ -33,6 +33,15 @@ Hosting and deployment decisions are deferred.
 
 ## Workspace layout
 
+The home page at `/` introduces JSGoApp and links to `/playground`. The playground
+loads the editor on demand, so the landing page does not load Monaco. Desktop
+starts directly at `/playground` and uses the same page routing.
+
+The home page includes Windows, macOS, and Linux download options. Installer
+builds have not been published, so these options show Coming soon and are
+disabled. Set the release URLs in `apps/web/src/desktopDownloads.ts` when actual
+installers are available. No placeholder links pretend to download an app.
+
 The explorer, editor, and results appear side by side on wide screens, with
 stacked panes on compact screens. The right pane has Web, Console, and Split
 controls in both environments. Web and Split remain visible but disabled while
@@ -118,7 +127,8 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open http://127.0.0.1:5173. Dependencies and editor workers are bundled
+Open http://127.0.0.1:5173 for the landing page, or
+http://127.0.0.1:5173/playground for the editor. Dependencies and workers are bundled
 locally; Monaco does not load from a CDN.
 
 ```sh
@@ -152,7 +162,7 @@ packages/editor/
     compile.test.ts
 ```
 
-The root `vitest.config.mts` discovers `.test.ts`, `.test.tsx`, `.spec.ts`, and
+The root `vitest.config.ts` discovers `.test.ts`, `.test.tsx`, `.spec.ts`, and
 `.spec.tsx` files recursively under these per-module test folders. Type checks
 include the test folders. Run all suites with `pnpm test`, or one module's tests
 with `pnpm test apps/web/tests` or `pnpm test packages/core/tests`.
@@ -193,6 +203,13 @@ TypeScript APIs. Keep callback names and test descriptions expressive rather
 than explaining every syntax detail. Document non-obvious lifecycle and
 cancellation behavior where it happens.
 
+Maintained code uses `.tsx` for React components and `.ts` for non-React code,
+scripts, and configuration. Root scripts run through `tsx`. Esbuild generates
+the shared Node runtime as ESM `.js` and Electron main/preload as CommonJS `.js`
+in ignored `dist/` folders. Package metadata selects the module format; no
+maintained CJS/MJS source or separate handwritten declaration shim is needed.
+Node, Electron, HTTP service, build scripts, and UI sources are all type-checked.
+
 JSON files must remain valid JSON. Their purposes are documented here instead
 of inserting unsupported comments:
 
@@ -200,6 +217,7 @@ of inserting unsupported comments:
 | ---------------------------------------------- | ----------------------------------------------------------- |
 | `package.json` and workspace package manifests | Package identity, scripts, and dependency boundaries        |
 | `tsconfig.base.json`                           | Shared TypeScript and JSX compiler settings                 |
+| `tsconfig.scripts.json`                        | Type checks for root build, version, and test configuration |
 | Each module's `tsconfig.json`                  | Source and test files included in that module's type checks |
 | `.prettierrc.json`                             | Shared formatting rules                                     |
 | `.vscode/settings.json`                        | Workspace editor settings and format-on-save                |

@@ -5,12 +5,16 @@ import { fileURLToPath } from 'node:url';
 
 const rootDirectory = fileURLToPath(new URL('../', import.meta.url));
 const changelogPath = join(rootDirectory, 'CHANGELOG.md');
+interface Manifest {
+  path: string;
+  data: { version: string; [key: string]: unknown };
+}
 
 /**
  * Reads root and immediate app/package manifests, including modules added in the future.
  * @param root Workspace directory containing package.json, apps/, and packages/.
  */
-async function readManifests(root) {
+async function readManifests(root: string): Promise<Manifest[]> {
   const paths = [join(root, 'package.json')];
   for (const group of ['apps', 'packages']) {
     const entries = await readdir(join(root, group), { withFileTypes: true });
@@ -21,7 +25,7 @@ async function readManifests(root) {
         await readFile(path, 'utf8');
         paths.push(path);
       } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+        if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') throw error;
       }
     }
   }
@@ -37,7 +41,7 @@ async function readManifests(root) {
  * @param manifests Parsed workspace manifests and their file paths.
  * @param changelog Current Markdown changelog text.
  */
-function checkVersions(manifests, changelog) {
+function checkVersions(manifests: Manifest[], changelog: string) {
   const version = manifests[0].data.version;
   if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Use a stable major.minor.patch version.');
   for (const { path, data } of manifests) {
@@ -54,7 +58,7 @@ function checkVersions(manifests, changelog) {
  * @param current Current numeric major.minor.patch version.
  * @param bump Requested patch, minor, or major increment.
  */
-function nextVersion(current, bump) {
+function nextVersion(current: string, bump: string) {
   const [major, minor, patch] = current.split('.').map(Number);
   if (bump === 'major') return `${major + 1}.0.0`;
   if (bump === 'minor') return `${major}.${minor + 1}.0`;
@@ -101,6 +105,6 @@ async function main() {
 
 // CLI failures return a nonzero status so checks and automation cannot report a false success.
 main().catch((error) => {
-  console.error(error.message);
+  console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 });

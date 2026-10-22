@@ -39,7 +39,7 @@ export function createRunnerServer() {
     const runtime = new NodeRuntime();
     response.on('close', () => runtime.stop());
     try {
-      const chunks = [];
+      const chunks: Buffer[] = [];
       let size = 0;
       for await (const chunk of request) {
         size += chunk.length;
