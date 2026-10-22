@@ -23,8 +23,15 @@ in the editor toolbar.
 - [RunJS interface](https://runjs.app/docs/introduction/user-interface)
 - [RunJS runtime environments](https://runjs.app/docs/features/running-code)
 
-Auto Run, expression-value inspection, package installation, and DOM rendering
-are separate capabilities and are not part of this milestone.
+Auto run now executes non-empty drafts after a two-second editing pause, once
+the editor is ready. It works with both environments and both languages through
+the shared UI. Every edit cancels active work and resets the deadline. The
+checkbox switches to manual execution; Run bypasses the delay and Stop prevents
+rescheduling until another edit or context change. Empty drafts clear output.
+Errors and completed executions are not automatically retried.
+
+Expression-value inspection, package installation, and DOM rendering remain
+separate capabilities.
 
 ## One runner, two transports
 

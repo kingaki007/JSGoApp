@@ -42,7 +42,7 @@ export default function OutputPanel({
         </button>
       </header>
       <div className="output-content" tabIndex={0} aria-label="Console output">
-        {!result && <p className="output-placeholder">Press Run to see console output.</p>}
+        {!result && <p className="output-placeholder">Start typing or press Run to see output.</p>}
         {result?.lines.map((line, index) => (
           <pre className="output-line" key={index}>
             {line || '\u00a0'}

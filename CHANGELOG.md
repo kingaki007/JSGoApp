@@ -5,6 +5,17 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.6.0] - 2026-10-22
+
+- Automatically execute non-empty drafts after two seconds without edits in
+  Browser and Node environments. Auto run is enabled by default and can be
+  disabled for manual execution.
+- Cancel stale execution when source, language, or environment changes; preserve
+  immediate Run and Stop without duplicate automatic runs.
+- Open built-in JavaScript/TypeScript and Node library declarations in a
+  read-only inline peek through Ctrl/Cmd+click or F12, keeping the scratchpad intact.
+- Add nine automatic-execution regression tests, bringing the suite to 45 tests.
+
 ## [0.5.0] - 2026-10-22
 
 ### Added

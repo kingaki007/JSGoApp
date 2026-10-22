@@ -9,7 +9,9 @@ planned for Windows, macOS, and Linux.
 
 Early development. The web app now includes a runnable Monaco editor
 with JavaScript and TypeScript scratchpads. Each language retains its
-draft while switching. Run executes the active scratchpad in a disposable
+draft while switching. Auto run is enabled by default and executes after a
+two-second pause in typing. Run executes immediately; Stop cancels active work.
+Disable the Auto run checkbox for manual execution. The active scratchpad runs in a disposable
 browser worker or a disposable Node process, selected through the editor's Env
 dropdown, with console output, Stop, and a five-second timeout.
 TypeScript is compiled using Monaco's bundled TypeScript language worker.
@@ -30,6 +32,28 @@ execution origin and stricter isolation are required before running untrusted
 shared projects or adding accounts.
 
 Hosting and deployment decisions are deferred.
+
+## Definition navigation
+
+Built-in definitions are available through Ctrl+click on Windows/Linux or
+Cmd+click on macOS, and through F12 (Go to Definition). External declarations
+open in a read-only inline peek view; the editable scratchpad stays in place.
+Monaco also provides hover signatures and documentation for recognized symbols.
+Browser and Node environments use their respective library declarations.
+
+## Automatic execution
+
+Once the editor is ready, non-empty code runs after two seconds without edits.
+Every edit cancels an in-flight run and replaces the pending timer. Changing
+language or environment schedules the selected draft after the same delay.
+The latest source is compiled at execution time. Empty drafts clear output
+without launching a worker or Node process.
+
+Manual Run cancels the pending timer and executes immediately, without a second
+automatic run. Stop remains effective until the next edit or context change;
+finishing, errors, output updates, theme changes, and Clear output do not create
+new runs. Turning Auto run off cancels pending and active work. The preference
+is session-only and applies equally to the web and Electron UI.
 
 ## Workspace layout
 

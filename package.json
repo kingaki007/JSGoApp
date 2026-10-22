@@ -1,6 +1,6 @@
 {
   "name": "code-editor",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.3.4",
@@ -22,10 +22,11 @@
     "check": "pnpm version:check && pnpm format:check && pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
-    "tsx": "4.23.15",
-    "esbuild": "0.28.2",
     "@types/node": "^22.0.0",
+    "esbuild": "0.28.2",
+    "happy-dom": "21.0.4",
     "prettier": "3.9.10",
+    "tsx": "4.23.15",
     "typescript": "latest",
     "vitest": "latest"
   }

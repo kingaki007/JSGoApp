@@ -8,9 +8,11 @@ import {
   type ReactNode,
 } from 'react';
 import MonacoEditor, { type Monaco } from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
 import { languages, type Environment, type Language } from '@code-editor/core';
 import './setup';
 import { compileSource } from './compile';
+import { configureNavigation } from './navigation';
 import { applyEditorTheme, readEditorTypography, type EditorTheme } from './theme';
 
 export interface CodeEditorHandle {
@@ -45,8 +47,15 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
   ref,
 ) {
   const monacoRef = useRef<Monaco | null>(null);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const environmentReady = useRef<Promise<void>>(Promise.resolve());
   const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!ready || !monacoRef.current || !editorRef.current) return;
+    const navigation = configureNavigation(monacoRef.current, editorRef.current);
+    return () => navigation.dispose();
+  }, [ready]);
 
   useImperativeHandle(
     ref,
@@ -92,6 +101,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
       onChange={(next) => onChange(next ?? '')}
       onMount={(editor, monaco) => {
         monacoRef.current = monaco;
+        editorRef.current = editor;
         editor.updateOptions(readEditorTypography());
         setReady(true);
         onReady?.();
@@ -105,6 +115,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
         scrollBeyondLastLine: false,
         tabSize: 2,
         insertSpaces: true,
+        definitionLinkOpensInPeek: true,
       }}
     />
   );

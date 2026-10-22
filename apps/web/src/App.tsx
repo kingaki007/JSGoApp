@@ -1,5 +1,5 @@
 /** Composes the explorer, shared editor, execution controls, draft recovery, and results pane. */
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { CodeEditor, type CodeEditorHandle } from '@code-editor/editor';
 import { languages, type Environment, type Language } from '@code-editor/core';
 import EnvironmentPicker from './EnvironmentPicker';
@@ -8,6 +8,7 @@ import ThemeSwitcher from './ThemeSwitcher';
 import ResultsPane from './ResultsPane';
 import { useExecution } from './useExecution';
 import { useDrafts } from './useDrafts';
+import { useAutoRun } from './useAutoRun';
 import './styles/workspace.css';
 
 const initialDrafts: Record<Language, string> = {
@@ -26,6 +27,19 @@ export default function App() {
   const editorRef = useRef<CodeEditorHandle | null>(null);
   const [environment, setEnvironment] = useState<Environment>('browser');
   const execution = useExecution(language, drafts[language], environment);
+  const [autoRunEnabled, setAutoRunEnabled] = useState(true);
+  /** Runs the latest editor snapshot without coupling debounce timers to output-state renders. */
+  const runCode = useCallback(() => {
+    void execution.run(editorRef.current);
+  }, [execution.run]);
+  const autoRun = useAutoRun({
+    source: drafts[language],
+    ready,
+    enabled: autoRunEnabled,
+    run: runCode,
+    cancelExecution: execution.cancelActive,
+    clearOutput: execution.clear,
+  });
 
   return (
     <div className="workspace">
@@ -61,7 +75,7 @@ export default function App() {
               aria-pressed={language === id}
               onClick={() => {
                 if (id !== language) {
-                  execution.stop();
+                  autoRun.stop();
                   setLanguage(id);
                 }
               }}
@@ -94,13 +108,13 @@ export default function App() {
               value={environment}
               onChange={(next) => {
                 if (next !== environment) {
-                  execution.stop();
+                  autoRun.stop();
                   setEnvironment(next);
                 }
               }}
             />
             {execution.isRunning ? (
-              <button type="button" className="run-button stop-button" onClick={execution.stop}>
+              <button type="button" className="run-button stop-button" onClick={autoRun.stop}>
                 <span aria-hidden="true">■</span> Stop
               </button>
             ) : (
@@ -108,7 +122,7 @@ export default function App() {
                 type="button"
                 className="run-button"
                 disabled={!ready}
-                onClick={() => void execution.run(editorRef.current)}
+                onClick={autoRun.runNow}
               >
                 <span aria-hidden="true">▶</span> Run
               </button>
@@ -117,6 +131,15 @@ export default function App() {
         </div>
         <div className="editor-breadcrumb">
           Scratchpads <span aria-hidden="true">/</span> scratch.{languages[language].extension}
+          <label className="auto-run-toggle" title="Run 2 seconds after typing stops">
+            <input
+              type="checkbox"
+              checked={autoRunEnabled}
+              onChange={(event) => setAutoRunEnabled(event.target.checked)}
+            />
+            <span>Auto run</span>
+            <span className="auto-run-delay">2s</span>
+          </label>
         </div>
         <div className="editor-surface" aria-label={`${languages[language].label} code editor`}>
           <CodeEditor
@@ -137,6 +160,13 @@ export default function App() {
             role="status"
           >
             {saveMessage}
+          </span>
+          <span className="auto-run-status" role="status">
+            {autoRun.isPending
+              ? 'Waiting for typing to pause…'
+              : autoRunEnabled
+                ? 'Auto run after 2 seconds idle'
+                : 'Manual run'}
           </span>
           <span className="execution-hint">
             {environment === 'browser'
