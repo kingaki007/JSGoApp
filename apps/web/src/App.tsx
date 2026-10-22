@@ -1,7 +1,14 @@
 /** Composes the explorer, shared editor, execution controls, draft recovery, and results pane. */
 import { useCallback, useRef, useState } from 'react';
 import { CodeEditor, type CodeEditorHandle } from '@code-editor/editor';
-import { languages, type Environment, type Language } from '@code-editor/core';
+import {
+  languages,
+  anonymousSubject,
+  resolveFeatureAccess,
+  type AccessSubject,
+  type Environment,
+  type Language,
+} from '@code-editor/core';
 import EnvironmentPicker from './EnvironmentPicker';
 import { useTheme } from './theme';
 import ThemeSwitcher from './ThemeSwitcher';
@@ -18,8 +25,9 @@ const initialDrafts: Record<Language, string> = {
     '// Your TypeScript scratchpad\nconst message: string = "Hello from JSGoApp";\nconsole.log(message);\n',
 };
 
-/** Builds the browser workspace; application state stays outside the reusable editor package. */
-export default function App() {
+/** @param props Optional API-owned account subject; anonymous visitors currently receive Max access. */
+export default function App({ subject = anonymousSubject }: { subject?: AccessSubject }) {
+  const features = resolveFeatureAccess(subject);
   const { language, drafts, setLanguage, updateDraft, saveState, saveMessage } =
     useDrafts(initialDrafts);
   const [ready, setReady] = useState(false);
@@ -143,6 +151,7 @@ export default function App() {
         </div>
         <div className="editor-surface" aria-label={`${languages[language].label} code editor`}>
           <CodeEditor
+            features={features}
             ref={editorRef}
             theme={resolved}
             language={language}

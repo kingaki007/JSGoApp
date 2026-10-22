@@ -5,6 +5,17 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.7.0] - 2026-10-22
+
+- Add shared Free/Plus/Max feature lists, independent feature off switches, and
+  a paywall bypass switch. Anonymous visitors retain Max access by default.
+- Gate editor definitions, autocomplete, and hover/signature documentation at
+  the Monaco provider level in web and desktop.
+- Define future account subscription data and Free fallback for inactive or
+  expired authenticated subscriptions.
+- Verify plan membership, expiry, global switches, and provider cleanup,
+  bringing the automated suite to 63 tests.
+
 ## [0.6.0] - 2026-10-22
 
 - Automatically execute non-empty drafts after two seconds without edits in

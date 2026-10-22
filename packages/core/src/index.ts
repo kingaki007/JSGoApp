@@ -1,4 +1,5 @@
 /** Defines shared language/project models, runtime contracts, and feature-access rules for all apps. */
+export * from './features';
 export type Language = 'javascript' | 'typescript';
 export type Environment = 'browser' | 'node';
 
@@ -41,28 +42,6 @@ export interface RuntimeAdapter {
   run(request: RunRequest): Promise<RunResult>;
   /** Cancels an active run and releases its execution resources. */
   stop(): void;
-}
-
-export type Feature = 'cloudSave' | 'aiChat' | 'history';
-export interface FeaturePolicy {
-  mode: 'open' | 'paid';
-  restricted: Feature[];
-}
-
-/**
- * Evaluates feature access independently of the UI.
- * @param policy Open/paid mode and the features restricted in paid mode.
- * @param feature Capability the caller wants to access.
- * @param entitlements Features granted to the current user or installation.
- */
-export function canUseFeature(
-  policy: FeaturePolicy,
-  feature: Feature,
-  entitlements: Feature[],
-): boolean {
-  return (
-    policy.mode === 'open' || !policy.restricted.includes(feature) || entitlements.includes(feature)
-  );
 }
 
 /** Creates a starter project with a TypeScript example and new project/file identifiers. */

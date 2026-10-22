@@ -35,6 +35,11 @@ Hosting and deployment decisions are deferred.
 
 ## Definition navigation
 
+Definition navigation, autocomplete, and hover documentation are controlled by
+the shared Free/Plus/Max feature policy. All visitors currently receive Max.
+See [subscription feature configuration](docs/feature-access.md) for plan lists,
+global on/off switches, and the future user subscription contract.
+
 Built-in definitions are available through Ctrl+click on Windows/Linux or
 Cmd+click on macOS, and through F12 (Go to Definition). External declarations
 open in a read-only inline peek view; the editable scratchpad stays in place.
@@ -106,7 +111,7 @@ last successful save wins; cross-tab merging is not implemented.
 - Optional accounts for cloud saving and cross-device sync.
 - Social login and email registration.
 - Extensible language services and execution adapters.
-- Owner-controlled paywall configuration, initially open.
+- Configurable Free/Plus/Max feature access, with Max enabled for all current users.
 - Desktop downloads accessible from the web app.
 
 ## Agreed technology stack

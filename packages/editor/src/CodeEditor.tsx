@@ -8,11 +8,17 @@ import {
   type ReactNode,
 } from 'react';
 import MonacoEditor, { type Monaco } from '@monaco-editor/react';
-import type { editor } from 'monaco-editor';
-import { languages, type Environment, type Language } from '@code-editor/core';
+import type { editor, IDisposable } from 'monaco-editor';
+import { languages, type Environment, type Language, type FeatureAccess } from '@code-editor/core';
 import './setup';
 import { compileSource } from './compile';
 import { configureNavigation } from './navigation';
+import {
+  configureLanguageFeatures,
+  featureEditorOptions,
+  closeRestrictedWidgets,
+  registerFeatureProviders,
+} from './features';
 import { applyEditorTheme, readEditorTypography, type EditorTheme } from './theme';
 
 export interface CodeEditorHandle {
@@ -25,6 +31,7 @@ export interface CodeEditorHandle {
 }
 
 export interface CodeEditorProps {
+  features: FeatureAccess;
   language: Language;
   environment?: Environment;
   path: string;
@@ -43,7 +50,7 @@ export interface CodeEditorProps {
  * @param ref Receives the public compilation handle without exposing Monaco to the host.
  */
 const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEditor(
-  { language, environment = 'browser', path, value, theme, onChange, onReady, loading },
+  { features, language, environment = 'browser', path, value, theme, onChange, onReady, loading },
   ref,
 ) {
   const monacoRef = useRef<Monaco | null>(null);
@@ -53,9 +60,22 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
 
   useEffect(() => {
     if (!ready || !monacoRef.current || !editorRef.current) return;
-    const navigation = configureNavigation(monacoRef.current, editorRef.current);
-    return () => navigation.dispose();
-  }, [ready]);
+    let current = true;
+    let providers: IDisposable | undefined;
+    void registerFeatureProviders(monacoRef.current, features).then((registration) => {
+      if (current) providers = registration;
+      else registration.dispose();
+    });
+    closeRestrictedWidgets(editorRef.current, features);
+    const navigation = features.definitionNavigation
+      ? configureNavigation(monacoRef.current, editorRef.current)
+      : undefined;
+    return () => {
+      current = false;
+      providers?.dispose();
+      navigation?.dispose();
+    };
+  }, [ready, features.definitionNavigation, features.autocomplete, features.hoverDocumentation]);
 
   useImperativeHandle(
     ref,
@@ -94,7 +114,10 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
     <MonacoEditor
       height="100%"
       theme="jsgoapp"
-      beforeMount={(monaco) => applyEditorTheme(monaco, theme)}
+      beforeMount={(monaco) => {
+        applyEditorTheme(monaco, theme);
+        configureLanguageFeatures(monaco);
+      }}
       language={language}
       path={path}
       value={value}
@@ -115,7 +138,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
         scrollBeyondLastLine: false,
         tabSize: 2,
         insertSpaces: true,
-        definitionLinkOpensInPeek: true,
+        ...featureEditorOptions(features),
       }}
     />
   );

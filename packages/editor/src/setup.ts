@@ -4,6 +4,10 @@ import * as monaco from 'monaco-editor';
 
 import EditorWorker from 'monaco-editor/editor/editor.worker.js?worker';
 import TypeScriptWorker from 'monaco-editor/languages/features/typescript/ts.worker.js?worker';
+import { configureLanguageFeatures } from './features';
+
+// Paid providers must be reserved before the first language model is created.
+configureLanguageFeatures(monaco);
 
 self.MonacoEnvironment = {
   /**
