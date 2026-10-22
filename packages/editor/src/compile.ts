@@ -17,7 +17,8 @@ export async function compileSource(
   if (language === 'javascript') return source;
   const uri = monaco.Uri.parse(`inmemory://execution/${crypto.randomUUID()}.ts`);
   // Compile a snapshot so typing while a run starts cannot change its source.
-  const model = monaco.editor.createModel(source, 'typescript', uri);
+  // Mark the snapshot as its own module so its declarations cannot collide with the visible draft.
+  const model = monaco.editor.createModel(`${source}\nexport {};\n`, 'typescript', uri);
   try {
     const getWorker = await monaco.typescript.getTypeScriptWorker();
     const worker = await getWorker(uri);
@@ -38,7 +39,8 @@ export async function compileSource(
       file.name.endsWith('.js'),
     );
     if (!javascript || output.emitSkipped) throw new Error('TypeScript could not be compiled.');
-    return javascript.text;
+    // Remove only our trailing empty-module marker before execution in a browser function.
+    return javascript.text.replace(/\nexport \{\};\s*$/, '');
   } finally {
     model.dispose();
   }

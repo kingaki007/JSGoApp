@@ -1,0 +1,12 @@
+{
+  "name": "@code-editor/runner",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/server.mjs"
+  },
+  "dependencies": {
+    "@code-editor/runtime-node": "workspace:*"
+  }
+}

@@ -1,4 +1,4 @@
-/** Verifies that browser result controls are available and Node cannot expose Web preview views. */
+/** Verifies that both environments retain disabled Web/Split controls while Console stays selected. */
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ResultsPane from '../src/ResultsPane';
@@ -14,14 +14,15 @@ describe('environment-specific result views', () => {
     expect(markup).toContain('value="split"');
   });
 
-  it('keeps Node console-only with no Web pane or view selector', () => {
+  it('keeps Node console-only with disabled preview choices', () => {
     const markup = renderToStaticMarkup(
       <ResultsPane environment="node" result={null} isRunning={false} onClear={() => {}} />,
     );
-    expect(markup).toContain('Node · Console');
+    expect(markup).toContain('Node.js results');
     expect(markup).toContain('results-console');
     expect(markup).toContain('Execution output');
-    expect(markup).not.toContain('Result view');
-    expect(markup).not.toContain('Web preview');
+    expect(markup).toContain('Result view');
+    expect(markup.match(/disabled=""/g)).toHaveLength(3);
+    expect(markup).not.toContain('web-preview-panel');
   });
 });

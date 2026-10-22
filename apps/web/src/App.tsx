@@ -1,7 +1,8 @@
 /** Composes the explorer, shared editor, execution controls, draft recovery, and results pane. */
 import { useRef, useState } from 'react';
 import { CodeEditor, type CodeEditorHandle } from '@code-editor/editor';
-import { languages, type Language } from '@code-editor/core';
+import { languages, type Environment, type Language } from '@code-editor/core';
+import EnvironmentPicker from './EnvironmentPicker';
 import { useTheme } from './theme';
 import ThemeSwitcher from './ThemeSwitcher';
 import ResultsPane from './ResultsPane';
@@ -22,7 +23,8 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const { preference, setPreference, resolved } = useTheme();
   const editorRef = useRef<CodeEditorHandle | null>(null);
-  const execution = useExecution(language, drafts[language]);
+  const [environment, setEnvironment] = useState<Environment>('browser');
+  const execution = useExecution(language, drafts[language], environment);
 
   return (
     <div className="workspace">
@@ -38,7 +40,7 @@ export default function App() {
         <div className="header-actions">
           <span className="environment-label">
             <span className="status-dot ready" />
-            Browser environment
+            {environment === 'node' ? 'Node.js environment' : 'Browser environment'}
           </span>
           <ThemeSwitcher value={preference} onChange={setPreference} />
         </div>
@@ -87,6 +89,15 @@ export default function App() {
             </h1>
           </div>
           <div className="run-actions">
+            <EnvironmentPicker
+              value={environment}
+              onChange={(next) => {
+                if (next !== environment) {
+                  execution.stop();
+                  setEnvironment(next);
+                }
+              }}
+            />
             {execution.isRunning ? (
               <button type="button" className="run-button stop-button" onClick={execution.stop}>
                 <span aria-hidden="true">■</span> Stop
@@ -111,7 +122,8 @@ export default function App() {
             ref={editorRef}
             theme={resolved}
             language={language}
-            path={`scratch.${languages[language].extension}`}
+            environment={environment}
+            path={`file:///scratch.${languages[language].extension}`}
             value={drafts[language]}
             onChange={(value) => updateDraft(language, value)}
             onReady={() => setReady(true)}
@@ -125,11 +137,18 @@ export default function App() {
           >
             {saveMessage}
           </span>
+          <span className="execution-hint">
+            {environment === 'browser'
+              ? 'Browser APIs · console execution · DOM preview deferred'
+              : window.desktop
+                ? 'Node.js · local desktop execution'
+                : 'Node.js · local service required: pnpm dev:runner'}
+          </span>
         </div>
       </main>
 
       <ResultsPane
-        environment="browser"
+        environment={environment}
         result={execution.result}
         isRunning={execution.isRunning}
         onClear={execution.clear}

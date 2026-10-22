@@ -1,6 +1,6 @@
 {
   "name": "code-editor",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "private": true,
   "packageManager": "pnpm@12.3.4",
   "engines": {
@@ -10,6 +10,7 @@
     "dev": "pnpm --filter @code-editor/web dev",
     "dev:desktop": "pnpm --filter @code-editor/desktop dev",
     "dev:api": "pnpm --filter @code-editor/api dev",
+    "dev:runner": "pnpm --filter @code-editor/runner dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run --config vitest.config.mts",

@@ -10,16 +10,19 @@ planned for Windows, macOS, and Linux.
 Early development. The web app now includes a runnable Monaco editor
 with JavaScript and TypeScript scratchpads. Each language retains its
 draft while switching. Run executes the active scratchpad in a disposable
-browser worker, with console output, Stop, and a five-second timeout.
+browser worker or a disposable Node process, selected through the editor's Env
+dropdown, with console output, Stop, and a five-second timeout.
 TypeScript is compiled using Monaco's bundled TypeScript language worker.
 JavaScript and TypeScript drafts and the selected language are automatically
 saved on this device and restored after a refresh, without an account.
 
-DOM previews, Node execution, npm imports, project file saving, cloud accounts,
-and desktop packaging are not connected yet. Await asynchronous work explicitly;
-the worker ends when the top-level async function completes. Type annotations
+An initial Electron shell reuses the web UI and shared Node runner. DOM previews,
+npm imports, project file saving, cloud accounts, and desktop installers are not
+connected yet. Await asynchronous work explicitly; the runner ends when the
+top-level async function completes. Type annotations
 are stripped before running; semantic type errors remain visible in Monaco
-and do not block execution. ES module imports and exports are not supported yet.
+and do not block execution. Node supports built-in module imports; browser module
+imports and third-party package installation remain deferred.
 
 This is a local scratchpad for code you trust. A Web Worker keeps code off the
 UI thread and can be terminated, but it is not a security sandbox. A separate
@@ -32,12 +35,14 @@ Hosting and deployment decisions are deferred.
 
 The explorer, editor, and results appear side by side on wide screens, with
 stacked panes on compact screens. The right pane has Web, Console, and Split
-views for the browser environment. The shared results component forces Console
-and hides the view selector for Node, ready for its future runtime integration.
+controls in both environments. Web and Split remain visible but disabled while
+preview development is deferred; Console stays selected.
 
-Console execution works now. The Web panel is a clearly labeled placeholder;
-DOM rendering is a separate next step. Changing the result view does not rerun
-code or discard console output. Split places the Web panel above Console.
+The Env dropdown selects Browser or Node.js independently of output views and
+language. Browser currently provides worker APIs without DOM access. Node runs
+through Electron IPC on desktop or the local HTTP runner for the web app.
+See [execution environments](docs/execution-environments.md) for the shared
+architecture, RunJS reference, startup commands, and current limitations.
 
 ## Local draft recovery
 
@@ -88,8 +93,11 @@ last successful save wins; cross-tab merging is not implemented.
   workers, theme mapping, and TypeScript compilation.
 - packages/core: shared project types, runtime contracts,
   and feature policy.
+- packages/runtime-node: shared Node runner and disposable snippet entrypoint.
+- apps/runner: loopback HTTP transport for Node execution from the web app.
+- apps/desktop: Electron shell, preload bridge, and utility-process adapter.
 
-Desktop and backend applications are planned but not scaffolded.
+The accounts backend and desktop installer packaging remain planned.
 
 Applications are runnable products; packages are libraries imported by them.
 `pnpm-workspace.yaml` links `@code-editor/core` and `@code-editor/editor` to their

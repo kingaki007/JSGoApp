@@ -9,6 +9,8 @@ declare global {
       run(request: RunRequest): Promise<RunResult>;
       /** Requests termination of the active desktop-hosted run. */
       stop(): Promise<void>;
+      /** @param listener Receives active-run console output; returns a subscription cleanup function. */
+      onOutput(listener: (message: { id: string; line: string }) => void): () => void;
     };
   }
 }

@@ -36,8 +36,31 @@ describe('editor compilation boundary', () => {
     const fixture = compilerFixture();
     const source = 'const value: number = 42;';
     expect(await compileSource(fixture.monaco, source, 'typescript')).toBe('const value = 42;');
-    expect(fixture.createModel.mock.calls[0].slice(0, 2)).toEqual([source, 'typescript']);
+    expect(fixture.createModel.mock.calls[0].slice(0, 2)).toEqual([
+      `${source}\nexport {};\n`,
+      'typescript',
+    ]);
     expect(fixture.model.dispose).toHaveBeenCalledOnce();
+  });
+
+  it('removes the synthetic module marker without stripping user imports', async () => {
+    const fixture = compilerFixture();
+    fixture.worker.getEmitOutput.mockResolvedValue({
+      outputFiles: [
+        {
+          name: 'snapshot.js',
+          text: 'import path from "node:path";\nconsole.log(path);\nexport {};\n',
+        },
+      ],
+      emitSkipped: false,
+    });
+    expect(
+      await compileSource(
+        fixture.monaco,
+        'import path from "node:path"; console.log(path);',
+        'typescript',
+      ),
+    ).toBe('import path from "node:path";\nconsole.log(path);');
   });
 
   it('reports syntax locations without emitting and releases the snapshot', async () => {

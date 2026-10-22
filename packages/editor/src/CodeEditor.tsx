@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import MonacoEditor, { type Monaco } from '@monaco-editor/react';
-import { languages, type Language } from '@code-editor/core';
+import { languages, type Environment, type Language } from '@code-editor/core';
 import './setup';
 import { compileSource } from './compile';
 import { applyEditorTheme, readEditorTypography, type EditorTheme } from './theme';
@@ -24,6 +24,7 @@ export interface CodeEditorHandle {
 
 export interface CodeEditorProps {
   language: Language;
+  environment?: Environment;
   path: string;
   value: string;
   theme: EditorTheme;
@@ -40,10 +41,11 @@ export interface CodeEditorProps {
  * @param ref Receives the public compilation handle without exposing Monaco to the host.
  */
 const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEditor(
-  { language, path, value, theme, onChange, onReady, loading },
+  { language, environment = 'browser', path, value, theme, onChange, onReady, loading },
   ref,
 ) {
   const monacoRef = useRef<Monaco | null>(null);
+  const environmentReady = useRef<Promise<void>>(Promise.resolve());
   const [ready, setReady] = useState(false);
 
   useImperativeHandle(
@@ -56,6 +58,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
        */
       async compile(source, sourceLanguage) {
         if (!monacoRef.current) throw new Error('The editor is not ready yet.');
+        await environmentReady.current;
         return compileSource(monacoRef.current, source, sourceLanguage);
       },
     }),
@@ -65,6 +68,18 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
   useEffect(() => {
     if (monacoRef.current) applyEditorTheme(monacoRef.current, theme);
   }, [theme, ready]);
+
+  useEffect(() => {
+    let current = true;
+    if (ready)
+      environmentReady.current = import('./environment').then(async ({ configureEnvironment }) => {
+        if (current && monacoRef.current)
+          await configureEnvironment(monacoRef.current, environment);
+      });
+    return () => {
+      current = false;
+    };
+  }, [environment, ready]);
 
   return (
     <MonacoEditor

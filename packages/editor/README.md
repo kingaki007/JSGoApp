@@ -9,7 +9,8 @@ the planned Electron renderer.
 ## Public API
 
 - `CodeEditor`: controlled component accepting `value`, `language`, `path`,
-  `theme`, `onChange`, optional `onReady`, and optional `loading` content.
+  `theme`, `onChange`, optional `environment` (Browser by default), optional
+  `onReady`, and optional `loading` content.
 - `CodeEditorHandle`: the ref exposes `compile(source, language)`, returning
   JavaScript from a source snapshot. JavaScript passes through; TypeScript
   uses the editor's language worker. Call after `onReady`.
@@ -21,13 +22,15 @@ package instead of accessing Monaco or this package's internal files.
 
 ## Internals
 
-| File                    | Responsibility                                                    |
-| ----------------------- | ----------------------------------------------------------------- |
-| `src/CodeEditor.tsx`    | Component lifecycle, editor defaults, and public handle           |
-| `src/setup.ts`          | Local worker factory, loader, and compiler configuration          |
-| `src/theme.ts`          | Semantic CSS token mapping and typography                         |
-| `src/compile.ts`        | Source snapshots, syntax errors, TypeScript emission, and cleanup |
-| `tests/compile.test.ts` | Compiler boundary and snapshot lifecycle checks                   |
+| File                     | Responsibility                                                    |
+| ------------------------ | ----------------------------------------------------------------- |
+| `src/CodeEditor.tsx`     | Component lifecycle, editor defaults, and public handle           |
+| `src/setup.ts`           | Local worker factory, loader, and compiler configuration          |
+| `src/theme.ts`           | Semantic CSS token mapping and typography                         |
+| `src/compile.ts`         | Source snapshots, syntax errors, TypeScript emission, and cleanup |
+| `src/environment.ts`     | Environment-specific compiler libraries and declarations          |
+| `src/nodeDefinitions.ts` | Lazy Node and fetch declaration bundle                            |
+| `tests/compile.test.ts`  | Compiler boundary and snapshot lifecycle checks                   |
 
 The host loads the JSGoApp CSS token definitions before mounting the editor
 and applies the resolved theme to the document. `theme.ts` reads `--editor-*`,
