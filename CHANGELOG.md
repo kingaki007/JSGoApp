@@ -5,6 +5,13 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.7.1] - 2026-10-23
+
+- Fix Light theme crashing the built desktop renderer when minified CSS uses
+  shorthand hex colors. Normalize colors before passing them to Monaco.
+- Cover theme switching and reopening with a saved Light preference in an
+  isolated Electron renderer smoke test, plus shorthand-color regression coverage.
+
 ## [0.7.0] - 2026-10-22
 
 - Add shared Free/Plus/Max feature lists, independent feature off switches, and

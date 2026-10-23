@@ -11,6 +11,7 @@ import {
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { NodeRuntime, RunnerProcess } from '@code-editor/runtime-node';
+import { checkRendererThemes } from '../tests/themeSmoke';
 
 // A standard app origin lets bundled Monaco workers and local storage work without file-origin exceptions.
 protocol.registerSchemesAsPrivileged([
@@ -27,7 +28,7 @@ let activeRuntime: NodeRuntime | undefined;
 async function start() {
   const pageDirectory = path.resolve(__dirname, '../../web/dist');
   /** @param request Local app asset request; paths must remain inside the built UI directory. */
-  protocol.handle('jsgoapp', (request) => {
+  const handleAppRequest: Parameters<typeof protocol.handle>[1] = (request) => {
     try {
       const url = new URL(request.url);
       if (url.host !== 'app') return new Response('Unknown app host.', { status: 403 });
@@ -41,7 +42,8 @@ async function start() {
     } catch {
       return new Response('Invalid asset request.', { status: 400 });
     }
-  });
+  };
+  protocol.handle('jsgoapp', handleAppRequest);
   const { NodeRuntime, runnerPath, validRequest, runnerEnvironment } =
     await import('@code-editor/runtime-node');
   /** Creates a Node utility process and adapts Electron message ports to the shared runner protocol. */
@@ -89,6 +91,11 @@ async function start() {
     });
     const asset = await net.fetch('jsgoapp://app/playground');
     const validAsset = asset.ok && (await asset.text()).includes('id="root"');
+    await checkRendererThemes(
+      'jsgoapp://app/playground',
+      path.join(__dirname, 'preload.js'),
+      handleAppRequest,
+    );
     console.log(JSON.stringify({ execution: result, timeout: timeout.error, assets: validAsset }));
     app.exit(result.error || !timeout.error?.includes('exceeded') || !validAsset ? 1 : 0);
     return;

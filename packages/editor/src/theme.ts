@@ -10,8 +10,14 @@ export type EditorTheme = 'light' | 'dark';
  */
 export function applyEditorTheme(monaco: Monaco, theme: EditorTheme) {
   const styles = getComputedStyle(document.documentElement);
-  /** @param name Semantic custom-property name to read from the host document. */
-  const token = (name: string) => styles.getPropertyValue(name).trim();
+  /** @param name Semantic custom-property name; CSS minifiers may shorten its hex color. */
+  const token = (name: string) => {
+    const value = styles.getPropertyValue(name).trim();
+    // Monaco's token color map accepts six/eight hex digits, unlike CSS's shorthand forms.
+    return /^#[\da-f]{3,4}$/i.test(value)
+      ? '#' + [...value.slice(1)].map((digit) => digit + digit).join('')
+      : value;
+  };
   monaco.editor.defineTheme('jsgoapp', {
     base: theme === 'dark' ? 'vs-dark' : 'vs',
     inherit: true,
