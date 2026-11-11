@@ -54,7 +54,9 @@ export default function OutputPanel({
           </pre>
         )}
         {result?.status === 'complete' && result.lines.length === 0 && (
-          <p className="output-placeholder">Finished without console output.</p>
+          <p className="output-placeholder">
+            Finished without expression results or console output.
+          </p>
         )}
       </div>
     </section>

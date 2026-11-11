@@ -5,6 +5,17 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.8.0] - 2026-11-11
+
+- Display top-level expression results automatically in Browser and Node execution,
+  including compiled TypeScript, without requiring console.log.
+- Preserve single evaluation, source order, explicit logs, and awaited results;
+  keep existing output limits and cancellation behavior.
+- Pin the existing Vite, React build-plugin, and Vitest versions to prevent
+  unrelated tool upgrades when adding dependencies.
+- Add expression regression coverage, bringing the automated suite to 72 tests,
+  and verify automatic values in Electron's Node utility process.
+
 ## [0.7.1] - 2026-10-23
 
 - Fix Light theme crashing the built desktop renderer when minified CSS uses

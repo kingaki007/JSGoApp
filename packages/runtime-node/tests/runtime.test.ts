@@ -8,6 +8,15 @@ function request(code: string) {
 }
 
 describe('shared Node runner', () => {
+  it('captures expressions after Node imports without logging compiler-generated statements', async () => {
+    const result = await new NodeRuntime().run(
+      request(
+        'import path from "node:path"; let count = 0; ++count; console.log("logged"); path.basename("/tmp/example.js"); await Promise.resolve(42);',
+      ),
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.lines).toEqual(['1', 'logged', 'example.js', '42']);
+  });
   it('does not inherit arbitrary host environment variables', async () => {
     vi.stubEnv('JSGOAPP_TEST_SECRET', 'host-only');
     try {

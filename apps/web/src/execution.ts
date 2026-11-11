@@ -1,5 +1,6 @@
 /** Executes compiled JavaScript inside a worker and formats bounded console output for the host. */
 import type { RunResult } from '@code-editor/core';
+import { captureExpressions } from '@code-editor/core/expressions';
 
 export type ExecutionMessage =
   { type: 'output'; id: string; line: string } | { type: 'complete'; result: RunResult };
@@ -57,18 +58,28 @@ export async function executeCode(
     onOutput(line);
   };
   try {
+    const transformed = captureExpressions(code);
+    /** @param value Result of one expression; skip undefined so console calls do not duplicate output. */
+    const capture = (value: unknown) => {
+      if (value !== undefined) log(value);
+      return value;
+    };
     const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
     await new AsyncFunction(
       'console',
-      `"use strict";\n${code}\n//# sourceURL=jsgoapp-scratchpad.js`,
-    )({
-      log,
-      info: log,
-      warn: log,
-      error: log,
-      debug: log,
-      table: log,
-    });
+      transformed.captureName,
+      `"use strict";\n${transformed.code}\n//# sourceURL=jsgoapp-scratchpad.js`,
+    )(
+      {
+        log,
+        info: log,
+        warn: log,
+        error: log,
+        debug: log,
+        table: log,
+      },
+      capture,
+    );
     return { id, lines };
   } catch (error) {
     return { id, lines, error: error instanceof Error ? error.message : String(error) };

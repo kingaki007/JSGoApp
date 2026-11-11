@@ -48,6 +48,15 @@ Browser and Node environments use their respective library declarations.
 
 ## Automatic execution
 
+Top-level expressions now produce results without `console.log` in Browser and
+Node environments. For example, `2 + 2` displays `4`, and
+`[1, 2, 3].map(n => n * 2)` displays the resulting array. JavaScript and compiled
+TypeScript use the same expression transform. Expressions run once, in source
+order, interleaved with explicit console output. Undefined results are omitted.
+Declarations and expressions inside functions/loops are not automatically printed.
+Use `await` to inspect an asynchronous result. Source-line alignment and expandable
+object inspection are separate future milestones.
+
 Once the editor is ready, non-empty code runs after two seconds without edits.
 Every edit cancels an in-flight run and replaces the pending timer. Changing
 language or environment schedules the selected draft after the same delay.

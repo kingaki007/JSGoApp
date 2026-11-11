@@ -89,6 +89,12 @@ async function start() {
       environment: 'node',
       code: 'while (true) {}',
     });
+    const expressions = await runtime.run({
+      id: 'expressions',
+      code: '2 + 2; await Promise.resolve(42);',
+      environment: 'node',
+    });
+    const validExpressions = !expressions.error && expressions.lines.join(',') === '4,42';
     const asset = await net.fetch('jsgoapp://app/playground');
     const validAsset = asset.ok && (await asset.text()).includes('id="root"');
     await checkRendererThemes(
@@ -96,8 +102,19 @@ async function start() {
       path.join(__dirname, 'preload.js'),
       handleAppRequest,
     );
-    console.log(JSON.stringify({ execution: result, timeout: timeout.error, assets: validAsset }));
-    app.exit(result.error || !timeout.error?.includes('exceeded') || !validAsset ? 1 : 0);
+    console.log(
+      JSON.stringify({
+        execution: result,
+        expressions,
+        timeout: timeout.error,
+        assets: validAsset,
+      }),
+    );
+    app.exit(
+      result.error || !timeout.error?.includes('exceeded') || !validAsset || !validExpressions
+        ? 1
+        : 0,
+    );
     return;
   }
   const development = process.argv.includes('--dev');

@@ -1,6 +1,6 @@
 {
   "name": "code-editor",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.3.4",
@@ -28,6 +28,6 @@
     "prettier": "3.9.10",
     "tsx": "4.23.15",
     "typescript": "latest",
-    "vitest": "latest"
+    "vitest": "5.0.5"
   }
 }

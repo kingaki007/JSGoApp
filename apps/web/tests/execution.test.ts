@@ -3,6 +3,17 @@ import { describe, expect, it, vi } from 'vitest';
 import { executeCode } from '../src/execution';
 
 describe('scratchpad execution', () => {
+  it('streams expression results alongside logs, without duplicate output or repeated side effects', async () => {
+    const output = vi.fn();
+    const result = await executeCode(
+      'expressions',
+      'let count = 0; ++count; console.log("logged"); count; await Promise.resolve(42);',
+      output,
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.lines).toEqual(['1', 'logged', '1', '42']);
+    expect(output.mock.calls).toEqual(result.lines.map((line) => [line]));
+  });
   it('streams logs and waits for explicitly awaited work', async () => {
     const output = vi.fn();
     const result = await executeCode(

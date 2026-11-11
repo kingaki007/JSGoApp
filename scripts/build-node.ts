@@ -7,7 +7,8 @@ await build({
   entryPoints: ['packages/runtime-node/src/index.ts', 'packages/runtime-node/src/runner.ts'],
   outdir: 'packages/runtime-node/dist',
   bundle: true,
-  packages: 'external',
+  // Bundle the shared expression transformer and parser; keep the Node-only compiler external.
+  external: ['typescript'],
   platform: 'node',
   format: 'esm',
   target: 'node22',

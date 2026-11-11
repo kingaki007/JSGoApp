@@ -3,6 +3,7 @@ import ts from 'typescript';
 import { inspect } from 'node:util';
 import { isBuiltin, createRequire } from 'node:module';
 import type { RunRequest } from '@code-editor/core';
+import { captureExpressions } from '@code-editor/core/expressions';
 const require = createRequire(import.meta.url);
 const port = (
   process as NodeJS.Process & {
@@ -67,7 +68,8 @@ async function execute(request: RunRequest) {
   process.once('uncaughtException', finish);
   process.once('unhandledRejection', finish);
   try {
-    const { outputText, diagnostics } = ts.transpileModule(request.code, {
+    const transformed = captureExpressions(request.code);
+    const { outputText, diagnostics } = ts.transpileModule(transformed.code, {
       reportDiagnostics: true,
       compilerOptions: {
         target: ts.ScriptTarget.ESNext,
@@ -86,8 +88,12 @@ async function execute(request: RunRequest) {
       'exports',
       'module',
       'console',
+      transformed.captureName,
       '"use strict";\n' + outputText + '\n//# sourceURL=jsgoapp-node.js',
-    )(requireBuiltin, module.exports, module, capturedConsole);
+    )(requireBuiltin, module.exports, module, capturedConsole, (value: unknown) => {
+      if (value !== undefined) log(value);
+      return value;
+    });
     finish();
   } catch (error) {
     finish(error);
