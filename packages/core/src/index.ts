@@ -29,17 +29,67 @@ export interface RunRequest {
   id: string;
   code: string;
   environment: Environment;
+  /** Also reports expression statements that evaluate to undefined. */
+  showUndefined?: boolean;
 }
 
 export interface RunResult {
   id: string;
   lines: string[];
+  /** 1-based line of the executed code that produced each entry in lines; 0 when unknown. */
+  sourceLines?: number[];
   error?: string;
+}
+
+/** Receives one output entry and the 1-based executed-code line that produced it (0 when unknown). */
+export type OutputListener = (line: string, sourceLine?: number) => void;
+
+/** Result callback injected into instrumented code; `at` records a console call's line. */
+export interface CaptureCallback {
+  (value: unknown, line?: number): unknown;
+  at(line: number): unknown;
+}
+
+/**
+ * Builds the callback used by every runtime so line tracking behaves identically in each host.
+ * @param capturedConsole Console replacement returned to instrumented console calls.
+ * @param setLine Records the line of the output that is about to be produced.
+ * @param report Emits one automatic expression result.
+ * @param showUndefined Whether undefined expression results are reported.
+ */
+export function createCapture(
+  capturedConsole: unknown,
+  setLine: (line: number) => void,
+  report: (value: unknown) => void,
+  showUndefined = false,
+): CaptureCallback {
+  /** @param value Expression result, returned unchanged. @param line Its statement's first line. */
+  const capture = (value: unknown, line = 0) => {
+    if (value !== undefined || showUndefined) {
+      setLine(line);
+      report(value);
+    }
+    return value;
+  };
+  return Object.assign(capture, {
+    /** @param line Line of the console call whose receiver is being resolved. */
+    at(line: number) {
+      setLine(line);
+      return capturedConsole;
+    },
+  });
+}
+
+/** @param value Untrusted line number from another process; anything invalid becomes 0 (unknown). */
+export function normalizeSourceLine(value: unknown): number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0 && value < 1_000_000
+    ? value
+    : 0;
 }
 
 export interface RuntimeAdapter {
   /** @param request Unique run identifier, compiled JavaScript, and target environment. */
-  run(request: RunRequest): Promise<RunResult>;
+  run(request: RunRequest, onOutput?: OutputListener): Promise<RunResult>;
   /** Cancels an active run and releases its execution resources. */
   stop(): void;
 }

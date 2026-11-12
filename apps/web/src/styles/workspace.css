@@ -380,6 +380,123 @@
   display: none;
 }
 
+/* Explorer tabs: one row per scratchpad with optional add, rename, and close controls. */
+.tab-add-actions {
+  display: flex;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.file-row .file-button {
+  flex: 1;
+  min-width: 0;
+}
+.file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tab-action {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.tab-action:hover:enabled {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+.tab-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.tab-close {
+  font-size: var(--font-size-body);
+  line-height: 1;
+}
+.tab-rename {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--size-control-min);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-focus);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-body);
+}
+
+/* Settings popover rows reuse the environment menu surface. */
+.settings-menu {
+  width: 18rem;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.settings-row:hover {
+  background: var(--color-surface-hover);
+}
+.settings-row input[type='checkbox'] {
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+.settings-number {
+  flex-shrink: 0;
+  width: 3.5rem;
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+}
+
+/* Line-aligned results: each row is positioned beside the editor line that produced it. */
+.output-content.output-aligned {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-0);
+}
+.output-row {
+  position: absolute;
+  left: var(--space-4);
+  right: var(--space-4);
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-family-code);
+  color: var(--color-text);
+  white-space: pre;
+  text-overflow: ellipsis;
+}
+.output-aligned-footer {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  max-height: 40%;
+  overflow: auto;
+  padding: var(--space-2) var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
 /* Stack the editor and results when side-by-side panes would be too narrow. */
 @media (max-width: 1000px) {
   .workspace {
@@ -414,9 +531,6 @@
   .sidebar {
     grid-row: auto;
     padding: var(--space-2) var(--space-4);
-  }
-  .explorer-root {
-    display: none;
   }
   .sidebar .file-button {
     padding-inline: var(--space-3);

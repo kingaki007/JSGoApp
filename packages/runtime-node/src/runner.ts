@@ -2,7 +2,7 @@
 import ts from 'typescript';
 import { inspect } from 'node:util';
 import { isBuiltin, createRequire } from 'node:module';
-import type { RunRequest } from '@code-editor/core';
+import { createCapture, type RunRequest } from '@code-editor/core';
 import { captureExpressions } from '@code-editor/core/expressions';
 const require = createRequire(import.meta.url);
 const port = (
@@ -23,6 +23,7 @@ function send(message: unknown) {
 async function execute(request: RunRequest) {
   let count = 0;
   let size = 0;
+  let currentLine = 0;
   let finished = false;
   /** @param error Optional top-level or asynchronous error; completion is emitted exactly once. */
   function finish(error?: unknown) {
@@ -55,7 +56,7 @@ async function execute(request: RunRequest) {
           .slice(0, Math.min(10_000, 90_000 - size));
     count = limited ? 500 : count + 1;
     size += line.length;
-    send({ type: 'output', id: request.id, line });
+    send({ type: 'output', id: request.id, line, sourceLine: limited ? 0 : currentLine });
   }
   /** @param name Built-in Node module; third-party package and project resolution are deferred. */
   function requireBuiltin(name: string) {
@@ -90,10 +91,20 @@ async function execute(request: RunRequest) {
       'console',
       transformed.captureName,
       '"use strict";\n' + outputText + '\n//# sourceURL=jsgoapp-node.js',
-    )(requireBuiltin, module.exports, module, capturedConsole, (value: unknown) => {
-      if (value !== undefined) log(value);
-      return value;
-    });
+    )(
+      requireBuiltin,
+      module.exports,
+      module,
+      capturedConsole,
+      createCapture(
+        capturedConsole,
+        (line) => {
+          currentLine = line;
+        },
+        log,
+        request.showUndefined === true,
+      ),
+    );
     finish();
   } catch (error) {
     finish(error);

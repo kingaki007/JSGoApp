@@ -1,20 +1,28 @@
 /** Compiles TypeScript snapshots through Monaco and releases temporary models on every exit path. */
 import type { Language } from '@code-editor/core';
 import type { Monaco } from '@monaco-editor/react';
+import { decodeLineMap } from './sourceMap';
+
+export interface CompiledSource {
+  /** Executable JavaScript. */
+  code: string;
+  /** Draft line for each line of code (index = code line - 1); absent when lines are unchanged. */
+  lineMap?: number[];
+}
 
 /**
  * Passes JavaScript through or emits JavaScript from an isolated TypeScript model.
  * @param monaco Initialized Monaco API used to create the snapshot and obtain its language worker.
  * @param source Complete source text captured for this run.
  * @param language Determines whether compilation is necessary.
- * @returns Executable JavaScript; rejects on syntax, emission, or language-service failures.
+ * @returns Executable JavaScript and its line mapping; rejects on syntax, emission, or service failures.
  */
 export async function compileSource(
   monaco: Monaco,
   source: string,
   language: Language,
-): Promise<string> {
-  if (language === 'javascript') return source;
+): Promise<CompiledSource> {
+  if (language === 'javascript') return { code: source };
   const uri = monaco.Uri.parse(`inmemory://execution/${crypto.randomUUID()}.ts`);
   // Compile a snapshot so typing while a run starts cannot change its source.
   // Mark the snapshot as its own module so its declarations cannot collide with the visible draft.
@@ -35,13 +43,29 @@ export async function compileSource(
       );
     }
     const output = await worker.getEmitOutput(uri.toString());
-    const javascript = output.outputFiles.find((file: { name: string; text: string }) =>
-      file.name.endsWith('.js'),
-    );
+    const files: Array<{ name: string; text: string }> = output.outputFiles;
+    const javascript = files.find((file) => file.name.endsWith('.js'));
     if (!javascript || output.emitSkipped) throw new Error('TypeScript could not be compiled.');
-    // Remove only our trailing empty-module marker before execution in a browser function.
-    return javascript.text.replace(/\nexport \{\};\s*$/, '');
+    // Remove only the compiler's map reference and our trailing empty-module marker.
+    const code = javascript.text
+      .replace(/\n?\/\/# sourceMappingURL=\S*\s*$/, '')
+      .replace(/\nexport \{\};\s*$/, '');
+    return { code, lineMap: readLineMap(files.find((file) => file.name.endsWith('.js.map'))) };
   } finally {
     model.dispose();
+  }
+}
+
+/**
+ * Extracts line origins from the emitted map; type-only lines make emitted lines differ from the draft.
+ * @param file Optional `.js.map` output; missing or malformed maps fall back to unchanged lines.
+ */
+function readLineMap(file: { text: string } | undefined): number[] | undefined {
+  if (!file) return undefined;
+  try {
+    const mappings: unknown = JSON.parse(file.text).mappings;
+    return typeof mappings === 'string' ? decodeLineMap(mappings) : undefined;
+  } catch {
+    return undefined;
   }
 }

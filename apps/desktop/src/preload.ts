@@ -8,10 +8,12 @@ contextBridge.exposeInMainWorld('desktop', {
   /** Terminates the current Node snippet. */
   stop: () => ipcRenderer.invoke('jsgoapp:stop'),
   /** @param listener Receives streamed output; returns a function removing this subscription. */
-  onOutput(listener: (message: { id: string; line: string }) => void) {
+  onOutput(listener: (message: { id: string; line: string; sourceLine?: number }) => void) {
     /** @param _event Private Electron event. @param message Structured run output. */
-    const receive = (_event: IpcRendererEvent, message: { id: string; line: string }) =>
-      listener(message);
+    const receive = (
+      _event: IpcRendererEvent,
+      message: { id: string; line: string; sourceLine?: number },
+    ) => listener(message);
     ipcRenderer.on('jsgoapp:output', receive);
     return () => ipcRenderer.removeListener('jsgoapp:output', receive);
   },

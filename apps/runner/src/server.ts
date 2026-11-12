@@ -59,8 +59,8 @@ export function createRunnerServer() {
         'Content-Type': 'application/x-ndjson',
         'Cache-Control': 'no-store',
       });
-      const result = await runtime.run(run, (line) => {
-        response.write(JSON.stringify({ type: 'output', id: run.id, line }) + '\n');
+      const result = await runtime.run(run, (line, sourceLine) => {
+        response.write(JSON.stringify({ type: 'output', id: run.id, line, sourceLine }) + '\n');
       });
       if (!response.destroyed)
         response.end(

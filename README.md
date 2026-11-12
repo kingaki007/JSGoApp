@@ -54,8 +54,8 @@ Node environments. For example, `2 + 2` displays `4`, and
 TypeScript use the same expression transform. Expressions run once, in source
 order, interleaved with explicit console output. Undefined results are omitted.
 Declarations and expressions inside functions/loops are not automatically printed.
-Use `await` to inspect an asynchronous result. Source-line alignment and expandable
-object inspection are separate future milestones.
+Use `await` to inspect an asynchronous result. Expandable object inspection is a
+separate future milestone.
 
 Once the editor is ready, non-empty code runs after two seconds without edits.
 Every edit cancels an in-flight run and replaces the pending timer. Changing
@@ -67,7 +67,36 @@ Manual Run cancels the pending timer and executes immediately, without a second
 automatic run. Stop remains effective until the next edit or context change;
 finishing, errors, output updates, theme changes, and Clear output do not create
 new runs. Turning Auto run off cancels pending and active work. The preference
-is session-only and applies equally to the web and Electron UI.
+is saved with the other settings and applies equally to the web and Electron UI.
+
+## RunJS-style workbench
+
+These capabilities follow RunJS and are shared by the web and desktop apps. Each
+has its own feature flag in `packages/core/src/features.ts` and is currently open
+on every plan; see [subscription feature configuration](docs/feature-access.md).
+
+- **Match lines** (`matchLines`): each expression result and console call appears
+  in the results pane beside the source line that produced it, and scrolls with
+  the editor. Several values from one line share its row. TypeScript results are
+  mapped back to draft lines through the compiler's source map, so type-only lines
+  do not shift them. Errors and output without a known line are listed at the
+  bottom of the pane. The list view is used when Match lines is off or when the
+  panes are stacked on narrow windows.
+- **Settings** (`workspaceSettings`): Auto run, Match lines, Show undefined, Word
+  wrap, Line numbers, and Font size. Preferences persist on this device in the
+  `jsgoapp.settings` local-storage entry. Show undefined reports expression
+  statements that evaluate to `undefined`; console calls are never reported twice.
+- **Format** (`codeFormatting`): the Format button and Shift+Alt+F format the draft
+  with Prettier's default style as one undoable edit. Prettier loads on first use.
+  A draft with a syntax error is left unchanged.
+- **Tabs** (`multipleTabs`): create JavaScript or TypeScript tabs with +JS and
+  +TS, double-click a name to rename it, and close a tab with ×. Closing a tab
+  that contains code asks for confirmation because its code is discarded. Up to
+  30 tabs are stored. Existing two-scratchpad drafts are migrated automatically.
+
+RunJS capabilities not yet implemented: npm package installation, environment
+variables, a snippet library, expandable object inspection, opening and saving
+files, Vim keybindings, loop protection, and the combined Browser + Node runtime.
 
 ## Workspace layout
 
@@ -93,8 +122,9 @@ architecture, RunJS reference, startup commands, and current limitations.
 
 ## Local draft recovery
 
-The web app stores both scratchpads and the selected language in a versioned
-`jsgoapp.drafts` local-storage entry after 500ms without edits. It also attempts
+The web app stores every scratchpad tab and the active tab in a versioned
+`jsgoapp.drafts` local-storage entry after 500ms without edits. Snapshots saved
+in the earlier one-draft-per-language format are read as two tabs. It also attempts
 to flush pending edits when the page is hidden or closed. The save message
 reports success or storage failures. Empty drafts are preserved.
 
@@ -103,8 +133,9 @@ It shows a recovery message and leaves stored data untouched until a user
 edits or changes language. Storage errors leave the current code in memory.
 
 This is browser recovery, not file export or cloud backup. Clearing browser
-data can remove drafts. Only drafts and language are persisted; console
-output and undo history are not. Multiple tabs use the same entry, so the
+data can remove drafts. Only tabs and the active tab are persisted; console
+output and undo history are not. Switching between tabs of the same language
+resets that tab's undo history. Multiple tabs use the same entry, so the
 last successful save wins; cross-tab merging is not implemented.
 
 ## Planned capabilities
@@ -177,6 +208,7 @@ pnpm format:check
 ```
 
 Automated tests cover shared project validation, feature policy, output capture,
+source-line tracking, source-map decoding, preferences, tab storage and migration,
 execution failures, output limits, timeout, cancellation, local draft recovery, and compiler snapshot
 cleanup. Editor typing and
 draft retention have also been checked in the browser.

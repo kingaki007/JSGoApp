@@ -30,8 +30,7 @@ checkbox switches to manual execution; Run bypasses the delay and Stop prevents
 rescheduling until another edit or context change. Empty drafts clear output.
 Errors and completed executions are not automatically retried.
 
-Expression-value inspection, package installation, and DOM rendering remain
-separate capabilities.
+Package installation and DOM rendering remain separate capabilities.
 
 ## One runner, two transports
 
@@ -64,6 +63,11 @@ Run sends JSON containing `id`, `environment`, and compiled `code` to
 {"type":"output","id":"run-id","line":"Hello"}
 {"type":"complete","result":{"id":"run-id"}}
 ```
+
+Output messages also carry `sourceLine`, the 1-based line of the executed code
+that produced the entry (0 when unknown). The browser worker, the HTTP stream,
+and Electron IPC all use this field, so line-aligned results behave the same in
+every host. A request may set `showUndefined: true` to report undefined results.
 
 Errors are reported in the completion result. Stop aborts the fetch connection;
 the service disposes its process when that connection closes. Environment and

@@ -26,16 +26,18 @@ function compilerFixture() {
 describe('editor compilation boundary', () => {
   it('passes JavaScript through without creating compiler resources', async () => {
     const fixture = compilerFixture();
-    expect(await compileSource(fixture.monaco, 'console.log(42);', 'javascript')).toBe(
-      'console.log(42);',
-    );
+    expect(await compileSource(fixture.monaco, 'console.log(42);', 'javascript')).toEqual({
+      code: 'console.log(42);',
+    });
     expect(fixture.createModel).not.toHaveBeenCalled();
   });
 
   it('compiles a source snapshot and disposes it after emission', async () => {
     const fixture = compilerFixture();
     const source = 'const value: number = 42;';
-    expect(await compileSource(fixture.monaco, source, 'typescript')).toBe('const value = 42;');
+    expect(await compileSource(fixture.monaco, source, 'typescript')).toEqual({
+      code: 'const value = 42;',
+    });
     expect(fixture.createModel.mock.calls[0].slice(0, 2)).toEqual([
       `${source}\nexport {};\n`,
       'typescript',
@@ -60,7 +62,40 @@ describe('editor compilation boundary', () => {
         'import path from "node:path"; console.log(path);',
         'typescript',
       ),
-    ).toBe('import path from "node:path";\nconsole.log(path);');
+    ).toEqual({ code: 'import path from "node:path";\nconsole.log(path);' });
+  });
+
+  it('strips the map reference and returns draft line origins from the emitted source map', async () => {
+    const fixture = compilerFixture();
+    fixture.worker.getEmitOutput.mockResolvedValue({
+      outputFiles: [
+        { name: 'snapshot.js.map', text: JSON.stringify({ version: 3, mappings: 'AAEA;AACA' }) },
+        {
+          name: 'snapshot.js',
+          text: 'const value = 1;\nvalue;\nexport {};\n//# sourceMappingURL=snapshot.js.map',
+        },
+      ],
+      emitSkipped: false,
+    });
+    expect(
+      await compileSource(
+        fixture.monaco,
+        'type T = 1;\n\nconst value: T = 1;\nvalue;',
+        'typescript',
+      ),
+    ).toEqual({ code: 'const value = 1;\nvalue;', lineMap: [3, 4] });
+  });
+
+  it('falls back to unchanged lines when the source map is malformed', async () => {
+    const fixture = compilerFixture();
+    fixture.worker.getEmitOutput.mockResolvedValue({
+      outputFiles: [
+        { name: 'snapshot.js.map', text: '{broken' },
+        { name: 'snapshot.js', text: 'value;' },
+      ],
+      emitSkipped: false,
+    });
+    expect(await compileSource(fixture.monaco, 'value;', 'typescript')).toEqual({ code: 'value;' });
   });
 
   it('reports syntax locations without emitting and releases the snapshot', async () => {

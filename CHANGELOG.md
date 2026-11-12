@@ -5,6 +5,30 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.9.0] - 2026-11-13
+
+- Add a RunJS-style workbench shared by the web and desktop apps. Each capability
+  has its own feature flag and is open on every plan; removing a flag's name from
+  a plan list paywalls it.
+- Match lines (`matchLines`): show each expression result and console call beside
+  the source line that produced it, scrolling with the editor. Source lines travel
+  through the browser worker, Node runner, HTTP stream, and Electron IPC; TypeScript
+  results map back to draft lines through the compiler source map.
+- Settings (`workspaceSettings`): Auto run, Match lines, Show undefined, Word wrap,
+  Line numbers, and Font size, saved on the device. Auto run is no longer session-only.
+- Format (`codeFormatting`): format the draft with Prettier from the Format button
+  or Shift+Alt+F. Monaco's built-in formatter is reserved, so formatting is
+  unavailable when this flag is off.
+- Tabs (`multipleTabs`): create, rename, and close JavaScript and TypeScript tabs.
+  Saved two-scratchpad drafts migrate to tabs. Switching between tabs of one
+  language resets that tab's undo history.
+- Console statements are no longer wrapped as expression results, so Show undefined
+  never reports them twice.
+- Record the small-PR, documentation, and changelog working agreements in AGENTS.md.
+- Add source-line, source-map, preference, tab-storage, and migration coverage,
+  bringing the automated suite to 96 tests; verify source lines in Electron's
+  Node utility process.
+
 ## [0.8.0] - 2026-11-11
 
 - Display top-level expression results automatically in Browser and Node execution,

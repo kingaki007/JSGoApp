@@ -10,10 +10,14 @@ the planned Electron renderer.
 
 - `CodeEditor`: controlled component accepting `value`, `language`, `path`,
   `theme`, `onChange`, optional `environment` (Browser by default), optional
-  `onReady`, and optional `loading` content.
+  `onReady`, optional `preferences` (font size, word wrap, line numbers),
+  optional `onViewportChange`, and optional `loading` content.
 - `CodeEditorHandle`: the ref exposes `compile(source, language)`, returning
-  JavaScript from a source snapshot. JavaScript passes through; TypeScript
-  uses the editor's language worker. Call after `onReady`.
+  `{ code, lineMap }` from a source snapshot. JavaScript passes through;
+  TypeScript uses the editor's language worker, and `lineMap` gives the draft
+  line of each emitted line. `format()` runs Format Document. `lineTop(line)`
+  and `lineHeight()` report on-screen line geometry so a host can align content
+  with editor lines. Call after `onReady`.
 - `EditorTheme`: `'light' | 'dark'`.
 
 The application owns its drafts, project paths, layout, theme preference,
@@ -28,6 +32,8 @@ package instead of accessing Monaco or this package's internal files.
 | `src/setup.ts`           | Local worker factory, loader, and compiler configuration          |
 | `src/theme.ts`           | Semantic CSS token mapping and typography                         |
 | `src/compile.ts`         | Source snapshots, syntax errors, TypeScript emission, and cleanup |
+| `src/sourceMap.ts`       | Source-map decoding into draft line origins                       |
+| `src/formatting.ts`      | Gated Prettier formatter for Format Document                      |
 | `src/environment.ts`     | Environment-specific compiler libraries and declarations          |
 | `src/nodeDefinitions.ts` | Lazy Node and fetch declaration bundle                            |
 | `tests/compile.test.ts`  | Compiler boundary and snapshot lifecycle checks                   |

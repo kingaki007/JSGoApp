@@ -6,9 +6,14 @@ import { executeCode, type ExecutionMessage } from './execution';
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 /** @param event Message containing a unique run ID and compiled JavaScript to execute. */
 scope.onmessage = async (event: MessageEvent<RunRequest>) => {
-  const { id, code } = event.data;
-  const result = await executeCode(id, code, (line) => {
-    scope.postMessage({ type: 'output', id, line } satisfies ExecutionMessage);
-  });
+  const { id, code, showUndefined } = event.data;
+  const result = await executeCode(
+    id,
+    code,
+    (line, sourceLine) => {
+      scope.postMessage({ type: 'output', id, line, sourceLine } satisfies ExecutionMessage);
+    },
+    showUndefined,
+  );
   scope.postMessage({ type: 'complete', result } satisfies ExecutionMessage);
 };

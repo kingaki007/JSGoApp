@@ -68,11 +68,12 @@ describe('editor subscription gates', () => {
     for (const service of services) {
       expect(service.setModeConfiguration).toHaveBeenCalledWith({
         diagnostics: true,
-        documentRangeFormattingEdits: true,
         definitions: false,
         completionItems: false,
         hovers: false,
         signatureHelp: false,
+        documentFormattingEdits: false,
+        documentRangeFormattingEdits: false,
       });
       expect(service.setCompilerOptions).not.toHaveBeenCalled();
     }

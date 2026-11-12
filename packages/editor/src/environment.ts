@@ -23,6 +23,7 @@ export async function configureEnvironment(monaco: Monaco, environment: Environm
       typeRoots: ['file:///node_modules/@types'],
       allowNonTsExtensions: true,
       noEmit: false,
+      sourceMap: true,
     });
     defaults.setExtraLibs(definitions);
   }

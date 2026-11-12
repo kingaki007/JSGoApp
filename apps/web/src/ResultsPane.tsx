@@ -1,7 +1,7 @@
 /** Keeps future Web/Split controls visible but disabled while console execution is active. */
 import { useId } from 'react';
 import type { Environment } from '@code-editor/core';
-import OutputPanel from './OutputPanel';
+import OutputPanel, { type LineAlignment } from './OutputPanel';
 import type { ExecutionView } from './useExecution';
 
 const resultViews = [
@@ -16,6 +16,8 @@ interface ResultsPaneProps {
   isRunning: boolean;
   /** Clears finished console output without changing drafts or the selected view. */
   onClear(): void;
+  /** Editor line geometry; present only while results are shown beside their source lines. */
+  alignment?: LineAlignment;
 }
 
 /**
@@ -24,8 +26,15 @@ interface ResultsPaneProps {
  * @param props.result Latest console output and execution state.
  * @param props.isRunning Whether execution is in progress.
  * @param props.onClear Clears console output without modifying the editor draft.
+ * @param props.alignment Optional editor geometry for line-aligned results.
  */
-export default function ResultsPane({ environment, result, isRunning, onClear }: ResultsPaneProps) {
+export default function ResultsPane({
+  environment,
+  result,
+  isRunning,
+  onClear,
+  alignment,
+}: ResultsPaneProps) {
   const groupId = useId();
   const view = 'console';
 
@@ -60,7 +69,12 @@ export default function ResultsPane({ environment, result, isRunning, onClear }:
       </header>
       <div className={`results-content results-${view}`}>
         <div className="console-slot">
-          <OutputPanel result={result} isRunning={isRunning} onClear={onClear} />
+          <OutputPanel
+            result={result}
+            isRunning={isRunning}
+            onClear={onClear}
+            alignment={alignment}
+          />
         </div>
       </div>
     </aside>
