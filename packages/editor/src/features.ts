@@ -18,7 +18,9 @@ export function configureLanguageFeatures(monaco: Monaco): void {
       mode.definitions === false &&
       mode.completionItems === false &&
       mode.hovers === false &&
-      mode.signatureHelp === false
+      mode.signatureHelp === false &&
+      mode.documentFormattingEdits === false &&
+      mode.documentRangeFormattingEdits === false
     )
       continue;
     defaults.setModeConfiguration({
@@ -27,6 +29,9 @@ export function configureLanguageFeatures(monaco: Monaco): void {
       completionItems: false,
       hovers: false,
       signatureHelp: false,
+      // Formatting is provided by the gated Prettier integration instead.
+      documentFormattingEdits: false,
+      documentRangeFormattingEdits: false,
     });
   }
 }

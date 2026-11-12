@@ -3,6 +3,10 @@
 # Repository working agreements
 
 - Build one small capability at a time. Do not expand the active feature without a clear reason.
+- Deliver work as small pull requests, one capability each; put shared groundwork
+  in its own pull request first. Propose the split before building a larger request.
+- Document every change in the pull request that makes it: update the README,
+  `docs/`, and package READMEs it affects, and add its `CHANGELOG.md` entry.
 - Keep changes uncommitted until the owner explicitly requests a commit and push.
 - Before every new commit, update `CHANGELOG.md` and increment the synchronized root/app/package version.
   Use `pnpm version:next patch "Summary"` for fixes, tests, docs, and refactors;

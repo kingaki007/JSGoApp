@@ -1,19 +1,26 @@
 /** Connects Node execution to either the narrow Electron bridge or the local web execution service. */
-import type { RunRequest, RunResult, RuntimeAdapter } from '@code-editor/core';
+import {
+  normalizeSourceLine,
+  type OutputListener,
+  type RunRequest,
+  type RunResult,
+  type RuntimeAdapter,
+} from '@code-editor/core';
 
 /** Owns one Node transport and cancels its process when execution is stopped or replaced. */
 export class NodeRuntime implements RuntimeAdapter {
   private controller?: AbortController;
   private unsubscribe?: () => void;
   /** @param request Compiled Node source. @param onOutput Receives streamed console text. */
-  async run(request: RunRequest, onOutput?: (line: string) => void): Promise<RunResult> {
+  async run(request: RunRequest, onOutput?: OutputListener): Promise<RunResult> {
     this.stop();
     if (request.environment !== 'node') throw new Error('Expected the Node.js environment.');
     const controller = new AbortController();
     this.controller = controller;
     if (window.desktop) {
       const unsubscribe = window.desktop.onOutput((message) => {
-        if (!controller.signal.aborted && message.id === request.id) onOutput?.(message.line);
+        if (!controller.signal.aborted && message.id === request.id)
+          onOutput?.(message.line, normalizeSourceLine(message.sourceLine));
       });
       this.unsubscribe = unsubscribe;
       try {
@@ -36,6 +43,7 @@ export class NodeRuntime implements RuntimeAdapter {
       const decoder = new TextDecoder();
       let buffer = '';
       const lines: string[] = [];
+      const sourceLines: number[] = [];
       while (true) {
         const chunk = await reader.read();
         if (chunk.done) break;
@@ -52,12 +60,15 @@ export class NodeRuntime implements RuntimeAdapter {
             lines.length < 500
           ) {
             const line = message.line.slice(0, 10_000);
+            const sourceLine = normalizeSourceLine(message.sourceLine);
             lines.push(line);
-            onOutput?.(line);
+            sourceLines.push(sourceLine);
+            onOutput?.(line, sourceLine);
           } else if (message.type === 'complete' && message.result?.id === request.id) {
             return {
               id: request.id,
               lines,
+              sourceLines,
               ...(typeof message.result.error === 'string'
                 ? { error: message.result.error.slice(0, 10_000) }
                 : {}),

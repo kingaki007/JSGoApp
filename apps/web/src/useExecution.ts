@@ -6,17 +6,39 @@ import { BrowserRuntime } from './runtime';
 import { NodeRuntime } from './nodeRuntime';
 
 export interface ExecutionView extends RunResult {
+  /** Draft that produced this output; output is hidden once another draft is shown. */
+  documentId: string;
   language: Language;
+  /** Draft line for each entry in lines; 0 when the origin is unknown. */
+  sourceLines: number[];
   status: 'running' | 'complete' | 'error' | 'stopped';
 }
 
 /**
+ * Translates a line of executed JavaScript to the draft line the user sees.
+ * @param line 1-based executed-code line reported by a runtime; 0 or undefined when unknown.
+ * @param lineMap Compiler line origins, absent when executed and draft lines are identical.
+ */
+export function toDraftLine(line: number | undefined, lineMap?: number[]): number {
+  if (!line) return 0;
+  return lineMap ? (lineMap[line - 1] ?? 0) : line;
+}
+
+/**
  * Keeps run state separate from the editor and ignores results from canceled runs.
- * @param language Active scratchpad language; changing it cancels the current run.
+ * @param documentId Active draft; changing it cancels the current run and hides its output.
+ * @param language Language of the active draft.
  * @param source Current source code captured when Run is requested.
  * @param environment Browser worker or actual Node execution on the host.
+ * @param showUndefined Whether undefined expression results are reported.
  */
-export function useExecution(language: Language, source: string, environment: Environment) {
+export function useExecution(
+  documentId: string,
+  language: Language,
+  source: string,
+  environment: Environment,
+  showUndefined = false,
+) {
   const [browser] = useState(() => new BrowserRuntime());
   const [node] = useState(() => new NodeRuntime());
   const runtime = environment === 'node' ? node : browser;
@@ -31,7 +53,7 @@ export function useExecution(language: Language, source: string, environment: En
       requestId.current = null;
       runtime.stop();
     };
-  }, [language, runtime]);
+  }, [documentId, language, runtime]);
 
   /**
    * Compiles a source snapshot and starts one run in the selected environment.
@@ -43,24 +65,43 @@ export function useExecution(language: Language, source: string, environment: En
       const id = crypto.randomUUID();
       requestId.current = id;
       setRunning(true);
-      setResult({ id, language, lines: [], status: 'running' });
+      setResult({ id, documentId, language, lines: [], sourceLines: [], status: 'running' });
       try {
-        const code = await editor.compile(source, language);
+        const { code, lineMap } = await editor.compile(source, language);
         if (requestId.current !== id) return;
-        const output = await runtime.run({ id, code, environment }, (line) => {
-          if (requestId.current !== id) return;
-          setResult((current) =>
-            current?.id === id ? { ...current, lines: [...current.lines, line] } : current,
-          );
+        const output = await runtime.run(
+          { id, code, environment, ...(showUndefined ? { showUndefined } : {}) },
+          (line, sourceLine) => {
+            if (requestId.current !== id) return;
+            setResult((current) =>
+              current?.id === id
+                ? {
+                    ...current,
+                    lines: [...current.lines, line],
+                    sourceLines: [...current.sourceLines, toDraftLine(sourceLine, lineMap)],
+                  }
+                : current,
+            );
+          },
+        );
+        if (requestId.current !== id) return;
+        setResult({
+          ...output,
+          sourceLines: output.lines.map((_line, index) =>
+            toDraftLine(output.sourceLines?.[index], lineMap),
+          ),
+          documentId,
+          language,
+          status: output.error ? 'error' : 'complete',
         });
-        if (requestId.current !== id) return;
-        setResult({ ...output, language, status: output.error ? 'error' : 'complete' });
       } catch (error) {
         if (requestId.current !== id) return;
         setResult({
           id,
+          documentId,
           language,
           lines: [],
+          sourceLines: [],
           error: error instanceof Error ? error.message : String(error),
           status: 'error',
         });
@@ -71,7 +112,7 @@ export function useExecution(language: Language, source: string, environment: En
         }
       }
     },
-    [environment, language, runtime, source],
+    [documentId, environment, language, runtime, source, showUndefined],
   );
 
   /** Cancels compilation results and terminates an active worker while keeping existing output. */
@@ -95,7 +136,7 @@ export function useExecution(language: Language, source: string, environment: En
   }, []);
 
   return {
-    result: result?.language === language ? result : null,
+    result: result?.documentId === documentId ? result : null,
     isRunning,
     run,
     stop,

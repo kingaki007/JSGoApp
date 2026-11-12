@@ -40,6 +40,7 @@ describe('execution lifecycle', () => {
     expect(await pending).toEqual({
       id: 'timeout',
       lines: ['before loop'],
+      sourceLines: [0],
       error: 'Execution exceeded 5 seconds.',
     });
     expect(worker.terminate).toHaveBeenCalledOnce();
@@ -51,7 +52,12 @@ describe('execution lifecycle', () => {
     const worker = TestWorker.instances[0];
     worker.send({ type: 'output', id: 'stop', line: 'partial' });
     runtime.stop();
-    expect(await pending).toEqual({ id: 'stop', lines: ['partial'], error: 'Execution stopped.' });
+    expect(await pending).toEqual({
+      id: 'stop',
+      lines: ['partial'],
+      sourceLines: [0],
+      error: 'Execution stopped.',
+    });
     expect(worker.terminate).toHaveBeenCalledOnce();
     expect(vi.getTimerCount()).toBe(0);
   });

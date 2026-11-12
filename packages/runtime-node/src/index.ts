@@ -1,7 +1,12 @@
 /** Shares process lifecycle, bounded output, validation, and cancellation across web and desktop hosts. */
 import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import type { RunRequest, RunResult } from '@code-editor/core';
+import {
+  normalizeSourceLine,
+  type OutputListener,
+  type RunRequest,
+  type RunResult,
+} from '@code-editor/core';
 
 export interface RunnerProcess {
   /** @param request Validated execution payload sent to the child. */
@@ -48,7 +53,8 @@ export function validRequest(value: unknown): value is RunRequest {
     typeof request.id === 'string' &&
     /^[\w-]{1,100}$/.test(request.id) &&
     typeof request.code === 'string' &&
-    request.code.length <= 100_000
+    request.code.length <= 100_000 &&
+    (request.showUndefined === undefined || typeof request.showUndefined === 'boolean')
   );
 }
 
@@ -87,12 +93,13 @@ export class NodeRuntime {
     this.#timeout = timeoutMs;
   }
   /** @param request Validated Node source. @param onOutput Receives output while the process is running. */
-  async run(request: RunRequest, onOutput?: (line: string) => void): Promise<RunResult> {
+  async run(request: RunRequest, onOutput?: OutputListener): Promise<RunResult> {
     this.stop();
     if (!validRequest(request))
       throw new Error('Invalid Node execution request (maximum source: 100,000 characters).');
     return new Promise<RunResult>((resolve) => {
       const lines: string[] = [];
+      const sourceLines: number[] = [];
       let size = 0;
       let done = false;
       let child: RunnerProcess | undefined;
@@ -103,7 +110,7 @@ export class NodeRuntime {
         clearTimeout(timer);
         this.#cancel = undefined;
         child?.kill();
-        resolve({ id: request.id, lines, ...(error ? { error } : {}) });
+        resolve({ id: request.id, lines, sourceLines, ...(error ? { error } : {}) });
       };
       const timer = setTimeout(() => finish('Execution exceeded 5 seconds.'), this.#timeout);
       this.#cancel = () => finish('Execution stopped.');
@@ -122,9 +129,11 @@ export class NodeRuntime {
             size < 100_000
           ) {
             const line = data.line.slice(0, Math.min(10_000, 100_000 - size));
+            const sourceLine = normalizeSourceLine(data.sourceLine);
             lines.push(line);
+            sourceLines.push(sourceLine);
             size += line.length;
-            onOutput?.(line);
+            onOutput?.(line, sourceLine);
           } else if (data.type === 'complete') {
             finish(typeof data.error === 'string' ? data.error.slice(0, 10_000) : undefined);
           }

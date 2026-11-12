@@ -47,7 +47,12 @@ it('streams output and completion from the shared Node runner', async () => {
     .trim()
     .split('\n')
     .map((line) => JSON.parse(line));
-  expect(messages[0]).toEqual({ type: 'output', id: 'web-run', line: 'object undefined' });
+  expect(messages[0]).toEqual({
+    type: 'output',
+    id: 'web-run',
+    line: 'object undefined',
+    sourceLine: 1,
+  });
   expect(messages[1].result.error).toBeUndefined();
 });
 

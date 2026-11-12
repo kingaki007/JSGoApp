@@ -1,5 +1,11 @@
 /** Implements the browser execution lifecycle with disposable workers, streamed logs, and time limits. */
-import type { RunRequest, RunResult, RuntimeAdapter } from '@code-editor/core';
+import {
+  normalizeSourceLine,
+  type OutputListener,
+  type RunRequest,
+  type RunResult,
+  type RuntimeAdapter,
+} from '@code-editor/core';
 import type { ExecutionMessage } from './execution';
 
 /** Keeps CPU-bound snippets off the UI thread; this adapter does not provide DOM or Node APIs. */
@@ -10,15 +16,16 @@ export class BrowserRuntime implements RuntimeAdapter {
   /**
    * Replaces any previous execution and resolves when the new run completes, fails, or is stopped.
    * @param request Unique run ID, executable JavaScript, and target environment.
-   * @param onOutput Optional callback receiving each captured console line as it arrives.
+   * @param onOutput Optional callback receiving each captured line and its code line as it arrives.
    */
-  run(request: RunRequest, onOutput?: (line: string) => void): Promise<RunResult> {
+  run(request: RunRequest, onOutput?: OutputListener): Promise<RunResult> {
     this.stop();
     if (request.environment !== 'browser') {
       return Promise.reject(new Error('Node execution is not connected yet.'));
     }
     return new Promise((resolve) => {
       const lines: string[] = [];
+      const sourceLines: number[] = [];
       let finished = false;
       const worker = new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' });
       this.worker = worker;
@@ -39,6 +46,7 @@ export class BrowserRuntime implements RuntimeAdapter {
           finish({
             id: request.id,
             lines: [...lines],
+            sourceLines: [...sourceLines],
             error: 'Execution exceeded 5 seconds.',
           }),
         5000,
@@ -47,6 +55,7 @@ export class BrowserRuntime implements RuntimeAdapter {
         finish({
           id: request.id,
           lines: [...lines],
+          sourceLines: [...sourceLines],
           error: 'Execution stopped.',
         });
       worker.onmessage = (event: MessageEvent<ExecutionMessage>) => {
@@ -54,14 +63,21 @@ export class BrowserRuntime implements RuntimeAdapter {
         const message = event.data;
         if (message.type === 'output' && message.id === request.id) {
           if (lines.length >= 500) return;
+          const sourceLine = normalizeSourceLine(message.sourceLine);
           lines.push(message.line);
-          onOutput?.(message.line);
+          sourceLines.push(sourceLine);
+          onOutput?.(message.line, sourceLine);
         } else if (message.type === 'complete' && message.result.id === request.id) {
           finish(message.result);
         }
       };
       worker.onerror = (event) =>
-        finish({ id: request.id, lines: [...lines], error: event.message });
+        finish({
+          id: request.id,
+          lines: [...lines],
+          sourceLines: [...sourceLines],
+          error: event.message,
+        });
       worker.postMessage(request);
     });
   }

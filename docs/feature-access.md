@@ -11,6 +11,14 @@ required. This change provides feature gates, without adding billing or checkout
 | `definitionNavigation` | Built-in definition navigation              | Off  | Off  | On  |
 | `autocomplete`         | Autocomplete                                | Off  | On   | On  |
 | `hoverDocumentation`   | Function signatures and hover documentation | Off  | On   | On  |
+| `matchLines`           | Results aligned with source lines           | On   | On   | On  |
+| `workspaceSettings`    | Editor and execution preferences            | On   | On   | On  |
+| `codeFormatting`       | Code formatting                             | On   | On   | On  |
+| `multipleTabs`         | Multiple scratchpad tabs                    | On   | On   | On  |
+
+The four workbench features are implemented and open on every plan. To put one
+behind the paywall, remove its name from `featurePolicy.plans.free` (and from
+`.plus` to make it Max-only). No other code changes are needed.
 
 ## Changing access
 
@@ -74,6 +82,17 @@ The same resolver is usable by a future backend, which must obtain subscription
 data from its trusted store and authorize protected API operations there. Browser
 and desktop feature gates control product behavior; client code alone cannot
 secure a paid service against a modified client.
+
+## Workbench behavior
+
+| Feature             | With access                                                                                 | Without access                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `matchLines`        | Results appear beside the line that produced them; a Match lines preference can turn it off | Results appear as a list in execution order                              |
+| `workspaceSettings` | Settings popover; preferences persist in the `jsgoapp.settings` local-storage entry         | Defaults apply; the Auto run checkbox still works for the session        |
+| `codeFormatting`    | Format button and Shift+Alt+F format the draft with Prettier                                | No Format button; Format Document has no formatter                       |
+| `multipleTabs`      | Create, rename, and close scratchpad tabs                                                   | Existing tabs remain selectable and editable; no tab management controls |
+
+Revoking `multipleTabs` never hides or deletes tabs a user already created.
 
 ## Editor behavior
 

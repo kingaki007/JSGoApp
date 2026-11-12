@@ -45,11 +45,15 @@ export function applyEditorTheme(monaco: Monaco, theme: EditorTheme) {
   monaco.editor.setTheme('jsgoapp');
 }
 
-/** Resolves the host's rem-based font-size and line-height tokens into Monaco pixel settings. */
-export function readEditorTypography() {
+/**
+ * Resolves the host's rem-based font-size and line-height tokens into Monaco pixel settings.
+ * @param preferredSize Optional user-selected size in pixels; the token size applies otherwise.
+ */
+export function readEditorTypography(preferredSize?: number) {
   const styles = getComputedStyle(document.documentElement);
   // Font-size primitives use rem; resolve them against the actual root size.
   const fontSize =
+    preferredSize ??
     parseFloat(styles.fontSize) * parseFloat(styles.getPropertyValue('--font-size-body'));
   return {
     fontFamily: styles.getPropertyValue('--font-family-code').trim(),

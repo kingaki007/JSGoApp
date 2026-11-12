@@ -198,6 +198,9 @@ importers:
       monaco-editor:
         specifier: 0.57.0
         version: 0.57.0
+      prettier:
+        specifier: 3.9.10
+        version: 3.9.10
     devDependencies:
       '@types/node':
         specifier: ^22.0.0

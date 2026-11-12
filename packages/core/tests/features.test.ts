@@ -23,7 +23,7 @@ function activeAccount(tier: SubscriptionTier): AccessSubject {
 
 describe('subscription feature policy', () => {
   it('keeps all three features active for anonymous users by default', () => {
-    expect(resolveFeatureAccess()).toEqual({
+    expect(resolveFeatureAccess()).toMatchObject({
       definitionNavigation: true,
       autocomplete: true,
       hoverDocumentation: true,
@@ -37,7 +37,7 @@ describe('subscription feature policy', () => {
   ] as const)(
     'grants the configured %s plan',
     (tier, definitionNavigation, autocomplete, hoverDocumentation) => {
-      expect(resolveFeatureAccess(activeAccount(tier))).toEqual({
+      expect(resolveFeatureAccess(activeAccount(tier))).toMatchObject({
         definitionNavigation,
         autocomplete,
         hoverDocumentation,
@@ -50,7 +50,7 @@ describe('subscription feature policy', () => {
     policy.plans.free = ['autocomplete'];
     policy.plans.plus = ['definitionNavigation'];
     expect(resolveFeatureAccess(activeAccount('free'), policy).autocomplete).toBe(true);
-    expect(resolveFeatureAccess(activeAccount('plus'), policy)).toEqual({
+    expect(resolveFeatureAccess(activeAccount('plus'), policy)).toMatchObject({
       definitionNavigation: true,
       autocomplete: false,
       hoverDocumentation: false,
@@ -62,12 +62,29 @@ describe('subscription feature policy', () => {
     const policy = structuredClone(featurePolicy);
     policy.paywallEnabled = false;
     policy.features.autocomplete.enabled = false;
-    expect(resolveFeatureAccess(activeAccount('free'), policy)).toEqual({
+    expect(resolveFeatureAccess(activeAccount('free'), policy)).toMatchObject({
       definitionNavigation: true,
       autocomplete: false,
       hoverDocumentation: true,
     });
     expect(resolveFeatureAccess(activeAccount('max'), policy).autocomplete).toBe(false);
+  });
+
+  it('opens the workbench features on every plan and paywalls one by removing its name', () => {
+    const workbench = [
+      'matchLines',
+      'workspaceSettings',
+      'codeFormatting',
+      'multipleTabs',
+    ] as const;
+    for (const tier of ['free', 'plus', 'max'] as const)
+      for (const feature of workbench)
+        expect(resolveFeatureAccess(activeAccount(tier))[feature]).toBe(true);
+    const policy = structuredClone(featurePolicy);
+    policy.plans.free = policy.plans.free.filter((feature) => feature !== 'multipleTabs');
+    expect(resolveFeatureAccess(activeAccount('free'), policy).multipleTabs).toBe(false);
+    expect(resolveFeatureAccess(activeAccount('free'), policy).matchLines).toBe(true);
+    expect(resolveFeatureAccess(activeAccount('plus'), policy).multipleTabs).toBe(true);
   });
 
   it('allows changing anonymous access without changing authenticated account grants', () => {

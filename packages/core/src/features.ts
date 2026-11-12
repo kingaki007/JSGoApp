@@ -5,6 +5,10 @@ export const featureCatalog = {
   definitionNavigation: { label: 'Built-in definition navigation', enabled: true },
   autocomplete: { label: 'Autocomplete', enabled: true },
   hoverDocumentation: { label: 'Function signatures and hover documentation', enabled: true },
+  matchLines: { label: 'Results aligned with source lines', enabled: true },
+  workspaceSettings: { label: 'Editor and execution preferences', enabled: true },
+  codeFormatting: { label: 'Code formatting', enabled: true },
+  multipleTabs: { label: 'Multiple scratchpad tabs', enabled: true },
 };
 export type Feature = keyof typeof featureCatalog;
 export type FeatureAccess = Readonly<Record<Feature, boolean>>;
@@ -25,9 +29,25 @@ export const featurePolicy: FeaturePolicy = {
   anonymousTier: 'max',
   features: featureCatalog,
   plans: {
-    free: [],
-    plus: ['autocomplete', 'hoverDocumentation'],
-    max: ['definitionNavigation', 'autocomplete', 'hoverDocumentation'],
+    // Workbench features are open on every plan; remove a name from a list to paywall it.
+    free: ['matchLines', 'workspaceSettings', 'codeFormatting', 'multipleTabs'],
+    plus: [
+      'autocomplete',
+      'hoverDocumentation',
+      'matchLines',
+      'workspaceSettings',
+      'codeFormatting',
+      'multipleTabs',
+    ],
+    max: [
+      'definitionNavigation',
+      'autocomplete',
+      'hoverDocumentation',
+      'matchLines',
+      'workspaceSettings',
+      'codeFormatting',
+      'multipleTabs',
+    ],
   },
 };
 

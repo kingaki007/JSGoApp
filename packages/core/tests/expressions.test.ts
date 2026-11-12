@@ -47,6 +47,21 @@ describe('automatic expression results', () => {
     expect(await evaluate('await Promise.resolve(12); undefined;')).toEqual([12]);
   });
 
+  it('passes each expression its first source line and tags console calls with theirs', () => {
+    const { code, captureName } = captureExpressions(
+      'const total = 1;\ntotal +\n  1;\nfunction log() {\n  console.log(total);\n}\nconsole.warn("direct");',
+    );
+    expect(code).toContain(`${captureName}(total +\n  1, 2);`);
+    expect(code).toContain(`${captureName}.at(5).log(total);`);
+    // A console statement reports its own output and is not wrapped as an expression result.
+    expect(code).toContain(`\n${captureName}.at(7).warn("direct");`);
+  });
+
+  it('keeps wrapper and console edits ordered when an expression starts with a console call', async () => {
+    const { code, captureName } = captureExpressions('console.log("a"), 5;');
+    expect(code).toBe(`${captureName}(${captureName}.at(1).log("a"), 5, 1);`);
+  });
+
   it('keeps imports intact for the Node compilation stage and rejects invalid syntax', () => {
     expect(captureExpressions('import path from "node:path"; path.sep;').code).toContain(
       'import path from "node:path";',

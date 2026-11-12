@@ -1,5 +1,5 @@
 /** Composes the explorer, shared editor, execution controls, draft recovery, and results pane. */
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CodeEditor, type CodeEditorHandle } from '@code-editor/editor';
 import {
   languages,
@@ -13,41 +13,92 @@ import EnvironmentPicker from './EnvironmentPicker';
 import { useTheme } from './theme';
 import ThemeSwitcher from './ThemeSwitcher';
 import ResultsPane from './ResultsPane';
+import SettingsPanel from './SettingsPanel';
+import TabList from './TabList';
+import type { LineAlignment } from './OutputPanel';
+import type { ScratchTab } from './draftStorage';
 import { useExecution } from './useExecution';
 import { useDrafts } from './useDrafts';
 import { useAutoRun } from './useAutoRun';
+import { useSettings } from './settings';
 import './styles/workspace.css';
 
-const initialDrafts: Record<Language, string> = {
-  javascript:
-    '// Your JavaScript scratchpad\nconst greeting = "Hello from JSGoApp";\nconsole.log(greeting);\n',
-  typescript:
-    '// Your TypeScript scratchpad\nconst message: string = "Hello from JSGoApp";\nconsole.log(message);\n',
-};
+const initialTabs: ScratchTab[] = [
+  {
+    id: 'javascript',
+    name: 'scratch.js',
+    language: 'javascript',
+    code: '// Your JavaScript scratchpad\nconst greeting = "Hello from JSGoApp";\nconsole.log(greeting);\n',
+  },
+  {
+    id: 'typescript',
+    name: 'scratch.ts',
+    language: 'typescript',
+    code: '// Your TypeScript scratchpad\nconst message: string = "Hello from JSGoApp";\nconsole.log(message);\n',
+  },
+];
+
+// Matches the workspace.css breakpoint below which the editor and results are stacked.
+const sideBySideQuery = '(min-width: 1001px)';
+
+/** Reports whether the editor and results are side by side, where aligning lines is meaningful. */
+function useSideBySide(): boolean {
+  const [matches, setMatches] = useState(() => window.matchMedia(sideBySideQuery).matches);
+  useEffect(() => {
+    const query = window.matchMedia(sideBySideQuery);
+    /** Follows window resizing across the stacked-layout breakpoint. */
+    const update = () => setMatches(query.matches);
+    query.addEventListener('change', update);
+    update();
+    return () => query.removeEventListener('change', update);
+  }, []);
+  return matches;
+}
 
 /** @param props Optional API-owned account subject; anonymous visitors currently receive Max access. */
 export default function App({ subject = anonymousSubject }: { subject?: AccessSubject }) {
   const features = resolveFeatureAccess(subject);
-  const { language, drafts, setLanguage, updateDraft, saveState, saveMessage } =
-    useDrafts(initialDrafts);
+  const drafts = useDrafts(initialTabs, 'typescript');
+  const { active } = drafts;
+  const language: Language = active.language;
+  const { settings, update: updateSettings } = useSettings(features.workspaceSettings);
   const [ready, setReady] = useState(false);
   const { preference, setPreference, resolved } = useTheme();
   const editorRef = useRef<CodeEditorHandle | null>(null);
   const [environment, setEnvironment] = useState<Environment>('browser');
-  const execution = useExecution(language, drafts[language], environment);
-  const [autoRunEnabled, setAutoRunEnabled] = useState(true);
+  const execution = useExecution(
+    active.id,
+    language,
+    active.code,
+    environment,
+    settings.showUndefined,
+  );
   /** Runs the latest editor snapshot without coupling debounce timers to output-state renders. */
   const runCode = useCallback(() => {
     void execution.run(editorRef.current);
   }, [execution.run]);
   const autoRun = useAutoRun({
-    source: drafts[language],
+    source: active.code,
     ready,
-    enabled: autoRunEnabled,
+    enabled: settings.autoRun,
     run: runCode,
     cancelExecution: execution.cancelActive,
     clearOutput: execution.clear,
   });
+
+  const sideBySide = useSideBySide();
+  const matchLines = features.matchLines && settings.matchLines && sideBySide && ready;
+  // Scrolling and layout changes move editor lines, so aligned results are re-rendered with them.
+  const [, setViewportRevision] = useState(0);
+  const onViewportChange = useCallback(() => setViewportRevision((revision) => revision + 1), []);
+  const lineHeight = matchLines ? editorRef.current?.lineHeight() : null;
+  const alignment: LineAlignment | undefined = lineHeight
+    ? {
+        lineTop: (line) => editorRef.current?.lineTop(line) ?? null,
+        lineHeight,
+        fontSize: settings.fontSize,
+      }
+    : undefined;
 
   return (
     <div className="workspace">
@@ -65,36 +116,44 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
             <span className="status-dot ready" />
             {environment === 'node' ? 'Node.js environment' : 'Browser environment'}
           </span>
+          {features.workspaceSettings && (
+            <SettingsPanel
+              settings={settings}
+              onChange={updateSettings}
+              matchLinesAvailable={features.matchLines}
+            />
+          )}
           <ThemeSwitcher value={preference} onChange={setPreference} />
         </div>
       </header>
 
       <aside className="sidebar" aria-label="Workspace">
         <p className="section-label">EXPLORER</p>
-        <div className="explorer-root">
-          <span aria-hidden="true">⌄</span> SCRATCHPADS
-        </div>
-        <nav aria-label="Select language">
-          {(Object.keys(languages) as Language[]).map((id) => (
-            <button
-              key={id}
-              type="button"
-              className={`file-button ${language === id ? 'selected' : ''}`}
-              aria-pressed={language === id}
-              onClick={() => {
-                if (id !== language) {
-                  autoRun.stop();
-                  setLanguage(id);
-                }
-              }}
-            >
-              <span className={`language-badge ${id}`} aria-hidden="true">
-                {id === 'typescript' ? 'TS' : 'JS'}
-              </span>
-              scratch.{languages[id].extension}
-            </button>
-          ))}
-        </nav>
+        <TabList
+          tabs={drafts.tabs}
+          activeId={active.id}
+          editable={features.multipleTabs}
+          canAdd={drafts.canAddTab}
+          onSelect={(id) => {
+            if (id !== active.id) {
+              autoRun.stop();
+              drafts.selectTab(id);
+            }
+          }}
+          onAdd={(next) => {
+            autoRun.stop();
+            drafts.addTab(next);
+          }}
+          onClose={(id) => {
+            const tab = drafts.tabs.find((candidate) => candidate.id === id);
+            // Closing discards the tab's code, so non-empty tabs need an explicit confirmation.
+            if (tab?.code.trim() && !window.confirm(`Close ${tab.name} and discard its code?`))
+              return;
+            if (id === active.id) autoRun.stop();
+            drafts.closeTab(id);
+          }}
+          onRename={drafts.renameTab}
+        />
         <div className="sidebar-note">
           <span className="section-label">START SMALL. BUILD ANYTHING.</span>
           <p>A little space for your next idea.</p>
@@ -108,10 +167,21 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
               <span className={`language-badge ${language}`} aria-hidden="true">
                 {language === 'typescript' ? 'TS' : 'JS'}
               </span>{' '}
-              scratch.{languages[language].extension}
+              {active.name}
             </h1>
           </div>
           <div className="run-actions">
+            {features.codeFormatting && (
+              <button
+                type="button"
+                className="run-button stop-button"
+                disabled={!ready}
+                title="Format with Prettier (Shift+Alt+F)"
+                onClick={() => void editorRef.current?.format()}
+              >
+                Format
+              </button>
+            )}
             <EnvironmentPicker
               value={environment}
               onChange={(next) => {
@@ -138,12 +208,12 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
           </div>
         </div>
         <div className="editor-breadcrumb">
-          Scratchpads <span aria-hidden="true">/</span> scratch.{languages[language].extension}
+          Scratchpads <span aria-hidden="true">/</span> {active.name}
           <label className="auto-run-toggle" title="Run 2 seconds after typing stops">
             <input
               type="checkbox"
-              checked={autoRunEnabled}
-              onChange={(event) => setAutoRunEnabled(event.target.checked)}
+              checked={settings.autoRun}
+              onChange={(event) => updateSettings({ autoRun: event.target.checked })}
             />
             <span>Auto run</span>
             <span className="auto-run-delay">2s</span>
@@ -156,24 +226,26 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
             theme={resolved}
             language={language}
             environment={environment}
-            path={`file:///scratch.${languages[language].extension}`}
-            value={drafts[language]}
-            onChange={(value) => updateDraft(language, value)}
+            path={`file:///${active.id}.${languages[language].extension}`}
+            value={active.code}
+            preferences={settings}
+            onChange={(value) => drafts.updateCode(active.id, value)}
             onReady={() => setReady(true)}
+            onViewportChange={matchLines ? onViewportChange : undefined}
             loading={<p className="editor-loading">Loading editor…</p>}
           />
         </div>
         <div className="draft-notice" role="note">
           <span
-            className={`draft-save-state ${saveState === 'error' ? 'draft-save-error' : ''}`}
+            className={`draft-save-state ${drafts.saveState === 'error' ? 'draft-save-error' : ''}`}
             role="status"
           >
-            {saveMessage}
+            {drafts.saveMessage}
           </span>
           <span className="auto-run-status" role="status">
             {autoRun.isPending
               ? 'Waiting for typing to pause…'
-              : autoRunEnabled
+              : settings.autoRun
                 ? 'Auto run after 2 seconds idle'
                 : 'Manual run'}
           </span>
@@ -192,6 +264,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
         result={execution.result}
         isRunning={execution.isRunning}
         onClear={execution.clear}
+        alignment={alignment}
       />
 
       <footer className="status-bar">
