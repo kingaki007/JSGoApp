@@ -9,3 +9,5 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
+# Local RunJS comparison checklist; a working note, not project documentation.
+docs/runjs-checklist.md
