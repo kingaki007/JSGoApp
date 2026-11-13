@@ -5,6 +5,23 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.12.0] - 2026-11-13
+
+- Enable the Web and Split result views in the Browser environment (`webView`, open on
+  every plan). Web shows the page the code renders; Split shows it above the console.
+  Node.js has no page, so the switch is hidden there.
+- Keep the page live after its run while the Web view shows it, so rendered content,
+  event handlers, and animation loops keep working until the next run, Stop, or a change
+  of tab, environment, or view. Changing to or from a view with the page starts a fresh
+  run when Auto run is on.
+- Change the in-page loop limit from an absolute deadline to five seconds of uninterrupted
+  work, so long-lived animations are not stopped while runaway loops still are.
+- Wait for the new page to report its window size before running, so code that sizes a
+  canvas from `window.innerWidth` works on its first line.
+- Apply Match lines to the Console view only.
+- Cover view selection, page keep-alive, and the per-task limit, bringing the suite to
+  124 tests.
+
 ## [0.11.0] - 2026-11-13
 
 - Run Browser code in a fresh, hidden, sandboxed page with a real `document` and

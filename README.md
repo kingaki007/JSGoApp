@@ -18,8 +18,7 @@ TypeScript is compiled using Monaco's bundled TypeScript language worker.
 JavaScript and TypeScript drafts and the selected language are automatically
 saved on this device and restored after a refresh, without an account.
 
-An initial Electron shell reuses the web UI and shared Node runner. Visible previews
-of the Browser page, npm imports, project file saving, cloud accounts, and desktop installers are not
+An initial Electron shell reuses the web UI and shared Node runner. npm imports, project file saving, cloud accounts, and desktop installers are not
 connected yet. Await asynchronous work explicitly; the runner ends when the
 top-level async function completes. Type annotations
 are stripped before running; semantic type errors remain visible in Monaco
@@ -27,9 +26,10 @@ and do not block execution. Node supports built-in module imports; browser modul
 imports and third-party package installation remain deferred.
 
 This is a local scratchpad for code you trust. Browser snippets run in a sandboxed
-page with an opaque origin, so they cannot read the app's storage or DOM, but the
-page shares the app's thread: heavy synchronous work makes the app unresponsive
-until it finishes or the five-second limit stops it. A separate execution origin
+page with an opaque origin, so they cannot read the app's storage or DOM. The
+browser decides whether that page gets its own process; where it shares the app's
+thread, heavy synchronous work makes the app unresponsive until it finishes or
+the five-second limit stops it. A separate execution origin
 and stricter isolation are required before running untrusted shared projects or
 adding accounts.
 
@@ -104,6 +104,15 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   per value; larger values state how many entries are not shown. Strings and
   other primitives stay plain text.
 
+- **Web view** (`webView`): in the Browser environment the results pane offers
+  Web, Console, and Split. Web shows the page your code renders (`document`,
+  canvas, event handlers, animation loops); Split shows the page above the
+  console. The page stays live after the run finishes, until the next run, Stop,
+  or a change of tab, environment, or view. Choosing a view that adds or removes
+  the page reruns the code when Auto run is on, because a page cannot move
+  between containers. Node.js has no page, so the switch is hidden there and the
+  console is shown. Match lines applies to the Console view only.
+
 RunJS capabilities not yet implemented: npm package installation, environment
 variables, a snippet library, opening and saving
 files, Vim keybindings, loop protection, and the combined Browser + Node runtime.
@@ -120,9 +129,9 @@ disabled. Set the release URLs in `apps/web/src/desktopDownloads.ts` when actual
 installers are available. No placeholder links pretend to download an app.
 
 The explorer, editor, and results appear side by side on wide screens, with
-stacked panes on compact screens. The right pane has Web, Console, and Split
-controls in both environments. Web and Split remain visible but disabled while
-preview development is deferred; Console stays selected.
+stacked panes on compact screens. In the Browser environment the right pane has
+Web, Console, and Split controls; Console is selected by default and the choice
+lasts for the session. Node.js shows the console without the switch.
 
 The Env dropdown selects Browser or Node.js independently of output views and
 language. Browser provides a real `document` and `window` in a hidden page; Node runs

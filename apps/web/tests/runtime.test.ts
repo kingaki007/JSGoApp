@@ -21,14 +21,16 @@ class TestHost implements FrameHost {
 /** Creates a runtime whose pages are test hosts, exposed in creation order. */
 function fixture() {
   const hosts: TestHost[] = [];
+  const mounts: Array<HTMLElement | null> = [];
   const runtime = new BrowserRuntime({
-    createHost: async () => {
+    createHost: async (mount) => {
       const host = new TestHost();
       hosts.push(host);
+      mounts.push(mount);
       return host;
     },
   });
-  return { runtime, hosts };
+  return { runtime, hosts, mounts };
 }
 
 /** @param id Run identifier for a Browser request with empty code. */
@@ -140,6 +142,49 @@ describe('browser page lifecycle', () => {
       sourceLines: [0],
       details: [null],
     });
+  });
+
+  it('keeps a finished page in the Web view until the next run, Stop, or a view change', async () => {
+    const { runtime, hosts, mounts } = fixture();
+    const webView = {} as HTMLElement;
+    runtime.setMount(webView);
+    const first = runtime.run(request('first'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mounts[0]).toBe(webView);
+    hosts[0].send({ type: 'complete', result: { id: 'first', error: 'thrown by the snippet' } });
+    expect((await first).error).toBe('thrown by the snippet');
+    // What the page rendered stays visible, even when the snippet ended with an error.
+    expect(hosts[0].dispose).not.toHaveBeenCalled();
+
+    const second = runtime.run(request('second'));
+    expect(hosts[0].dispose).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(0);
+    hosts[1].send({ type: 'complete', result: { id: 'second' } });
+    await second;
+    runtime.stop();
+    expect(hosts[1].dispose).toHaveBeenCalledOnce();
+
+    const third = runtime.run(request('third'));
+    await vi.advanceTimersByTimeAsync(0);
+    hosts[2].send({ type: 'complete', result: { id: 'third' } });
+    await third;
+    runtime.setMount(null);
+    expect(hosts[2].dispose).toHaveBeenCalledOnce();
+  });
+
+  it('never keeps a page whose run was ended by the host, and ends a run when the view moves', async () => {
+    const { runtime, hosts } = fixture();
+    runtime.setMount({} as HTMLElement);
+    const hung = runtime.run(request('hung'));
+    await vi.advanceTimersByTimeAsync(5500);
+    expect((await hung).error).toBe('Execution exceeded 5 seconds.');
+    expect(hosts[0].dispose).toHaveBeenCalledOnce();
+
+    const moving = runtime.run(request('moving'));
+    await vi.advanceTimersByTimeAsync(0);
+    runtime.setMount(null);
+    expect((await moving).error).toBe('Execution stopped.');
+    expect(hosts[1].dispose).toHaveBeenCalledOnce();
   });
 
   it('reports a page that cannot start and rejects other environments', async () => {

@@ -16,8 +16,9 @@ required. This change provides feature gates, without adding billing or checkout
 | `codeFormatting`       | Code formatting                             | On   | On   | On  |
 | `multipleTabs`         | Multiple scratchpad tabs                    | On   | On   | On  |
 | `objectInspection`     | Expandable values in results                | On   | On   | On  |
+| `webView`              | Web view of the Browser page                | On   | On   | On  |
 
-The five workbench features are implemented and open on every plan. To put one
+The six workbench features are implemented and open on every plan. To put one
 behind the paywall, remove its name from `featurePolicy.plans.free` (and from
 `.plus` to make it Max-only). No other code changes are needed.
 
@@ -92,6 +93,9 @@ secure a paid service against a modified client.
 | `workspaceSettings` | Settings popover; preferences persist in the `jsgoapp.settings` local-storage entry         | Defaults apply; the Auto run checkbox still works for the session        |
 | `codeFormatting`    | Format button and Shift+Alt+F format the draft with Prettier                                | No Format button; Format Document has no formatter                       |
 | `multipleTabs`      | Create, rename, and close scratchpad tabs                                                   | Existing tabs remain selectable and editable; no tab management controls |
+
+Without `webView`, the Web/Console/Split switch is hidden and results appear in the
+console; Browser code still runs in its page with a real DOM, off screen.
 
 Without `objectInspection`, objects and collections print as plain text, as they
 did before the feature existed, and runtimes are not asked to inspect values.
