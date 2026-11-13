@@ -143,13 +143,14 @@ async function start() {
   }
   ipcMain.handle('jsgoapp:run', (event, request) => {
     if (!trusted(event) || !validRequest(request)) throw new Error('Invalid execution request.');
-    return runtime.run(request, (line, sourceLine, values) => {
+    return runtime.run(request, (line, sourceLine, values, level) => {
       if (!event.sender.isDestroyed())
         event.sender.send('jsgoapp:output', {
           id: request.id,
           line,
           sourceLine,
           ...(values ? { values } : {}),
+          ...(level && level !== 'log' ? { level } : {}),
         });
     });
   });

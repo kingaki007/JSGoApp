@@ -6,6 +6,7 @@ import {
   type RunResult,
   type RuntimeAdapter,
 } from '@code-editor/core';
+import { readLevel, type ConsoleLevel } from '@code-editor/core/console';
 import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 import { createFrameHost, type FrameHost } from './frameHost';
 
@@ -64,6 +65,7 @@ export class BrowserRuntime implements RuntimeAdapter {
       const lines: string[] = [];
       const sourceLines: number[] = [];
       const details: Array<InspectedValue[] | null> = [];
+      const levels: ConsoleLevel[] = [];
       let finished = false;
       let host: FrameHost | undefined;
       const mount = this.mount;
@@ -79,7 +81,14 @@ export class BrowserRuntime implements RuntimeAdapter {
         if (keepPage && host && mount && this.mount === mount) this.page = host;
         else host?.dispose();
         if (this.cancel === cancel) this.cancel = undefined;
-        resolve({ id: request.id, lines, sourceLines, details, ...(error ? { error } : {}) });
+        resolve({
+          id: request.id,
+          lines,
+          sourceLines,
+          details,
+          levels,
+          ...(error ? { error } : {}),
+        });
       };
       /** Ends the run on Stop or replacement while keeping output already received. */
       const cancel = () => finish('Execution stopped.');
@@ -107,8 +116,10 @@ export class BrowserRuntime implements RuntimeAdapter {
               const values = readInspectedValues(data.values);
               lines.push(line);
               sourceLines.push(sourceLine);
+              const level = readLevel(data.level);
               details.push(values);
-              onOutput?.(line, sourceLine, values);
+              levels.push(level);
+              onOutput?.(line, sourceLine, values, level);
             } else if (data.type === 'complete') {
               const result = data.result as Record<string, unknown> | null;
               if (!result || typeof result !== 'object' || result.id !== request.id) return;

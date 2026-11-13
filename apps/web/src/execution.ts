@@ -5,6 +5,7 @@ import {
   type RunRequest,
   type RunResult,
 } from '@code-editor/core';
+import { createConsole, type ConsoleLevel } from '@code-editor/core/console';
 import { captureExpressions } from '@code-editor/core/expressions';
 import { createInspector, type InspectedValue } from '@code-editor/core/inspect';
 
@@ -21,6 +22,7 @@ export type ExecutionMessage =
       line: string;
       sourceLine?: number;
       values?: InspectedValue[] | null;
+      level?: ConsoleLevel;
     }
   | { type: 'complete'; result: RunResult };
 
@@ -64,19 +66,24 @@ export async function executeCode(
   const lines: string[] = [];
   const sourceLines: number[] = [];
   const details: Array<InspectedValue[] | null> = [];
+  const levels: ConsoleLevel[] = [];
   const inspector = createInspector(inspectValues);
   let currentLine = 0;
   let size = 0;
   let truncated = false;
-  /** @param values Console arguments captured subject to line-count and text-size limits. */
-  const log = (...values: unknown[]) => {
+  /**
+   * Captures one entry subject to line-count and text-size limits.
+   * @param level Console level of the entry. @param values Console arguments or one result.
+   */
+  const emit = (level: ConsoleLevel, values: unknown[]) => {
     if (truncated) return;
     if (lines.length >= 499 || size >= 90_000) {
       const notice = '[Output limit reached. Further logs omitted.]';
       lines.push(notice);
       sourceLines.push(0);
       details.push(null);
-      onOutput(notice, 0, null);
+      levels.push('log');
+      onOutput(notice, 0, null, 'log');
       truncated = true;
       return;
     }
@@ -89,11 +96,14 @@ export async function executeCode(
     const inspected = inspector(values);
     sourceLines.push(currentLine);
     details.push(inspected);
-    onOutput(line, currentLine, inspected);
+    levels.push(level);
+    onOutput(line, currentLine, inspected, level);
   };
+  /** @param value One automatic expression result, reported as a plain log. */
+  const log = (value: unknown) => emit('log', [value]);
   try {
     const transformed = captureExpressions(code);
-    const capturedConsole = { log, info: log, warn: log, error: log, debug: log, table: log };
+    const capturedConsole = createConsole(emit);
     const capture = createCapture(
       capturedConsole,
       (line) => {
@@ -109,13 +119,14 @@ export async function executeCode(
       transformed.captureName,
       `"use strict";\n${transformed.code}\n//# sourceURL=jsgoapp-scratchpad.js`,
     )(capturedConsole, capture);
-    return { id, lines, sourceLines, details };
+    return { id, lines, sourceLines, details, levels };
   } catch (error) {
     return {
       id,
       lines,
       sourceLines,
       details,
+      levels,
       error: error instanceof Error ? error.message : String(error),
     };
   }

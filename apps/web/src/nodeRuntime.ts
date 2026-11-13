@@ -6,6 +6,7 @@ import {
   type RunResult,
   type RuntimeAdapter,
 } from '@code-editor/core';
+import { readLevel, type ConsoleLevel } from '@code-editor/core/console';
 import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 
 /** Owns one Node transport and cancels its process when execution is stopped or replaced. */
@@ -25,6 +26,7 @@ export class NodeRuntime implements RuntimeAdapter {
             message.line,
             normalizeSourceLine(message.sourceLine),
             readInspectedValues(message.values),
+            readLevel(message.level),
           );
       });
       this.unsubscribe = unsubscribe;
@@ -50,6 +52,7 @@ export class NodeRuntime implements RuntimeAdapter {
       const lines: string[] = [];
       const sourceLines: number[] = [];
       const details: Array<InspectedValue[] | null> = [];
+      const levels: ConsoleLevel[] = [];
       while (true) {
         const chunk = await reader.read();
         if (chunk.done) break;
@@ -70,14 +73,17 @@ export class NodeRuntime implements RuntimeAdapter {
             lines.push(line);
             const values = readInspectedValues(message.values);
             sourceLines.push(sourceLine);
+            const level = readLevel(message.level);
             details.push(values);
-            onOutput?.(line, sourceLine, values);
+            levels.push(level);
+            onOutput?.(line, sourceLine, values, level);
           } else if (message.type === 'complete' && message.result?.id === request.id) {
             return {
               id: request.id,
               lines,
               sourceLines,
               details,
+              levels,
               ...(typeof message.result.error === 'string'
                 ? { error: message.result.error.slice(0, 10_000) }
                 : {}),

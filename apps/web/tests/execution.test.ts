@@ -13,7 +13,7 @@ describe('scratchpad execution', () => {
     expect(result.error).toBeUndefined();
     expect(result.lines).toEqual(['1', 'logged', '1', '42']);
     expect(result.sourceLines).toEqual([1, 1, 1, 1]);
-    expect(output.mock.calls).toEqual(result.lines.map((line) => [line, 1, null]));
+    expect(output.mock.calls).toEqual(result.lines.map((line) => [line, 1, null, 'log']));
   });
   it('streams logs and waits for explicitly awaited work', async () => {
     const output = vi.fn();
@@ -27,10 +27,11 @@ describe('scratchpad execution', () => {
       lines: ['before', '{"answer":42}'],
       sourceLines: [1, 1],
       details: [null, null],
+      levels: ['log', 'log'],
     });
     expect(output.mock.calls).toEqual([
-      ['before', 1, null],
-      ['{"answer":42}', 1, null],
+      ['before', 1, null, 'log'],
+      ['{"answer":42}', 1, null, 'log'],
     ]);
   });
 
@@ -83,6 +84,40 @@ describe('scratchpad execution', () => {
     );
     expect(result.lines).toEqual(['started']);
     expect(result.error).toBe('Execution exceeded 0 seconds.');
+  });
+
+  it('records the level of each console method and supports the wider console API', async () => {
+    const output = vi.fn();
+    const result = await executeCode(
+      'levels',
+      'console.info("i");\nconsole.warn("w");\nconsole.error("e");\nconsole.debug("d");\nconsole.assert(1 === 2, "math");\nconsole.count("n");\nconsole.dir({ a: 1 });\nconsole.group("g"); console.groupEnd();\n2 + 2;',
+      output,
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.lines).toEqual([
+      'i',
+      'w',
+      'e',
+      'd',
+      'Assertion failed: math',
+      'n: 1',
+      '{"a":1}',
+      'g',
+      '4',
+    ]);
+    expect(result.levels).toEqual([
+      'info',
+      'warn',
+      'error',
+      'debug',
+      'error',
+      'log',
+      'log',
+      'log',
+      'log',
+    ]);
+    expect(result.sourceLines).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(output.mock.calls[1]).toEqual(['w', 2, null, 'warn']);
   });
 
   it('keeps earlier output when execution throws', async () => {

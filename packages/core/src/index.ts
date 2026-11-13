@@ -1,6 +1,8 @@
 /** Defines shared language/project models, runtime contracts, and feature-access rules for all apps. */
 export * from './features';
+import type { ConsoleLevel } from './console';
 import type { InspectedValue } from './inspect';
+export type { ConsoleLevel } from './console';
 export type { InspectedEntry, InspectedValue } from './inspect';
 export type Language = 'javascript' | 'typescript';
 export type Environment = 'browser' | 'node';
@@ -44,17 +46,20 @@ export interface RunResult {
   sourceLines?: number[];
   /** Inspected arguments of each entry in lines; null when the text is the whole value. */
   details?: Array<InspectedValue[] | null>;
+  /** Console level of each entry in lines; expression results count as plain logs. */
+  levels?: ConsoleLevel[];
   error?: string;
 }
 
 /**
  * Receives one output entry, the 1-based executed-code line that produced it (0 when unknown),
- * and its inspected arguments when the entry contains expandable values.
+ * its inspected arguments when the entry contains expandable values, and its console level.
  */
 export type OutputListener = (
   line: string,
   sourceLine?: number,
   values?: InspectedValue[] | null,
+  level?: ConsoleLevel,
 ) => void;
 
 /** Result callback injected into instrumented code; `at` records a console call's line. */

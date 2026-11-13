@@ -16,6 +16,7 @@ declare global {
           line: string;
           sourceLine?: number;
           values?: unknown;
+          level?: unknown;
         }) => void,
       ): () => void;
     };

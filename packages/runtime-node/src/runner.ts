@@ -3,6 +3,7 @@ import ts from 'typescript';
 import { inspect } from 'node:util';
 import { isBuiltin, createRequire } from 'node:module';
 import { createCapture, type RunRequest } from '@code-editor/core';
+import { createConsole, type ConsoleLevel } from '@code-editor/core/console';
 import { captureExpressions } from '@code-editor/core/expressions';
 import { createInspector } from '@code-editor/core/inspect';
 const require = createRequire(import.meta.url);
@@ -41,8 +42,11 @@ async function execute(request: RunRequest) {
     });
   }
   const inspector = createInspector(request.inspect === true);
-  /** @param values Console arguments formatted safely and bounded before sending to the host. */
-  function log(...values: unknown[]) {
+  /**
+   * Formats one entry safely and sends it to the host within the output limits.
+   * @param level Console level of the entry. @param values Console arguments or one result.
+   */
+  function emit(level: ConsoleLevel, values: unknown[]) {
     if (finished || count >= 500) return;
     const limited = count === 499 || size >= 90_000;
     const line = limited
@@ -69,15 +73,18 @@ async function execute(request: RunRequest) {
       line,
       sourceLine: limited ? 0 : currentLine,
       ...(inspected ? { values: inspected } : {}),
+      ...(level !== 'log' && !limited ? { level } : {}),
     });
   }
+  /** @param value One automatic expression result, reported as a plain log. */
+  const log = (value: unknown) => emit('log', [value]);
   /** @param name Built-in Node module; third-party package and project resolution are deferred. */
   function requireBuiltin(name: string) {
     if (!isBuiltin(name))
       throw new Error('Only Node built-in modules are supported in this milestone.');
     return require(name);
   }
-  const capturedConsole = { log, info: log, warn: log, error: log, debug: log, table: log };
+  const capturedConsole = createConsole(emit);
   Object.assign(console, capturedConsole);
   process.once('uncaughtException', finish);
   process.once('unhandledRejection', finish);

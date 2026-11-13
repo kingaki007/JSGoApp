@@ -55,9 +55,9 @@ describe('line-aligned results', () => {
   it('groups output by source line, in line order, and keeps unknown origins separate', () => {
     expect(alignOutput(['b', 'a1', 'limit', 'a2', 'multi\n  line'], [3, 1, 0, 1, 2])).toEqual({
       rows: [
-        { line: 1, text: 'a1  a2' },
-        { line: 2, text: 'multi line' },
-        { line: 3, text: 'b' },
+        { line: 1, text: 'a1  a2', level: 'log' },
+        { line: 2, text: 'multi line', level: 'log' },
+        { line: 3, text: 'b', level: 'log' },
       ],
       unplaced: ['limit'],
     });
@@ -79,6 +79,7 @@ describe('line-aligned results', () => {
       lines: ['4'],
       sourceLines: [1],
       details: [null],
+      levels: ['log'],
       status: 'complete',
     };
     const list = renderToStaticMarkup(
@@ -93,6 +94,7 @@ describe('line-aligned results', () => {
           lines: ['4', 'late'],
           sourceLines: [1, 0],
           details: [null, null],
+          levels: ['log', 'log'],
           error: 'Boom',
         }}
         isRunning={false}
@@ -110,9 +112,60 @@ describe('line-aligned results', () => {
     const object = { type: 'object' as const, text: 'Object', entries: [] };
     const output = alignOutput(['label', '{}', 'plain'], [2, 2, 5], [null, [object], null]);
     expect(output.rows).toEqual([
-      { line: 2, text: 'label {}', values: [{ type: 'string', text: 'label' }, object] },
-      { line: 5, text: 'plain' },
+      {
+        line: 2,
+        text: 'label {}',
+        level: 'log',
+        values: [{ type: 'string', text: 'label' }, object],
+      },
+      { line: 5, text: 'plain', level: 'log' },
     ]);
+  });
+});
+
+describe('console levels', () => {
+  const result: ExecutionView = {
+    id: 'run',
+    documentId: 'tab',
+    language: 'javascript',
+    lines: ['plain', 'careful', 'broken', 'note', 'detail'],
+    sourceLines: [1, 2, 2, 3, 4],
+    details: [null, null, null, null, null],
+    levels: ['log', 'warn', 'error', 'info', 'debug'],
+    status: 'complete',
+  };
+
+  it('gives a shared row the most severe level of its entries', () => {
+    expect(
+      alignOutput(result.lines, result.sourceLines, result.details, result.levels).rows.map(
+        (row) => [row.line, row.level],
+      ),
+    ).toEqual([
+      [1, 'log'],
+      [2, 'error'],
+      [3, 'info'],
+      [4, 'debug'],
+    ]);
+  });
+
+  it('styles and announces levels in the list view when the feature is on', () => {
+    const markup = renderToStaticMarkup(
+      <OutputPanel result={result} isRunning={false} onClear={() => {}} styleLevels />,
+    );
+    expect(markup).toContain('<pre class="output-line">');
+    for (const level of ['warn', 'error', 'info', 'debug'])
+      expect(markup).toContain(`output-line output-level-${level}`);
+    expect(markup).toContain('<span class="visually-hidden">Warning: </span>careful');
+    expect(markup).toContain('<span class="visually-hidden">Error: </span>broken');
+  });
+
+  it('shows every entry alike when the feature is off', () => {
+    const markup = renderToStaticMarkup(
+      <OutputPanel result={result} isRunning={false} onClear={() => {}} />,
+    );
+    expect(markup).not.toContain('output-level-');
+    expect(markup).not.toContain('Warning: ');
+    expect(markup).toContain('careful');
   });
 });
 
@@ -154,6 +207,7 @@ describe('expandable values', () => {
           lines: ['plain', '{"name":"<b>Ada</b>"}'],
           sourceLines: [1, 2],
           details: [null, [value]],
+          levels: ['log', 'log'],
           status: 'complete',
         }}
         isRunning={false}

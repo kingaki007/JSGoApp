@@ -5,6 +5,19 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.14.0] - 2026-11-14
+
+- Style console levels in the results pane (`consoleLevels`, open on every plan): warnings
+  and errors are coloured and marked, info is marked, debug is dimmed, and screen readers
+  hear "Warning" or "Error". A line-aligned row takes the most severe level of its entries.
+- Send each entry's level through the Browser page, the Node runner, the HTTP stream, and
+  Electron IPC; hosts treat unknown levels as plain logs.
+- Build the console given to snippets in one shared module. `console.dir`, `assert`,
+  `count`, `countReset`, `time`, `timeLog`, `timeEnd`, `trace`, `group`, `groupEnd`, and
+  `clear` now work in both runtimes; calling them previously threw an error.
+- `console.table` still prints its data as a value, and groups are not indented.
+- Add console and level coverage, bringing the suite to 135 tests.
+
 ## [0.13.2] - 2026-11-14
 
 - Make `pnpm package:desktop` build into a staging folder and swap it in at the end. If

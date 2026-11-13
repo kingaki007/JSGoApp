@@ -39,7 +39,8 @@ window.addEventListener('message', (event: MessageEvent<Partial<FrameRequest> | 
       executeCode(
         id,
         code,
-        (line, sourceLine, values) => post({ type: 'output', id, line, sourceLine, values }),
+        (line, sourceLine, values, level) =>
+          post({ type: 'output', id, line, sourceLine, values, level }),
         request.showUndefined === true,
         request.inspect === true,
         typeof request.timeoutMs === 'number' ? request.timeoutMs : undefined,
