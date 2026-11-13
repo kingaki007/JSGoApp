@@ -72,6 +72,19 @@ describe('scratchpad execution', () => {
     expect(output.mock.calls[0][2]).toEqual(inspected.details?.[0]);
   });
 
+  it('stops a runaway loop from inside when given a time limit', async () => {
+    const result = await executeCode(
+      'loop',
+      'console.log("started"); while (true) {}',
+      () => {},
+      false,
+      false,
+      50,
+    );
+    expect(result.lines).toEqual(['started']);
+    expect(result.error).toBe('Execution exceeded 0 seconds.');
+  });
+
   it('keeps earlier output when execution throws', async () => {
     const result = await executeCode(
       'error',

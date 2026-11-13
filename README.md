@@ -11,25 +11,27 @@ Early development. The web app now includes a runnable Monaco editor
 with JavaScript and TypeScript scratchpads. Each language retains its
 draft while switching. Auto run is enabled by default and executes after a
 two-second pause in typing. Run executes immediately; Stop cancels active work.
-Disable the Auto run checkbox for manual execution. The active scratchpad runs in a disposable
-browser worker or a disposable Node process, selected through the editor's Env
-dropdown, with console output, Stop, and a five-second timeout.
+Disable the Auto run checkbox for manual execution. The active scratchpad runs in a
+disposable sandboxed browser page or a disposable Node process, selected through the
+editor's Env dropdown, with console output, Stop, and a five-second timeout.
 TypeScript is compiled using Monaco's bundled TypeScript language worker.
 JavaScript and TypeScript drafts and the selected language are automatically
 saved on this device and restored after a refresh, without an account.
 
-An initial Electron shell reuses the web UI and shared Node runner. DOM previews,
-npm imports, project file saving, cloud accounts, and desktop installers are not
+An initial Electron shell reuses the web UI and shared Node runner. Visible previews
+of the Browser page, npm imports, project file saving, cloud accounts, and desktop installers are not
 connected yet. Await asynchronous work explicitly; the runner ends when the
 top-level async function completes. Type annotations
 are stripped before running; semantic type errors remain visible in Monaco
 and do not block execution. Node supports built-in module imports; browser module
 imports and third-party package installation remain deferred.
 
-This is a local scratchpad for code you trust. A Web Worker keeps code off the
-UI thread and can be terminated, but it is not a security sandbox. A separate
-execution origin and stricter isolation are required before running untrusted
-shared projects or adding accounts.
+This is a local scratchpad for code you trust. Browser snippets run in a sandboxed
+page with an opaque origin, so they cannot read the app's storage or DOM, but the
+page shares the app's thread: heavy synchronous work makes the app unresponsive
+until it finishes or the five-second limit stops it. A separate execution origin
+and stricter isolation are required before running untrusted shared projects or
+adding accounts.
 
 Hosting and deployment decisions are deferred.
 
@@ -60,7 +62,7 @@ Once the editor is ready, non-empty code runs after two seconds without edits.
 Every edit cancels an in-flight run and replaces the pending timer. Changing
 language or environment schedules the selected draft after the same delay.
 The latest source is compiled at execution time. Empty drafts clear output
-without launching a worker or Node process.
+without launching a page or Node process.
 
 Manual Run cancels the pending timer and executes immediately, without a second
 automatic run. Stop remains effective until the next edit or context change;
@@ -123,7 +125,7 @@ controls in both environments. Web and Split remain visible but disabled while
 preview development is deferred; Console stays selected.
 
 The Env dropdown selects Browser or Node.js independently of output views and
-language. Browser currently provides worker APIs without DOM access. Node runs
+language. Browser provides a real `document` and `window` in a hidden page; Node runs
 through Electron IPC on desktop or the local HTTP runner for the web app.
 See [execution environments](docs/execution-environments.md) for the shared
 architecture, RunJS reference, startup commands, and current limitations.

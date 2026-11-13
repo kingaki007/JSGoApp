@@ -1,4 +1,4 @@
-/** Coordinates source compilation, worker execution, streamed output, and cancellation for the active draft. */
+/** Coordinates source compilation, execution, streamed output, and cancellation for the active draft. */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CodeEditorHandle } from '@code-editor/editor';
 import type { Environment, InspectedValue, Language, RunResult } from '@code-editor/core';
@@ -31,7 +31,7 @@ export function toDraftLine(line: number | undefined, lineMap?: number[]): numbe
  * @param documentId Active draft; changing it cancels the current run and hides its output.
  * @param language Language of the active draft.
  * @param source Current source code captured when Run is requested.
- * @param environment Browser worker or actual Node execution on the host.
+ * @param environment Sandboxed Browser page or actual Node execution on the host.
  * @param showUndefined Whether undefined expression results are reported.
  * @param inspect Whether runtimes also send expandable trees for objects and collections.
  */
@@ -136,7 +136,7 @@ export function useExecution(
     [documentId, environment, language, runtime, source, showUndefined, inspect],
   );
 
-  /** Cancels compilation results and terminates an active worker while keeping existing output. */
+  /** Cancels compilation results and ends the active run while keeping existing output. */
   const stop = useCallback(() => {
     requestId.current = null;
     runtime.stop();

@@ -1,7 +1,18 @@
-/** Executes compiled JavaScript inside a worker and formats bounded console output for the host. */
-import { createCapture, type OutputListener, type RunResult } from '@code-editor/core';
+/** Executes compiled JavaScript inside the sandboxed page and formats bounded console output for the app. */
+import {
+  createCapture,
+  type OutputListener,
+  type RunRequest,
+  type RunResult,
+} from '@code-editor/core';
 import { captureExpressions } from '@code-editor/core/expressions';
 import { createInspector, type InspectedValue } from '@code-editor/core/inspect';
+
+/** Run request sent to the page, with the limit its loops enforce from inside. */
+export type FrameRequest = RunRequest & { timeoutMs: number };
+
+/** Everything the page posts to the app: readiness, streamed output, and completion. */
+export type FrameMessage = ExecutionMessage | { type: 'ready' };
 
 export type ExecutionMessage =
   | {
@@ -34,12 +45,13 @@ function format(value: unknown): string {
 }
 
 /**
- * Evaluates JavaScript and awaits explicitly awaited asynchronous work inside a disposable worker.
+ * Evaluates JavaScript and awaits explicitly awaited asynchronous work inside a disposable page.
  * @param id Run identifier echoed in the final result.
  * @param code JavaScript source; TypeScript must already have been compiled by the editor.
  * @param onOutput Receives each formatted console line and the code line that produced it.
  * @param showUndefined Whether expression statements evaluating to undefined are reported.
  * @param inspectValues Whether objects and collections are also sent as expandable trees.
+ * @param timeoutMs Limit enforced inside loops, because the app cannot interrupt its own thread.
  */
 export async function executeCode(
   id: string,
@@ -47,6 +59,7 @@ export async function executeCode(
   onOutput: OutputListener,
   showUndefined = false,
   inspectValues = false,
+  timeoutMs?: number,
 ): Promise<RunResult> {
   const lines: string[] = [];
   const sourceLines: number[] = [];
@@ -88,6 +101,7 @@ export async function executeCode(
       },
       log,
       showUndefined,
+      timeoutMs,
     );
     const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
     await new AsyncFunction(

@@ -61,6 +61,8 @@ export type OutputListener = (
 export interface CaptureCallback {
   (value: unknown, line?: number): unknown;
   at(line: number): unknown;
+  /** Called at the start of every loop iteration; throws once the run's deadline has passed. */
+  tick(): void;
 }
 
 /**
@@ -69,13 +71,18 @@ export interface CaptureCallback {
  * @param setLine Records the line of the output that is about to be produced.
  * @param report Emits one automatic expression result.
  * @param showUndefined Whether undefined expression results are reported.
+ * @param timeoutMs Optional limit enforced from inside loops, for hosts that cannot interrupt
+ *   running code from outside. Hosts that end the process or worker themselves omit it.
  */
 export function createCapture(
   capturedConsole: unknown,
   setLine: (line: number) => void,
   report: (value: unknown) => void,
   showUndefined = false,
+  timeoutMs?: number,
 ): CaptureCallback {
+  const deadline = timeoutMs === undefined ? Infinity : Date.now() + timeoutMs;
+  let ticks = 0;
   /** @param value Expression result, returned unchanged. @param line Its statement's first line. */
   const capture = (value: unknown, line = 0) => {
     if (value !== undefined || showUndefined) {
@@ -89,6 +96,11 @@ export function createCapture(
     at(line: number) {
       setLine(line);
       return capturedConsole;
+    },
+    /** Checks the clock every 1024 iterations so the guard stays cheap in tight loops. */
+    tick() {
+      if ((++ticks & 1023) === 0 && Date.now() > deadline)
+        throw new Error(`Execution exceeded ${Math.round((timeoutMs ?? 0) / 1000)} seconds.`);
     },
   });
 }
