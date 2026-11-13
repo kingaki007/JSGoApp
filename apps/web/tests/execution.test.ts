@@ -120,6 +120,40 @@ describe('scratchpad execution', () => {
     expect(output.mock.calls[1]).toEqual(['w', 2, null, 'warn']);
   });
 
+  it('reports where an error originated, with the snippet frames', async () => {
+    const result = await executeCode(
+      'located',
+      [
+        'function parse(text) {',
+        '  return JSON.parse(text);',
+        '}',
+        'console.log("start");',
+        'parse("{oops");',
+      ].join(String.fromCharCode(10)),
+      () => {},
+    );
+    expect(result.lines).toEqual(['start']);
+    expect(result.error).toBeTruthy();
+    expect(result.errorLine).toBe(2);
+    expect(result.errorFrames).toEqual([
+      { name: 'parse', line: 2 },
+      { name: '', line: 5 },
+    ]);
+  });
+
+  it('locates syntax errors and gives no location for thrown values without a stack', async () => {
+    const syntax = await executeCode(
+      'syntax',
+      ['const a = 1;', 'const = ;'].join(String.fromCharCode(10)),
+      () => {},
+    );
+    expect(syntax.errorLine).toBe(2);
+    expect(syntax.errorFrames).toEqual([]);
+    const text = await executeCode('text', 'throw "plain text";', () => {});
+    expect(text.error).toBe('plain text');
+    expect(text.errorLine).toBeUndefined();
+  });
+
   it('keeps earlier output when execution throws', async () => {
     const result = await executeCode(
       'error',

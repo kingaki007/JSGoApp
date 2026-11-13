@@ -32,7 +32,6 @@ package instead of accessing Monaco or this package's internal files.
 | `src/setup.ts`           | Local worker factory, loader, and compiler configuration          |
 | `src/theme.ts`           | Semantic CSS token mapping and typography                         |
 | `src/compile.ts`         | Source snapshots, syntax errors, TypeScript emission, and cleanup |
-| `src/sourceMap.ts`       | Source-map decoding into draft line origins                       |
 | `src/formatting.ts`      | Gated Prettier formatter for Format Document                      |
 | `src/environment.ts`     | Environment-specific compiler libraries and declarations          |
 | `src/nodeDefinitions.ts` | Lazy Node and fetch declaration bundle                            |

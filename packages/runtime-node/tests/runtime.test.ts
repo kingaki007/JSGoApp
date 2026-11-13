@@ -58,6 +58,48 @@ describe('shared Node runner', () => {
     expect(output.mock.calls[0]).toEqual(['w', 1, null, 'warn']);
   });
 
+  it('reports where an error originated, including after module syntax is compiled', async () => {
+    const newline = String.fromCharCode(10);
+    const plain = await new NodeRuntime().run(
+      request(
+        [
+          'function fail() {',
+          '  throw new Error("inside");',
+          '}',
+          'console.log("start");',
+          'fail();',
+        ].join(newline),
+      ),
+    );
+    expect(plain.lines).toEqual(['start']);
+    expect(plain.error).toBe('inside');
+    expect(plain.errorLine).toBe(2);
+    expect(plain.errorFrames).toEqual([
+      { name: 'fail', line: 2 },
+      { name: '', line: 5 },
+    ]);
+    const compiled = await new NodeRuntime().run(
+      request(
+        [
+          'import path from "node:path";',
+          'import fs from "node:fs";',
+          '',
+          'path.sep;',
+          'null.missing;',
+        ].join(newline),
+      ),
+    );
+    expect(compiled.error).toBeTruthy();
+    expect(compiled.errorLine).toBe(5);
+    const syntax = await new NodeRuntime().run(
+      request(['const a = 1;', 'const = ;'].join(newline)),
+    );
+    expect(syntax.errorLine).toBe(2);
+    const text = await new NodeRuntime().run(request('throw "plain text";'));
+    expect(text.error).toBe('plain text');
+    expect(text.errorLine).toBeUndefined();
+  });
+
   it('does not inherit arbitrary host environment variables', async () => {
     vi.stubEnv('JSGOAPP_TEST_SECRET', 'host-only');
     try {

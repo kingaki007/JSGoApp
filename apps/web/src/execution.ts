@@ -6,6 +6,7 @@ import {
   type RunResult,
 } from '@code-editor/core';
 import { createConsole, type ConsoleLevel } from '@code-editor/core/console';
+import { traceError } from '@code-editor/core/errors';
 import { captureExpressions } from '@code-editor/core/expressions';
 import { createInspector, type InspectedValue } from '@code-editor/core/inspect';
 
@@ -14,6 +15,9 @@ export type FrameRequest = RunRequest & { timeoutMs: number };
 
 /** Everything the page posts to the app: readiness, streamed output, and completion. */
 export type FrameMessage = ExecutionMessage | { type: 'ready' };
+
+// Names the snippet in engine stacks, so its frames can be told apart from the runner's own.
+const scriptName = 'jsgoapp-scratchpad.js';
 
 export type ExecutionMessage =
   | {
@@ -117,10 +121,12 @@ export async function executeCode(
     await new AsyncFunction(
       'console',
       transformed.captureName,
-      `"use strict";\n${transformed.code}\n//# sourceURL=jsgoapp-scratchpad.js`,
+      `"use strict";\n${transformed.code}\n//# sourceURL=${scriptName}`,
     )(capturedConsole, capture);
     return { id, lines, sourceLines, details, levels };
   } catch (error) {
+    // The snippet follows one line of preamble inside the generated function.
+    const trace = traceError(error, scriptName, 1);
     return {
       id,
       lines,
@@ -128,6 +134,7 @@ export async function executeCode(
       details,
       levels,
       error: error instanceof Error ? error.message : String(error),
+      ...(trace.line ? { errorLine: trace.line, errorFrames: trace.frames } : {}),
     };
   }
 }

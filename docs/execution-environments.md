@@ -121,6 +121,18 @@ plain logs and expression results omit it. Hosts treat unknown levels as plain
 logs. `packages/core/src/console.ts` builds the console given to snippets, so the
 Browser page and the Node runner support the same methods.
 
+When a run fails, its completion carries `errorLine` and `errorFrames` alongside
+the message when the origin is known. `packages/core/src/errors.ts` reads the
+engine's stack for frames of the snippet's own script (named through a
+`sourceURL` comment), so the runner's frames are left out. Engines count the
+header of a generated function differently, so the line offset is measured once
+with a probe function, not assumed. Syntax errors use the parser's position.
+The Node runner compiles module syntax to CommonJS before running, which moves
+lines, so it maps frames back through that step's source map. All of these are
+lines of the executed code; the UI translates them to draft lines the same way
+it does for output. TypeScript syntax errors found by the editor carry their
+draft line directly.
+
 With `inspect: true` in the request, an output message whose arguments include an
 object or collection also carries `values`: one bounded, JSON-serializable tree
 per console argument (`type`, `text`, optional `entries` and `omitted`). `line`

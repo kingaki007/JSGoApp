@@ -72,12 +72,58 @@ export function alignOutput(
 }
 
 /**
+ * Shows a run's error, optionally with the line it originated from and the snippet's call stack.
+ * @param props.result Finished run that has an error.
+ * @param props.className Classes for the message, which differ for stopped runs.
+ * @param props.locate Whether the plan includes error locations; the message alone is shown otherwise.
+ * @param props.hideMessage Whether the message is already shown beside its source line.
+ */
+function ErrorDetails({
+  result,
+  className,
+  locate,
+  hideMessage = false,
+}: {
+  result: ExecutionView;
+  className: string;
+  locate: boolean;
+  hideMessage?: boolean;
+}) {
+  const frames = locate ? (result.errorFrames ?? []) : [];
+  return (
+    <div className="output-error-block">
+      {!hideMessage && (
+        <pre className={className}>
+          {locate && result.errorLine ? (
+            <span className="output-error-line">Line {result.errorLine}</span>
+          ) : null}
+          {result.error}
+        </pre>
+      )}
+      {frames.length > 1 && (
+        <details className="output-stack">
+          <summary>Call stack ({frames.length} frames)</summary>
+          <ol>
+            {frames.map((frame, index) => (
+              <li key={index}>
+                {frame.name || '(top level)'} <span>line {frame.line}</span>
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+    </div>
+  );
+}
+
+/**
  * Renders output as text so logged HTML cannot become active page content.
  * @param props.result Output and status of the latest run; null means no run to display.
  * @param props.isRunning Whether the clear action should be disabled during execution.
  * @param props.onClear Callback that clears output without changing source code.
  * @param props.alignment Editor line geometry; when present, results sit beside their source lines.
  * @param props.styleLevels Whether warnings, errors, info, and debug entries are styled differently.
+ * @param props.locateErrors Whether errors show their source line and call stack.
  */
 export default function OutputPanel({
   result,
@@ -85,12 +131,14 @@ export default function OutputPanel({
   onClear,
   alignment,
   styleLevels = false,
+  locateErrors = false,
 }: {
   result: ExecutionView | null;
   isRunning: boolean;
   onClear(): void;
   alignment?: LineAlignment;
   styleLevels?: boolean;
+  locateErrors?: boolean;
 }) {
   const statusLabels = {
     running: 'Running…',
@@ -106,10 +154,21 @@ export default function OutputPanel({
     const top = content.current?.getBoundingClientRect().top ?? null;
     setOrigin((current) => (current === top ? current : top));
   });
+  // A located error joins the row of the line it came from, like any other output of that line.
+  const errorLine =
+    locateErrors && result?.status === 'error' && result.error ? (result.errorLine ?? 0) : 0;
   const aligned =
     alignment && result
-      ? alignOutput(result.lines, result.sourceLines, result.details, result.levels)
+      ? errorLine
+        ? alignOutput(
+            [...result.lines, result.error ?? ''],
+            [...result.sourceLines, errorLine],
+            [...result.details, null],
+            [...result.levels, 'error'],
+          )
+        : alignOutput(result.lines, result.sourceLines, result.details, result.levels)
       : null;
+  const stackShown = locateErrors && (result?.errorFrames?.length ?? 0) > 1;
   /** @param level Entry or row level. @returns Extra class and spoken prefix for that level. */
   const presentLevel = (level: ConsoleLevel | undefined) => {
     const shown = styleLevels ? (level ?? 'log') : 'log';
@@ -118,6 +177,11 @@ export default function OutputPanel({
       prefix: shown === 'warn' ? 'Warning: ' : shown === 'error' ? 'Error: ' : '',
     };
   };
+  /** @param row Aligned row. @returns Its presentation; the row holding the run's error is an error. */
+  const rowLevel = (row: { line: number; level: ConsoleLevel }) =>
+    errorLine && row.line === errorLine
+      ? { className: ' output-level-error', prefix: 'Error: ' }
+      : presentLevel(row.level);
   // One aligned row at a time can be opened; it overlays the rows below until closed.
   const [opened, setOpened] = useState<{ run: string; line: number } | null>(null);
   const errorClass = `output-error ${result?.status === 'stopped' ? 'output-stopped' : ''}`;
@@ -154,7 +218,7 @@ export default function OutputPanel({
               if (row.values && opened?.run === result?.id && opened?.line === row.line)
                 return (
                   <div
-                    className={`output-row output-row-open${presentLevel(row.level).className}`}
+                    className={`output-row output-row-open${rowLevel(row).className}`}
                     key={row.line}
                     style={{ top: top - origin, fontSize: alignment.fontSize }}
                   >
@@ -174,7 +238,7 @@ export default function OutputPanel({
                 );
               return (
                 <pre
-                  className={`output-row${presentLevel(row.level).className}`}
+                  className={`output-row${rowLevel(row).className}`}
                   key={row.line}
                   title={row.text}
                   style={{
@@ -185,7 +249,7 @@ export default function OutputPanel({
                   }}
                 >
                   <span className="visually-hidden">
-                    Line {row.line}: {presentLevel(row.level).prefix}
+                    Line {row.line}: {rowLevel(row).prefix}
                   </span>
                   {row.values ? (
                     <button
@@ -205,14 +269,21 @@ export default function OutputPanel({
                 </pre>
               );
             })}
-          {(aligned.unplaced.length > 0 || result?.error) && (
+          {(aligned.unplaced.length > 0 || (result?.error && (!errorLine || stackShown))) && (
             <div className="output-aligned-footer">
               {aligned.unplaced.map((line, index) => (
                 <pre className="output-line" key={index}>
                   {line || ' '}
                 </pre>
               ))}
-              {result?.error && <pre className={errorClass}>{result.error}</pre>}
+              {result?.error && (!errorLine || stackShown) && (
+                <ErrorDetails
+                  result={result}
+                  className={errorClass}
+                  locate={locateErrors}
+                  hideMessage={errorLine > 0}
+                />
+              )}
             </div>
           )}
         </div>
@@ -249,7 +320,9 @@ export default function OutputPanel({
               </pre>
             );
           })}
-          {result?.error && <pre className={errorClass}>{result.error}</pre>}
+          {result?.error && (
+            <ErrorDetails result={result} className={errorClass} locate={locateErrors} />
+          )}
           {result?.status === 'complete' && result.lines.length === 0 && (
             <p className="output-placeholder">
               Finished without expression results or console output.

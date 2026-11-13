@@ -1,7 +1,7 @@
 /** Compiles TypeScript snapshots through Monaco and releases temporary models on every exit path. */
 import type { Language } from '@code-editor/core';
 import type { Monaco } from '@monaco-editor/react';
-import { decodeLineMap } from './sourceMap';
+import { decodeLineMap } from '@code-editor/core/sourceMap';
 
 export interface CompiledSource {
   /** Executable JavaScript. */
@@ -38,8 +38,12 @@ export async function compileSource(
         typeof diagnostic.messageText === 'string'
           ? diagnostic.messageText
           : diagnostic.messageText?.messageText;
-      throw new Error(
-        `TypeScript ${location.lineNumber}:${location.column}: ${message ?? 'Syntax error'}`,
+      // The line travels with the error so the host can show it beside the draft line.
+      throw Object.assign(
+        new Error(
+          `TypeScript ${location.lineNumber}:${location.column}: ${message ?? 'Syntax error'}`,
+        ),
+        { line: location.lineNumber },
       );
     }
     const output = await worker.getEmitOutput(uri.toString());

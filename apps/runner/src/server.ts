@@ -75,7 +75,13 @@ export function createRunnerServer() {
         response.end(
           JSON.stringify({
             type: 'complete',
-            result: { id: result.id, ...(result.error ? { error: result.error } : {}) },
+            result: {
+              id: result.id,
+              ...(result.error ? { error: result.error } : {}),
+              ...(result.errorLine
+                ? { errorLine: result.errorLine, errorFrames: result.errorFrames }
+                : {}),
+            },
           }) + '\n',
         );
     } catch {
