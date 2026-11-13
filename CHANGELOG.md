@@ -5,6 +5,23 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.11.0] - 2026-11-13
+
+- Run Browser code in a fresh, hidden, sandboxed page with a real `document` and
+  `window` instead of a worker. Browser always uses the page; there is no execution
+  mechanism selector. The page has a `#root` element and is removed after each run.
+- Give the page an opaque origin (`sandbox="allow-scripts"`), so snippets cannot read
+  the app's storage or DOM. Bundle its runner into one inline script at build time,
+  because such a page cannot load module scripts from the app.
+- Stop runaway loops from inside the page: every loop body now starts with a deadline
+  check, since the page shares the app's thread and cannot be interrupted from outside.
+  The app is unresponsive for up to five seconds while a tight loop runs.
+- Offer DOM types in the editor for the Browser environment.
+- Fix top-level comma expressions reporting their first value instead of their last.
+- Web and Split stay disabled; showing the page is a separate change.
+- Replace worker lifecycle tests with page lifecycle tests and add loop-guard coverage,
+  bringing the suite to 119 tests.
+
 ## [0.10.0] - 2026-11-13
 
 - Add expandable values in results (`objectInspection`, open on every plan): objects,

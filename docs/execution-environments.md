@@ -8,9 +8,40 @@ output without changing either language's draft. Environment selection is
 session-only; drafts continue to persist locally.
 
 Web, Console, and Split remain visible in both environments. Web and Split are
-disabled with a tooltip because DOM preview is parked in a separate draft PR.
-Browser currently means browser-worker APIs and console output; it does not
-promise access to `window` or `document`.
+disabled with a tooltip until the Browser page can be shown.
+
+## Browser page
+
+Browser runs every snippet in a fresh, hidden, sandboxed page. There is no
+separate worker mode and no mechanism selector: Browser always means a real
+`document` and `window`, as in RunJS.
+
+```text
+App -> creates <iframe sandbox="allow-scripts" srcdoc=...> -> page posts "ready"
+App -> posts { id, code, showUndefined, inspect, timeoutMs }
+Page -> posts output messages, then completion -> App removes the page
+```
+
+- The page contains `<div id="root"></div>`, so UI libraries have a mount point.
+  It is laid out at 1024 by 768 off screen; nothing it renders is visible yet.
+- `sandbox="allow-scripts"` gives the page an opaque origin. Snippets cannot
+  read the app's local storage, cookies, or DOM, cannot navigate the app, and
+  cannot open windows. `localStorage` inside the page throws, and `fetch` sends
+  `Origin: null`, so only APIs that allow any origin respond.
+- An opaque-origin page cannot load module scripts from the app. The runner
+  (`apps/web/src/frame.ts`) is therefore bundled into one script by the
+  `jsgoapp-frame-runner` plugin in `apps/web/vite.config.ts` and placed inline in
+  the page. It loads on the first Browser run.
+- The page is removed when the run completes, fails, times out, or is stopped,
+  which also ends its timers, listeners, and animation loops.
+- The page shares the app's thread, so the app cannot interrupt it from outside.
+  The expression transform adds a check at the start of every loop body; once
+  the five-second limit passes, the loop throws `Execution exceeded 5 seconds.`
+  from inside the page. A host timer, half a second later, covers work that
+  never finishes, such as a promise that never settles. While a tight loop runs,
+  the app is unresponsive for up to five seconds. Long synchronous work without
+  loops (for example deep recursion) is not interrupted by this check.
+- The editor offers DOM types (`lib.dom.d.ts`) for Browser.
 
 ## RunJS reference
 
@@ -30,7 +61,7 @@ checkbox switches to manual execution; Run bypasses the delay and Stop prevents
 rescheduling until another edit or context change. Empty drafts clear output.
 Errors and completed executions are not automatically retried.
 
-Package installation and DOM rendering remain separate capabilities.
+Package installation and showing the Browser page remain separate capabilities.
 
 ## One runner, two transports
 
@@ -65,7 +96,7 @@ Run sends JSON containing `id`, `environment`, and compiled `code` to
 ```
 
 Output messages also carry `sourceLine`, the 1-based line of the executed code
-that produced the entry (0 when unknown). The browser worker, the HTTP stream,
+that produced the entry (0 when unknown). The Browser page, the HTTP stream,
 and Electron IPC all use this field, so line-aligned results behave the same in
 every host. A request may set `showUndefined: true` to report undefined results.
 

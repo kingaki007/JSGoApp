@@ -18,7 +18,10 @@ export async function configureEnvironment(monaco: Monaco, environment: Environm
       target: monaco.typescript.ScriptTarget.ESNext,
       module: monaco.typescript.ModuleKind.ESNext,
       moduleResolution: monaco.typescript.ModuleResolutionKind.NodeJs,
-      lib: environment === 'node' ? ['lib.esnext.d.ts'] : ['lib.esnext.d.ts', 'lib.webworker.d.ts'],
+      lib:
+        environment === 'node'
+          ? ['lib.esnext.d.ts']
+          : ['lib.esnext.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
       types: environment === 'node' ? ['node'] : [],
       typeRoots: ['file:///node_modules/@types'],
       allowNonTsExtensions: true,

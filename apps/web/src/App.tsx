@@ -252,7 +252,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
           </span>
           <span className="execution-hint">
             {environment === 'browser'
-              ? 'Browser APIs · console execution · DOM preview deferred'
+              ? 'Browser page · DOM available · preview hidden'
               : window.desktop
                 ? 'Node.js · local desktop execution'
                 : 'Node.js · local service required: pnpm dev:runner'}
