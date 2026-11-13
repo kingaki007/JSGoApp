@@ -565,6 +565,31 @@
   overflow-wrap: anywhere;
 }
 
+/* Web view: the Browser page fills its tile; a hint shows through until a page is mounted. */
+.web-preview-panel {
+  position: relative;
+}
+.web-view-empty {
+  margin: auto;
+  padding: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+.web-view-mount {
+  position: absolute;
+  inset: 0;
+}
+.web-view-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  /* Pages have no stylesheet of their own, so they get the browser's default light canvas. */
+  background: var(--web-view-background);
+  color-scheme: light;
+}
+
 /* Stack the editor and results when side-by-side panes would be too narrow. */
 @media (max-width: 1000px) {
   .workspace {

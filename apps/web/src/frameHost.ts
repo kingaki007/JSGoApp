@@ -1,4 +1,4 @@
-/** Creates the sandboxed, hidden page that gives Browser snippets a real document and window. */
+/** Creates the sandboxed page that gives Browser snippets a real document and window. */
 import type { FrameRequest } from './execution';
 
 export interface FrameHost {
@@ -23,15 +23,21 @@ export function frameDocument(runner: string): string {
  * Starts a fresh page for one run.
  * The sandbox grants scripts only: the page has an opaque origin, so snippets cannot read the
  * app's storage, cookies, or DOM, and cannot navigate or open windows.
+ * @param mount Element of the Web view that displays the page; null keeps the page off screen.
  */
-export async function createFrameHost(): Promise<FrameHost> {
+export async function createFrameHost(mount: HTMLElement | null = null): Promise<FrameHost> {
   const { default: runner } = await import('virtual:frame-runner');
   const frame = document.createElement('iframe');
-  frame.className = 'runner-frame';
-  frame.title = 'Code execution page';
   frame.setAttribute('sandbox', 'allow-scripts');
-  frame.setAttribute('aria-hidden', 'true');
-  frame.tabIndex = -1;
+  if (mount) {
+    frame.className = 'web-view-frame';
+    frame.title = 'Web view';
+  } else {
+    frame.className = 'runner-frame';
+    frame.title = 'Code execution page';
+    frame.setAttribute('aria-hidden', 'true');
+    frame.tabIndex = -1;
+  }
   frame.srcdoc = frameDocument(runner);
   const listeners: Array<(message: unknown) => void> = [];
   /** @param event Window message; only those sent by this page's own window are forwarded. */
@@ -40,7 +46,7 @@ export async function createFrameHost(): Promise<FrameHost> {
       for (const listener of listeners) listener(event.data);
   };
   window.addEventListener('message', receive);
-  document.body.append(frame);
+  (mount ?? document.body).append(frame);
   return {
     /** @param request Run request for the page's runner. */
     post: (request) => frame.contentWindow?.postMessage(request, '*'),

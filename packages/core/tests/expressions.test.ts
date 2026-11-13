@@ -107,6 +107,26 @@ describe('automatic expression results', () => {
     for (let index = 0; index < 5000; index++) unlimited.tick();
   });
 
+  it('restarts the limit whenever the code yields, so long-lived animations are not stopped', async () => {
+    const capture = createCapture(
+      console,
+      () => {},
+      () => {},
+      false,
+      30,
+    );
+    /** Simulates one animation frame's worth of loop iterations. */
+    const frame = () => {
+      for (let index = 0; index < 3000; index++) capture.tick();
+    };
+    for (let round = 0; round < 4; round++) {
+      frame();
+      // Yielding for longer than the limit must not count against the next frame.
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    frame();
+  });
+
   it('keeps imports intact for the Node compilation stage and rejects invalid syntax', () => {
     expect(captureExpressions('import path from "node:path"; path.sep;').code).toContain(
       'import path from "node:path";',

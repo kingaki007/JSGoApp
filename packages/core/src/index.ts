@@ -61,7 +61,7 @@ export type OutputListener = (
 export interface CaptureCallback {
   (value: unknown, line?: number): unknown;
   at(line: number): unknown;
-  /** Called at the start of every loop iteration; throws once the run's deadline has passed. */
+  /** Called at the start of every loop iteration; throws when code runs too long without yielding. */
   tick(): void;
 }
 
@@ -71,8 +71,10 @@ export interface CaptureCallback {
  * @param setLine Records the line of the output that is about to be produced.
  * @param report Emits one automatic expression result.
  * @param showUndefined Whether undefined expression results are reported.
- * @param timeoutMs Optional limit enforced from inside loops, for hosts that cannot interrupt
- *   running code from outside. Hosts that end the process or worker themselves omit it.
+ * @param timeoutMs Optional limit on uninterrupted synchronous work, enforced from inside loops
+ *   for hosts that cannot interrupt running code from outside. The clock restarts whenever the
+ *   code yields to the event loop, so timers and animation frames may keep running indefinitely.
+ *   Hosts that end the process themselves omit it.
  */
 export function createCapture(
   capturedConsole: unknown,
@@ -81,8 +83,9 @@ export function createCapture(
   showUndefined = false,
   timeoutMs?: number,
 ): CaptureCallback {
-  const deadline = timeoutMs === undefined ? Infinity : Date.now() + timeoutMs;
   let ticks = 0;
+  // Start of the current uninterrupted stretch of work; 0 once the event loop has run again.
+  let busySince = 0;
   /** @param value Expression result, returned unchanged. @param line Its statement's first line. */
   const capture = (value: unknown, line = 0) => {
     if (value !== undefined || showUndefined) {
@@ -99,8 +102,17 @@ export function createCapture(
     },
     /** Checks the clock every 1024 iterations so the guard stays cheap in tight loops. */
     tick() {
-      if ((++ticks & 1023) === 0 && Date.now() > deadline)
-        throw new Error(`Execution exceeded ${Math.round((timeoutMs ?? 0) / 1000)} seconds.`);
+      if (timeoutMs === undefined || (++ticks & 1023) !== 0) return;
+      const now = Date.now();
+      if (busySince === 0) {
+        busySince = now;
+        // A timer only fires after the current work yields, which ends the measured stretch.
+        setTimeout(() => {
+          busySince = 0;
+        }, 0);
+      } else if (now - busySince > timeoutMs) {
+        throw new Error(`Execution exceeded ${Math.round(timeoutMs / 1000)} seconds.`);
+      }
     },
   });
 }

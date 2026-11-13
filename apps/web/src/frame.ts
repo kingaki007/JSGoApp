@@ -7,6 +7,24 @@ function post(message: FrameMessage) {
   parent.postMessage(message, '*');
 }
 
+/**
+ * Waits until the page knows its size. A new page can report a zero-sized window for a moment,
+ * which would break code that sizes a canvas from `window.innerWidth` on its first line.
+ * @returns Resolves at once when sized, otherwise as soon as a size arrives or after one second.
+ */
+function whenSized(): Promise<void> {
+  if (window.innerWidth > 0) return Promise.resolve();
+  return new Promise((resolve) => {
+    const startedAt = Date.now();
+    /** Checks again shortly; a page that stays unsized (for example while hidden) still runs. */
+    const check = () => {
+      if (window.innerWidth > 0 || Date.now() - startedAt >= 1000) resolve();
+      else setTimeout(check, 20);
+    };
+    check();
+  });
+}
+
 let started = false;
 window.addEventListener('message', (event: MessageEvent<Partial<FrameRequest> | null>) => {
   const request = event.data;
@@ -15,13 +33,18 @@ window.addEventListener('message', (event: MessageEvent<Partial<FrameRequest> | 
   if (typeof request.id !== 'string' || typeof request.code !== 'string') return;
   started = true;
   const { id } = request;
-  void executeCode(
-    id,
-    request.code,
-    (line, sourceLine, values) => post({ type: 'output', id, line, sourceLine, values }),
-    request.showUndefined === true,
-    request.inspect === true,
-    typeof request.timeoutMs === 'number' ? request.timeoutMs : undefined,
-  ).then((result) => post({ type: 'complete', result }));
+  const code = request.code;
+  void whenSized()
+    .then(() =>
+      executeCode(
+        id,
+        code,
+        (line, sourceLine, values) => post({ type: 'output', id, line, sourceLine, values }),
+        request.showUndefined === true,
+        request.inspect === true,
+        typeof request.timeoutMs === 'number' ? request.timeoutMs : undefined,
+      ),
+    )
+    .then((result) => post({ type: 'complete', result }));
 });
 post({ type: 'ready' });

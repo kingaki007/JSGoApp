@@ -34,6 +34,7 @@ export function toDraftLine(line: number | undefined, lineMap?: number[]): numbe
  * @param environment Sandboxed Browser page or actual Node execution on the host.
  * @param showUndefined Whether undefined expression results are reported.
  * @param inspect Whether runtimes also send expandable trees for objects and collections.
+ * @param webMount Web view element that shows the Browser page; null runs pages off screen.
  */
 export function useExecution(
   documentId: string,
@@ -42,6 +43,7 @@ export function useExecution(
   environment: Environment,
   showUndefined = false,
   inspect = false,
+  webMount: HTMLElement | null = null,
 ) {
   const [browser] = useState(() => new BrowserRuntime());
   const [node] = useState(() => new NodeRuntime());
@@ -49,6 +51,16 @@ export function useExecution(
   const requestId = useRef<string | null>(null);
   const [result, setResult] = useState<ExecutionView | null>(null);
   const [isRunning, setRunning] = useState(false);
+
+  useEffect(() => {
+    // Moving the page ends its run inside the runtime; release this hook's run as well so a
+    // rerun requested for the new location is not ignored.
+    if (requestId.current) {
+      requestId.current = null;
+      setRunning(false);
+    }
+    browser.setMount(webMount);
+  }, [browser, webMount]);
 
   useEffect(() => {
     setResult(null);

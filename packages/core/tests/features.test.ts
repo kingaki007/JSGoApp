@@ -77,6 +77,7 @@ describe('subscription feature policy', () => {
       'codeFormatting',
       'multipleTabs',
       'objectInspection',
+      'webView',
     ] as const;
     for (const tier of ['free', 'plus', 'max'] as const)
       for (const feature of workbench)

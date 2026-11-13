@@ -53,4 +53,6 @@
   --layout-pane-toolbar-height: 3.25rem;
   --layout-breadcrumb-height: 2rem;
   --layout-preview-min-height: 12rem;
+  /* Default canvas for pages rendered by snippets, independent of the app theme. */
+  --web-view-background: #ffffff;
 }

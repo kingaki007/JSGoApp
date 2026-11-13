@@ -7,8 +7,9 @@ JavaScript or TypeScript. Changing environment cancels active work and clears it
 output without changing either language's draft. Environment selection is
 session-only; drafts continue to persist locally.
 
-Web, Console, and Split remain visible in both environments. Web and Split are
-disabled with a tooltip until the Browser page can be shown.
+In the Browser environment the results pane offers Web, Console, and Split. Node.js
+has no page to show, so the switch is hidden there and the console is displayed.
+The selected view lasts for the session and is kept while Node.js is selected.
 
 ## Browser page
 
@@ -23,7 +24,8 @@ Page -> posts output messages, then completion -> App removes the page
 ```
 
 - The page contains `<div id="root"></div>`, so UI libraries have a mount point.
-  It is laid out at 1024 by 768 off screen; nothing it renders is visible yet.
+  In the Console view it is laid out at 1024 by 768 off screen. In the Web and
+  Split views it is created inside the Web view and fills it.
 - `sandbox="allow-scripts"` gives the page an opaque origin. Snippets cannot
   read the app's local storage, cookies, or DOM, cannot navigate the app, and
   cannot open windows. `localStorage` inside the page throws, and `fetch` sends
@@ -32,14 +34,28 @@ Page -> posts output messages, then completion -> App removes the page
   (`apps/web/src/frame.ts`) is therefore bundled into one script by the
   `jsgoapp-frame-runner` plugin in `apps/web/vite.config.ts` and placed inline in
   the page. It loads on the first Browser run.
-- The page is removed when the run completes, fails, times out, or is stopped,
-  which also ends its timers, listeners, and animation loops.
-- The page shares the app's thread, so the app cannot interrupt it from outside.
-  The expression transform adds a check at the start of every loop body; once
-  the five-second limit passes, the loop throws `Execution exceeded 5 seconds.`
-  from inside the page. A host timer, half a second later, covers work that
-  never finishes, such as a promise that never settles. While a tight loop runs,
-  the app is unresponsive for up to five seconds. Long synchronous work without
+- Off screen, the page is removed when the run completes, fails, times out, or
+  is stopped, which also ends its timers, listeners, and animation loops.
+- Shown in the Web view, the page is kept after its top-level code finishes,
+  even when that code threw, so what it rendered stays visible and its event
+  handlers and animation loops keep working. It is removed by the next run,
+  Stop, a change of tab, language, or environment, or leaving the Web view. A
+  run ended by the host (time limit or Stop) never keeps its page. Console output
+  produced after the top-level code finished is not shown.
+- A page cannot move between containers without reloading. Entering or leaving
+  a view that shows the page therefore ends the current page and, when Auto run
+  is on, starts a fresh run in the new place.
+- The runner waits (at most one second) until the new page reports a non-zero
+  window size, so code such as `canvas.width = window.innerWidth` works on its
+  first line.
+- The app cannot rely on interrupting the page from outside: the browser decides
+  whether a sandboxed page gets its own process, and where it does not, the page
+  shares the app's thread. The expression transform adds a check at the start of
+  every loop body. When code has run for more than five seconds without yielding
+  to the event loop, the loop throws `Execution exceeded 5 seconds.` from inside
+  the page. The clock restarts whenever the code yields, so timers and animation
+  frames may run indefinitely. A host timer covers top-level code that never
+  finishes, such as a promise that never settles. Long synchronous work without
   loops (for example deep recursion) is not interrupted by this check.
 - The editor offers DOM types (`lib.dom.d.ts`) for Browser.
 

@@ -10,6 +10,7 @@ export const featureCatalog = {
   codeFormatting: { label: 'Code formatting', enabled: true },
   multipleTabs: { label: 'Multiple scratchpad tabs', enabled: true },
   objectInspection: { label: 'Expandable values in results', enabled: true },
+  webView: { label: 'Web view of the Browser page', enabled: true },
 };
 export type Feature = keyof typeof featureCatalog;
 export type FeatureAccess = Readonly<Record<Feature, boolean>>;
@@ -31,7 +32,14 @@ export const featurePolicy: FeaturePolicy = {
   features: featureCatalog,
   plans: {
     // Workbench features are open on every plan; remove a name from a list to paywall it.
-    free: ['matchLines', 'workspaceSettings', 'codeFormatting', 'multipleTabs', 'objectInspection'],
+    free: [
+      'matchLines',
+      'workspaceSettings',
+      'codeFormatting',
+      'multipleTabs',
+      'objectInspection',
+      'webView',
+    ],
     plus: [
       'autocomplete',
       'hoverDocumentation',
@@ -40,6 +48,7 @@ export const featurePolicy: FeaturePolicy = {
       'codeFormatting',
       'multipleTabs',
       'objectInspection',
+      'webView',
     ],
     max: [
       'definitionNavigation',
@@ -50,6 +59,7 @@ export const featurePolicy: FeaturePolicy = {
       'codeFormatting',
       'multipleTabs',
       'objectInspection',
+      'webView',
     ],
   },
 };

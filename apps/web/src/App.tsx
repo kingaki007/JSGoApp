@@ -12,7 +12,7 @@ import {
 import EnvironmentPicker from './EnvironmentPicker';
 import { useTheme } from './theme';
 import ThemeSwitcher from './ThemeSwitcher';
-import ResultsPane from './ResultsPane';
+import ResultsPane, { type ResultView } from './ResultsPane';
 import SettingsPanel from './SettingsPanel';
 import TabList from './TabList';
 import type { LineAlignment } from './OutputPanel';
@@ -66,6 +66,10 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
   const { preference, setPreference, resolved } = useTheme();
   const editorRef = useRef<CodeEditorHandle | null>(null);
   const [environment, setEnvironment] = useState<Environment>('browser');
+  const [resultView, setResultView] = useState<ResultView>('console');
+  // The Web view's container; the Browser page is created inside it while it exists.
+  const [webMount, setWebMount] = useState<HTMLElement | null>(null);
+  const webAvailable = features.webView && environment === 'browser';
   const execution = useExecution(
     active.id,
     language,
@@ -73,6 +77,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     environment,
     settings.showUndefined,
     features.objectInspection,
+    webMount,
   );
   /** Runs the latest editor snapshot without coupling debounce timers to output-state renders. */
   const runCode = useCallback(() => {
@@ -86,6 +91,15 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     cancelExecution: execution.cancelActive,
     clearOutput: execution.clear,
   });
+
+  // A page cannot move between containers, so showing or hiding the Web view starts a fresh run
+  // in the new location. With Auto run off the user starts it, as for any other change.
+  const lastMount = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (lastMount.current === webMount) return;
+    lastMount.current = webMount;
+    if (ready && settings.autoRun && active.code.trim()) autoRun.runNow();
+  }, [webMount]);
 
   const sideBySide = useSideBySide();
   const matchLines = features.matchLines && settings.matchLines && sideBySide && ready;
@@ -252,7 +266,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
           </span>
           <span className="execution-hint">
             {environment === 'browser'
-              ? 'Browser page · DOM available · preview hidden'
+              ? 'Browser page · DOM available · Web view shows what it renders'
               : window.desktop
                 ? 'Node.js · local desktop execution'
                 : 'Node.js · local service required: pnpm dev:runner'}
@@ -266,6 +280,10 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
         isRunning={execution.isRunning}
         onClear={execution.clear}
         alignment={alignment}
+        view={resultView}
+        onViewChange={setResultView}
+        webAvailable={webAvailable}
+        onWebMount={setWebMount}
       />
 
       <footer className="status-bar">
