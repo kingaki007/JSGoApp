@@ -237,7 +237,8 @@ layout inside `resources/app` mirrors the repository so the main process finds
 the UI at the same relative path.
 
 To update the app, close it, pull or merge the new code, and run the command
-again; the folder is replaced. Drafts and settings are kept because Electron
+again. The new app is built beside the old one and swapped in at the end. If the
+app is still open, the command stops and leaves the existing app unchanged. Drafts and settings are kept because Electron
 stores them in the user-data folder (`%APPDATA%\JSGoApp` on Windows,
 `~/.config/JSGoApp` on Linux), not in the app folder. The packaged app keeps its
 own drafts, separate from `pnpm dev:desktop` and from the web app.
