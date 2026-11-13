@@ -283,6 +283,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
         view={resultView}
         onViewChange={setResultView}
         webAvailable={webAvailable}
+        styleLevels={features.consoleLevels}
         onWebMount={setWebMount}
       />
 

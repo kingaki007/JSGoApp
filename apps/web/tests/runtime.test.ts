@@ -52,15 +52,16 @@ describe('browser page lifecycle', () => {
     host.send({ type: 'ready' });
     expect(host.post).toHaveBeenCalledWith({ ...request('run'), inspect: true, timeoutMs: 5000 });
     const values = [{ type: 'object', text: 'Object', entries: [] }];
-    host.send({ type: 'output', id: 'run', line: '{}', sourceLine: 3, values });
+    host.send({ type: 'output', id: 'run', line: '{}', sourceLine: 3, values, level: 'warn' });
     host.send({ type: 'complete', result: { id: 'run' } });
     expect(await pending).toEqual({
       id: 'run',
       lines: ['{}'],
       sourceLines: [3],
       details: [values],
+      levels: ['warn'],
     });
-    expect(output).toHaveBeenCalledWith('{}', 3, values);
+    expect(output).toHaveBeenCalledWith('{}', 3, values, 'warn');
     expect(host.dispose).toHaveBeenCalledOnce();
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -76,6 +77,7 @@ describe('browser page lifecycle', () => {
       lines: ['started'],
       sourceLines: [0],
       details: [null],
+      levels: ['log'],
       error: 'Something broke',
     });
   });
@@ -94,6 +96,7 @@ describe('browser page lifecycle', () => {
       lines: ['before wait'],
       sourceLines: [0],
       details: [null],
+      levels: ['log'],
       error: 'Execution exceeded 5 seconds.',
     });
     expect(hosts[0].dispose).toHaveBeenCalledOnce();
@@ -134,13 +137,20 @@ describe('browser page lifecycle', () => {
     host.send({ type: 'complete', result: { id: 'old' } });
     host.send('not an object');
     expect(output).not.toHaveBeenCalled();
-    host.send({ type: 'output', id: 'new', line: 'current', values: [{ type: 'script' }] });
+    host.send({
+      type: 'output',
+      id: 'new',
+      line: 'current',
+      values: [{ type: 'script' }],
+      level: 'script',
+    });
     host.send({ type: 'complete', result: { id: 'new' } });
     expect(await next).toEqual({
       id: 'new',
       lines: ['current'],
       sourceLines: [0],
       details: [null],
+      levels: ['log'],
     });
   });
 

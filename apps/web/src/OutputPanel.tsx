@@ -1,6 +1,7 @@
 /** Presents console output as a list or aligned with editor lines, plus status, errors, and clearing. */
 import { useLayoutEffect, useRef, useState } from 'react';
-import type { InspectedValue } from '@code-editor/core';
+import type { ConsoleLevel, InspectedValue } from '@code-editor/core';
+import { highestLevel } from '@code-editor/core/console';
 import { summarize } from '@code-editor/core/inspect';
 import type { ExecutionView } from './useExecution';
 import { ValueList } from './ValueTree';
@@ -16,7 +17,7 @@ export interface LineAlignment {
 
 export interface AlignedOutput {
   /** One entry per draft line with output, in line order; values from one line are joined. */
-  rows: Array<{ line: number; text: string; values?: InspectedValue[] }>;
+  rows: Array<{ line: number; text: string; level: ConsoleLevel; values?: InspectedValue[] }>;
   /** Output whose source line is unknown, shown below the aligned rows. */
   unplaced: string[];
 }
@@ -26,15 +27,17 @@ export interface AlignedOutput {
  * @param lines Output entries in execution order.
  * @param sourceLines Draft line per entry; 0 or missing marks an unknown origin.
  * @param details Inspected arguments per entry; a row gains values when any of its entries has them.
+ * @param levels Console level per entry; a row takes the most severe level among its entries.
  */
 export function alignOutput(
   lines: readonly string[],
   sourceLines: readonly number[],
   details: ReadonlyArray<InspectedValue[] | null> = [],
+  levels: readonly ConsoleLevel[] = [],
 ): AlignedOutput {
   const grouped = new Map<
     number,
-    { texts: string[]; values: InspectedValue[]; inspectable: boolean }
+    { texts: string[]; values: InspectedValue[]; inspectable: boolean; levels: ConsoleLevel[] }
   >();
   const unplaced: string[] = [];
   lines.forEach((text, index) => {
@@ -43,7 +46,8 @@ export function alignOutput(
       unplaced.push(text);
       return;
     }
-    const row = grouped.get(line) ?? { texts: [], values: [], inspectable: false };
+    const row = grouped.get(line) ?? { texts: [], values: [], inspectable: false, levels: [] };
+    row.levels.push(levels[index] ?? 'log');
     row.texts.push(text.replace(/\s*\n\s*/g, ' '));
     const inspected = details[index];
     // Text-only entries join an inspectable row as plain strings so nothing is lost when it opens.
@@ -56,6 +60,7 @@ export function alignOutput(
       .sort(([first], [second]) => first - second)
       .map(([line, row]) => ({
         line,
+        level: highestLevel(row.levels),
         // Inspectable rows preview their values the same way the opened tree labels them.
         text: row.inspectable
           ? row.values.map((value) => summarize(value)).join(' ')
@@ -72,17 +77,20 @@ export function alignOutput(
  * @param props.isRunning Whether the clear action should be disabled during execution.
  * @param props.onClear Callback that clears output without changing source code.
  * @param props.alignment Editor line geometry; when present, results sit beside their source lines.
+ * @param props.styleLevels Whether warnings, errors, info, and debug entries are styled differently.
  */
 export default function OutputPanel({
   result,
   isRunning,
   onClear,
   alignment,
+  styleLevels = false,
 }: {
   result: ExecutionView | null;
   isRunning: boolean;
   onClear(): void;
   alignment?: LineAlignment;
+  styleLevels?: boolean;
 }) {
   const statusLabels = {
     running: 'Running…',
@@ -99,7 +107,17 @@ export default function OutputPanel({
     setOrigin((current) => (current === top ? current : top));
   });
   const aligned =
-    alignment && result ? alignOutput(result.lines, result.sourceLines, result.details) : null;
+    alignment && result
+      ? alignOutput(result.lines, result.sourceLines, result.details, result.levels)
+      : null;
+  /** @param level Entry or row level. @returns Extra class and spoken prefix for that level. */
+  const presentLevel = (level: ConsoleLevel | undefined) => {
+    const shown = styleLevels ? (level ?? 'log') : 'log';
+    return {
+      className: shown === 'log' ? '' : ` output-level-${shown}`,
+      prefix: shown === 'warn' ? 'Warning: ' : shown === 'error' ? 'Error: ' : '',
+    };
+  };
   // One aligned row at a time can be opened; it overlays the rows below until closed.
   const [opened, setOpened] = useState<{ run: string; line: number } | null>(null);
   const errorClass = `output-error ${result?.status === 'stopped' ? 'output-stopped' : ''}`;
@@ -136,7 +154,7 @@ export default function OutputPanel({
               if (row.values && opened?.run === result?.id && opened?.line === row.line)
                 return (
                   <div
-                    className="output-row output-row-open"
+                    className={`output-row output-row-open${presentLevel(row.level).className}`}
                     key={row.line}
                     style={{ top: top - origin, fontSize: alignment.fontSize }}
                   >
@@ -156,7 +174,7 @@ export default function OutputPanel({
                 );
               return (
                 <pre
-                  className="output-row"
+                  className={`output-row${presentLevel(row.level).className}`}
                   key={row.line}
                   title={row.text}
                   style={{
@@ -166,7 +184,9 @@ export default function OutputPanel({
                     fontSize: alignment.fontSize,
                   }}
                 >
-                  <span className="visually-hidden">Line {row.line}: </span>
+                  <span className="visually-hidden">
+                    Line {row.line}: {presentLevel(row.level).prefix}
+                  </span>
                   {row.values ? (
                     <button
                       type="button"
@@ -204,11 +224,27 @@ export default function OutputPanel({
           {result?.lines.map((line, index) => {
             const values = result.details[index];
             return values ? (
-              <div className="output-line output-values" key={index}>
+              <div
+                className={`output-line output-values${presentLevel(result.levels[index]).className}`}
+                key={index}
+              >
+                {presentLevel(result.levels[index]).prefix && (
+                  <span className="visually-hidden">
+                    {presentLevel(result.levels[index]).prefix}
+                  </span>
+                )}
                 <ValueList values={values} />
               </div>
             ) : (
-              <pre className="output-line" key={index}>
+              <pre
+                className={`output-line${presentLevel(result.levels[index]).className}`}
+                key={index}
+              >
+                {presentLevel(result.levels[index]).prefix && (
+                  <span className="visually-hidden">
+                    {presentLevel(result.levels[index]).prefix}
+                  </span>
+                )}
                 {line || ' '}
               </pre>
             );

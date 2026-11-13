@@ -1,7 +1,13 @@
 /** Coordinates source compilation, execution, streamed output, and cancellation for the active draft. */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CodeEditorHandle } from '@code-editor/editor';
-import type { Environment, InspectedValue, Language, RunResult } from '@code-editor/core';
+import type {
+  ConsoleLevel,
+  Environment,
+  InspectedValue,
+  Language,
+  RunResult,
+} from '@code-editor/core';
 import { BrowserRuntime } from './runtime';
 import { NodeRuntime } from './nodeRuntime';
 
@@ -13,6 +19,8 @@ export interface ExecutionView extends RunResult {
   sourceLines: number[];
   /** Inspected arguments for each entry in lines; null when the text is the whole value. */
   details: Array<InspectedValue[] | null>;
+  /** Console level for each entry in lines. */
+  levels: ConsoleLevel[];
   status: 'running' | 'complete' | 'error' | 'stopped';
 }
 
@@ -88,6 +96,7 @@ export function useExecution(
         lines: [],
         sourceLines: [],
         details: [],
+        levels: [],
         status: 'running',
       });
       try {
@@ -101,7 +110,7 @@ export function useExecution(
             ...(showUndefined ? { showUndefined } : {}),
             ...(inspect ? { inspect } : {}),
           },
-          (line, sourceLine, values) => {
+          (line, sourceLine, values, level) => {
             if (requestId.current !== id) return;
             setResult((current) =>
               current?.id === id
@@ -110,6 +119,7 @@ export function useExecution(
                     lines: [...current.lines, line],
                     sourceLines: [...current.sourceLines, toDraftLine(sourceLine, lineMap)],
                     details: [...current.details, values ?? null],
+                    levels: [...current.levels, level ?? 'log'],
                   }
                 : current,
             );
@@ -122,6 +132,7 @@ export function useExecution(
             toDraftLine(output.sourceLines?.[index], lineMap),
           ),
           details: output.lines.map((_line, index) => output.details?.[index] ?? null),
+          levels: output.lines.map((_line, index) => output.levels?.[index] ?? 'log'),
           documentId,
           language,
           status: output.error ? 'error' : 'complete',
@@ -135,6 +146,7 @@ export function useExecution(
           lines: [],
           sourceLines: [],
           details: [],
+          levels: [],
           error: error instanceof Error ? error.message : String(error),
           status: 'error',
         });

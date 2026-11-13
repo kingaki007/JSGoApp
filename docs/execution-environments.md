@@ -116,6 +116,11 @@ that produced the entry (0 when unknown). The Browser page, the HTTP stream,
 and Electron IPC all use this field, so line-aligned results behave the same in
 every host. A request may set `showUndefined: true` to report undefined results.
 
+An output message from `console.info`, `warn`, `error`, or `debug` carries `level`;
+plain logs and expression results omit it. Hosts treat unknown levels as plain
+logs. `packages/core/src/console.ts` builds the console given to snippets, so the
+Browser page and the Node runner support the same methods.
+
 With `inspect: true` in the request, an output message whose arguments include an
 object or collection also carries `values`: one bounded, JSON-serializable tree
 per console argument (`type`, `text`, optional `entries` and `omitted`). `line`

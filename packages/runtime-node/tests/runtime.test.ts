@@ -36,6 +36,28 @@ describe('shared Node runner', () => {
     expect(validRequest({ ...request(code), inspect: 'yes' })).toBe(false);
   });
 
+  it('reports console levels and supports the wider console API', async () => {
+    const output = vi.fn();
+    const result = await new NodeRuntime().run(
+      request(
+        'console.warn("w");\nconsole.error("e");\nconsole.info("i");\nconsole.assert(false, "nope");\nconsole.count();\nconsole.dir("plain");\n1 + 1;',
+      ),
+      output,
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.lines).toEqual([
+      'w',
+      'e',
+      'i',
+      'Assertion failed: nope',
+      'default: 1',
+      'plain',
+      '2',
+    ]);
+    expect(result.levels).toEqual(['warn', 'error', 'info', 'error', 'log', 'log', 'log']);
+    expect(output.mock.calls[0]).toEqual(['w', 1, null, 'warn']);
+  });
+
   it('does not inherit arbitrary host environment variables', async () => {
     vi.stubEnv('JSGOAPP_TEST_SECRET', 'host-only');
     try {

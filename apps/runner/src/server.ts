@@ -59,7 +59,7 @@ export function createRunnerServer() {
         'Content-Type': 'application/x-ndjson',
         'Cache-Control': 'no-store',
       });
-      const result = await runtime.run(run, (line, sourceLine, values) => {
+      const result = await runtime.run(run, (line, sourceLine, values, level) => {
         response.write(
           JSON.stringify({
             type: 'output',
@@ -67,6 +67,7 @@ export function createRunnerServer() {
             line,
             sourceLine,
             ...(values ? { values } : {}),
+            ...(level && level !== 'log' ? { level } : {}),
           }) + '\n',
         );
       });

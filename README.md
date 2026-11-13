@@ -113,6 +113,15 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   between containers. Node.js has no page, so the switch is hidden there and the
   console is shown. Match lines applies to the Console view only.
 
+- **Console levels** (`consoleLevels`): `console.warn` and `console.error` entries
+  are coloured and marked, `console.info` is marked, and `console.debug` is
+  dimmed. Screen readers hear "Warning" or "Error" before the entry. When several
+  entries share a line in Match lines, the row takes the most severe level.
+  The console given to snippets also supports `dir`, `assert`, `count`,
+  `countReset`, `time`, `timeLog`, `timeEnd`, `trace`, `group`, `groupEnd`, and
+  `clear`; previously calling these threw an error. Groups are not indented,
+  `trace` has no stack, and `console.table` still prints its data as a value.
+
 RunJS capabilities not yet implemented: npm package installation, environment
 variables, a snippet library, opening and saving
 files, Vim keybindings, loop protection, and the combined Browser + Node runtime.

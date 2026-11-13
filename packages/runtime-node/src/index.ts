@@ -7,6 +7,7 @@ import {
   type RunRequest,
   type RunResult,
 } from '@code-editor/core';
+import { readLevel, type ConsoleLevel } from '@code-editor/core/console';
 import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 
 export interface RunnerProcess {
@@ -103,6 +104,7 @@ export class NodeRuntime {
       const lines: string[] = [];
       const sourceLines: number[] = [];
       const details: Array<InspectedValue[] | null> = [];
+      const levels: ConsoleLevel[] = [];
       let size = 0;
       let done = false;
       let child: RunnerProcess | undefined;
@@ -113,7 +115,14 @@ export class NodeRuntime {
         clearTimeout(timer);
         this.#cancel = undefined;
         child?.kill();
-        resolve({ id: request.id, lines, sourceLines, details, ...(error ? { error } : {}) });
+        resolve({
+          id: request.id,
+          lines,
+          sourceLines,
+          details,
+          levels,
+          ...(error ? { error } : {}),
+        });
       };
       const timer = setTimeout(() => finish('Execution exceeded 5 seconds.'), this.#timeout);
       this.#cancel = () => finish('Execution stopped.');
@@ -136,9 +145,11 @@ export class NodeRuntime {
             lines.push(line);
             const values = readInspectedValues(data.values);
             sourceLines.push(sourceLine);
+            const level = readLevel(data.level);
             details.push(values);
+            levels.push(level);
             size += line.length;
-            onOutput?.(line, sourceLine, values);
+            onOutput?.(line, sourceLine, values, level);
           } else if (data.type === 'complete') {
             finish(typeof data.error === 'string' ? data.error.slice(0, 10_000) : undefined);
           }

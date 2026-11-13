@@ -590,6 +590,32 @@
   color-scheme: light;
 }
 
+/* Console levels: warnings and errors stand out; info is marked; debug recedes. */
+.output-level-warn,
+.output-level-error,
+.output-level-info {
+  padding-left: var(--space-2);
+  border-left: var(--focus-width) solid currentColor;
+}
+.output-level-warn {
+  color: var(--editor-warning);
+}
+.output-level-error {
+  color: var(--editor-error);
+}
+.output-level-info {
+  border-left-color: var(--color-focus);
+}
+.output-level-debug {
+  color: var(--color-text-muted);
+}
+.output-row.output-level-warn,
+.output-row.output-level-error,
+.output-row.output-level-info {
+  /* Aligned rows keep their left edge so text still lines up with other rows. */
+  margin-left: calc(-1 * (var(--space-2) + var(--focus-width)));
+}
+
 /* Stack the editor and results when side-by-side panes would be too narrow. */
 @media (max-width: 1000px) {
   .workspace {

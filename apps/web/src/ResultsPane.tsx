@@ -35,6 +35,8 @@ interface ResultsPaneProps {
   onViewChange?(view: ResultView): void;
   /** Whether the Web view can be offered; the switch is hidden otherwise. */
   webAvailable?: boolean;
+  /** Whether console levels are styled; plans without the feature show every entry alike. */
+  styleLevels?: boolean;
   /** @param element Container that displays the Browser page, or null when it is not shown. */
   onWebMount?(element: HTMLElement | null): void;
 }
@@ -53,6 +55,7 @@ export default function ResultsPane({
   view = 'console',
   onViewChange,
   webAvailable = false,
+  styleLevels = false,
   onWebMount,
 }: ResultsPaneProps) {
   const groupId = useId();
@@ -98,6 +101,7 @@ export default function ResultsPane({
               isRunning={isRunning}
               onClear={onClear}
               alignment={shown === 'console' ? alignment : undefined}
+              styleLevels={styleLevels}
             />
           </div>
         )}

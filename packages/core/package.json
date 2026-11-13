@@ -1,12 +1,13 @@
 {
   "name": "@code-editor/core",
-  "version": "0.13.2",
+  "version": "0.14.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./expressions": "./src/expressions.ts",
-    "./inspect": "./src/inspect.ts"
+    "./inspect": "./src/inspect.ts",
+    "./console": "./src/console.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"

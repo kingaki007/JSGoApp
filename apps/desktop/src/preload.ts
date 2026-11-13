@@ -8,6 +8,7 @@ interface OutputMessage {
   line: string;
   sourceLine?: number;
   values?: unknown;
+  level?: unknown;
 }
 
 contextBridge.exposeInMainWorld('desktop', {

@@ -11,6 +11,7 @@ export const featureCatalog = {
   multipleTabs: { label: 'Multiple scratchpad tabs', enabled: true },
   objectInspection: { label: 'Expandable values in results', enabled: true },
   webView: { label: 'Web view of the Browser page', enabled: true },
+  consoleLevels: { label: 'Styled console warnings and errors', enabled: true },
 };
 export type Feature = keyof typeof featureCatalog;
 export type FeatureAccess = Readonly<Record<Feature, boolean>>;
@@ -39,6 +40,7 @@ export const featurePolicy: FeaturePolicy = {
       'multipleTabs',
       'objectInspection',
       'webView',
+      'consoleLevels',
     ],
     plus: [
       'autocomplete',
@@ -49,6 +51,7 @@ export const featurePolicy: FeaturePolicy = {
       'multipleTabs',
       'objectInspection',
       'webView',
+      'consoleLevels',
     ],
     max: [
       'definitionNavigation',
@@ -60,6 +63,7 @@ export const featurePolicy: FeaturePolicy = {
       'multipleTabs',
       'objectInspection',
       'webView',
+      'consoleLevels',
     ],
   },
 };
