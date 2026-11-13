@@ -72,6 +72,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     active.code,
     environment,
     settings.showUndefined,
+    features.objectInspection,
   );
   /** Runs the latest editor snapshot without coupling debounce timers to output-state renders. */
   const runCode = useCallback(() => {

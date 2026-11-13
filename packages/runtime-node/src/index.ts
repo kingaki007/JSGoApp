@@ -7,6 +7,7 @@ import {
   type RunRequest,
   type RunResult,
 } from '@code-editor/core';
+import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 
 export interface RunnerProcess {
   /** @param request Validated execution payload sent to the child. */
@@ -54,7 +55,8 @@ export function validRequest(value: unknown): value is RunRequest {
     /^[\w-]{1,100}$/.test(request.id) &&
     typeof request.code === 'string' &&
     request.code.length <= 100_000 &&
-    (request.showUndefined === undefined || typeof request.showUndefined === 'boolean')
+    (request.showUndefined === undefined || typeof request.showUndefined === 'boolean') &&
+    (request.inspect === undefined || typeof request.inspect === 'boolean')
   );
 }
 
@@ -100,6 +102,7 @@ export class NodeRuntime {
     return new Promise<RunResult>((resolve) => {
       const lines: string[] = [];
       const sourceLines: number[] = [];
+      const details: Array<InspectedValue[] | null> = [];
       let size = 0;
       let done = false;
       let child: RunnerProcess | undefined;
@@ -110,7 +113,7 @@ export class NodeRuntime {
         clearTimeout(timer);
         this.#cancel = undefined;
         child?.kill();
-        resolve({ id: request.id, lines, sourceLines, ...(error ? { error } : {}) });
+        resolve({ id: request.id, lines, sourceLines, details, ...(error ? { error } : {}) });
       };
       const timer = setTimeout(() => finish('Execution exceeded 5 seconds.'), this.#timeout);
       this.#cancel = () => finish('Execution stopped.');
@@ -131,9 +134,11 @@ export class NodeRuntime {
             const line = data.line.slice(0, Math.min(10_000, 100_000 - size));
             const sourceLine = normalizeSourceLine(data.sourceLine);
             lines.push(line);
+            const values = readInspectedValues(data.values);
             sourceLines.push(sourceLine);
+            details.push(values);
             size += line.length;
-            onOutput?.(line, sourceLine);
+            onOutput?.(line, sourceLine, values);
           } else if (data.type === 'complete') {
             finish(typeof data.error === 'string' ? data.error.slice(0, 10_000) : undefined);
           }

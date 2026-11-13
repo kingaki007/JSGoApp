@@ -54,8 +54,7 @@ Node environments. For example, `2 + 2` displays `4`, and
 TypeScript use the same expression transform. Expressions run once, in source
 order, interleaved with explicit console output. Undefined results are omitted.
 Declarations and expressions inside functions/loops are not automatically printed.
-Use `await` to inspect an asynchronous result. Expandable object inspection is a
-separate future milestone.
+Use `await` to inspect an asynchronous result.
 
 Once the editor is ready, non-empty code runs after two seconds without edits.
 Every edit cancels an in-flight run and replaces the pending timer. Changing
@@ -94,8 +93,17 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   that contains code asks for confirmation because its code is discarded. Up to
   30 tabs are stored. Existing two-scratchpad drafts are migrated automatically.
 
+- **Expandable values** (`objectInspection`): objects, arrays, Maps, Sets, class
+  instances, and errors appear as a one-line preview that opens into a tree of
+  their entries. In the list view each value expands in place; with Match lines
+  on, clicking a row opens it over the rows below until it is closed. Values are
+  captured when they are logged, so later mutations do not change them. Getters
+  are shown as `[Getter]` and never invoked. Trees keep 5 levels and 100 entries
+  per value; larger values state how many entries are not shown. Strings and
+  other primitives stay plain text.
+
 RunJS capabilities not yet implemented: npm package installation, environment
-variables, a snippet library, expandable object inspection, opening and saving
+variables, a snippet library, opening and saving
 files, Vim keybindings, loop protection, and the combined Browser + Node runtime.
 
 ## Workspace layout
@@ -208,7 +216,7 @@ pnpm format:check
 ```
 
 Automated tests cover shared project validation, feature policy, output capture,
-source-line tracking, source-map decoding, preferences, tab storage and migration,
+source-line tracking, source-map decoding, value inspection, preferences, tab storage and migration,
 execution failures, output limits, timeout, cancellation, local draft recovery, and compiler snapshot
 cleanup. Editor typing and
 draft retention have also been checked in the browser.

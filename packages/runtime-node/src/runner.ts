@@ -4,6 +4,7 @@ import { inspect } from 'node:util';
 import { isBuiltin, createRequire } from 'node:module';
 import { createCapture, type RunRequest } from '@code-editor/core';
 import { captureExpressions } from '@code-editor/core/expressions';
+import { createInspector } from '@code-editor/core/inspect';
 const require = createRequire(import.meta.url);
 const port = (
   process as NodeJS.Process & {
@@ -21,6 +22,10 @@ function send(message: unknown) {
 
 /** @param request Compiled source and run identifier; the owning host validates size and environment. */
 async function execute(request: RunRequest) {
+  // The host ends this process after it receives completion. Without a pending timer the process
+  // could exit as soon as the snippet finished, before queued output and completion were delivered.
+  setInterval(() => {}, 2 ** 30);
+  process.once('disconnect', () => process.exit());
   let count = 0;
   let size = 0;
   let currentLine = 0;
@@ -35,6 +40,7 @@ async function execute(request: RunRequest) {
       ...(error ? { error: error instanceof Error ? error.message : String(error) } : {}),
     });
   }
+  const inspector = createInspector(request.inspect === true);
   /** @param values Console arguments formatted safely and bounded before sending to the host. */
   function log(...values: unknown[]) {
     if (finished || count >= 500) return;
@@ -54,9 +60,16 @@ async function execute(request: RunRequest) {
           )
           .join(' ')
           .slice(0, Math.min(10_000, 90_000 - size));
+    const inspected = limited ? null : inspector(values);
     count = limited ? 500 : count + 1;
     size += line.length;
-    send({ type: 'output', id: request.id, line, sourceLine: limited ? 0 : currentLine });
+    send({
+      type: 'output',
+      id: request.id,
+      line,
+      sourceLine: limited ? 0 : currentLine,
+      ...(inspected ? { values: inspected } : {}),
+    });
   }
   /** @param name Built-in Node module; third-party package and project resolution are deferred. */
   function requireBuiltin(name: string) {

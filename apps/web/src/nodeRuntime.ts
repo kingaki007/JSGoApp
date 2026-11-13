@@ -6,6 +6,7 @@ import {
   type RunResult,
   type RuntimeAdapter,
 } from '@code-editor/core';
+import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 
 /** Owns one Node transport and cancels its process when execution is stopped or replaced. */
 export class NodeRuntime implements RuntimeAdapter {
@@ -20,7 +21,11 @@ export class NodeRuntime implements RuntimeAdapter {
     if (window.desktop) {
       const unsubscribe = window.desktop.onOutput((message) => {
         if (!controller.signal.aborted && message.id === request.id)
-          onOutput?.(message.line, normalizeSourceLine(message.sourceLine));
+          onOutput?.(
+            message.line,
+            normalizeSourceLine(message.sourceLine),
+            readInspectedValues(message.values),
+          );
       });
       this.unsubscribe = unsubscribe;
       try {
@@ -44,11 +49,12 @@ export class NodeRuntime implements RuntimeAdapter {
       let buffer = '';
       const lines: string[] = [];
       const sourceLines: number[] = [];
+      const details: Array<InspectedValue[] | null> = [];
       while (true) {
         const chunk = await reader.read();
         if (chunk.done) break;
         buffer += decoder.decode(chunk.value, { stream: true });
-        if (buffer.length > 150_000) throw new Error('Invalid Node runner response.');
+        if (buffer.length > 1_000_000) throw new Error('Invalid Node runner response.');
         let boundary;
         while ((boundary = buffer.indexOf('\n')) >= 0) {
           const message = JSON.parse(buffer.slice(0, boundary));
@@ -62,13 +68,16 @@ export class NodeRuntime implements RuntimeAdapter {
             const line = message.line.slice(0, 10_000);
             const sourceLine = normalizeSourceLine(message.sourceLine);
             lines.push(line);
+            const values = readInspectedValues(message.values);
             sourceLines.push(sourceLine);
-            onOutput?.(line, sourceLine);
+            details.push(values);
+            onOutput?.(line, sourceLine, values);
           } else if (message.type === 'complete' && message.result?.id === request.id) {
             return {
               id: request.id,
               lines,
               sourceLines,
+              details,
               ...(typeof message.result.error === 'string'
                 ? { error: message.result.error.slice(0, 10_000) }
                 : {}),

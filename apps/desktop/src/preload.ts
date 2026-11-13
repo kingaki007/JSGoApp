@@ -2,18 +2,23 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { RunRequest } from '@code-editor/core';
 
+/** Streamed output forwarded unchanged; the UI validates the untrusted values field. */
+interface OutputMessage {
+  id: string;
+  line: string;
+  sourceLine?: number;
+  values?: unknown;
+}
+
 contextBridge.exposeInMainWorld('desktop', {
   /** @param request Compiled Node execution payload validated again by the main process. */
   run: (request: RunRequest) => ipcRenderer.invoke('jsgoapp:run', request),
   /** Terminates the current Node snippet. */
   stop: () => ipcRenderer.invoke('jsgoapp:stop'),
   /** @param listener Receives streamed output; returns a function removing this subscription. */
-  onOutput(listener: (message: { id: string; line: string; sourceLine?: number }) => void) {
+  onOutput(listener: (message: OutputMessage) => void) {
     /** @param _event Private Electron event. @param message Structured run output. */
-    const receive = (
-      _event: IpcRendererEvent,
-      message: { id: string; line: string; sourceLine?: number },
-    ) => listener(message);
+    const receive = (_event: IpcRendererEvent, message: OutputMessage) => listener(message);
     ipcRenderer.on('jsgoapp:output', receive);
     return () => ipcRenderer.removeListener('jsgoapp:output', receive);
   },

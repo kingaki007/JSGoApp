@@ -69,6 +69,18 @@ that produced the entry (0 when unknown). The browser worker, the HTTP stream,
 and Electron IPC all use this field, so line-aligned results behave the same in
 every host. A request may set `showUndefined: true` to report undefined results.
 
+With `inspect: true` in the request, an output message whose arguments include an
+object or collection also carries `values`: one bounded, JSON-serializable tree
+per console argument (`type`, `text`, optional `entries` and `omitted`). `line`
+is always present as the plain-text form. `packages/core/src/inspect.ts` builds
+the trees inside the snippet process and validates them again in each host before
+they reach the UI. A run may send about 400,000 characters of trees; after that,
+entries carry text only.
+
+The Node snippet process now stays alive until its host ends it. Previously it
+could exit as soon as the snippet finished, before queued output was delivered,
+which truncated large outputs.
+
 Errors are reported in the completion result. Stop aborts the fetch connection;
 the service disposes its process when that connection closes. Environment and
 language changes do the same. The deadline is enforced by the runner host.

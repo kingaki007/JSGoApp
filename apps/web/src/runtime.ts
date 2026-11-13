@@ -6,6 +6,7 @@ import {
   type RunResult,
   type RuntimeAdapter,
 } from '@code-editor/core';
+import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 import type { ExecutionMessage } from './execution';
 
 /** Keeps CPU-bound snippets off the UI thread; this adapter does not provide DOM or Node APIs. */
@@ -26,6 +27,7 @@ export class BrowserRuntime implements RuntimeAdapter {
     return new Promise((resolve) => {
       const lines: string[] = [];
       const sourceLines: number[] = [];
+      const details: Array<InspectedValue[] | null> = [];
       let finished = false;
       const worker = new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' });
       this.worker = worker;
@@ -47,6 +49,7 @@ export class BrowserRuntime implements RuntimeAdapter {
             id: request.id,
             lines: [...lines],
             sourceLines: [...sourceLines],
+            details: [...details],
             error: 'Execution exceeded 5 seconds.',
           }),
         5000,
@@ -56,6 +59,7 @@ export class BrowserRuntime implements RuntimeAdapter {
           id: request.id,
           lines: [...lines],
           sourceLines: [...sourceLines],
+          details: [...details],
           error: 'Execution stopped.',
         });
       worker.onmessage = (event: MessageEvent<ExecutionMessage>) => {
@@ -65,8 +69,10 @@ export class BrowserRuntime implements RuntimeAdapter {
           if (lines.length >= 500) return;
           const sourceLine = normalizeSourceLine(message.sourceLine);
           lines.push(message.line);
+          const values = readInspectedValues(message.values);
           sourceLines.push(sourceLine);
-          onOutput?.(message.line, sourceLine);
+          details.push(values);
+          onOutput?.(message.line, sourceLine, values);
         } else if (message.type === 'complete' && message.result.id === request.id) {
           finish(message.result);
         }
@@ -76,6 +82,7 @@ export class BrowserRuntime implements RuntimeAdapter {
           id: request.id,
           lines: [...lines],
           sourceLines: [...sourceLines],
+          details: [...details],
           error: event.message,
         });
       worker.postMessage(request);

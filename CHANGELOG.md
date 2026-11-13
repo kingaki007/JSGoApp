@@ -5,6 +5,20 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.10.0] - 2026-11-13
+
+- Add expandable values in results (`objectInspection`, open on every plan): objects,
+  arrays, Maps, Sets, class instances, and errors show a one-line preview that opens
+  into a tree. List entries expand in place; a line-aligned row opens over the rows below.
+- Build the trees in a shared inspector used by the browser worker and the Node runner.
+  Values are captured when logged, getters are not invoked, cycles are marked, and
+  depth, entry, and size limits report what was left out. Hosts validate trees again
+  before they reach the UI. Runtimes inspect only when the request asks for it.
+- Fix the Node snippet process sometimes exiting before queued output was delivered,
+  which truncated large outputs. The process now stays alive until its host ends it.
+- Raise the web Node transport's unparsed-buffer limit to fit inspected values.
+- Add inspector, transport, and tree-rendering coverage, bringing the suite to 110 tests.
+
 ## [0.9.0] - 2026-11-13
 
 - Add a RunJS-style workbench shared by the web and desktop apps. Each capability
