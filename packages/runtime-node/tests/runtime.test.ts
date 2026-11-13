@@ -17,6 +17,25 @@ describe('shared Node runner', () => {
     expect(result.error).toBeUndefined();
     expect(result.lines).toEqual(['1', 'logged', 'example.js', '42']);
   });
+  it('returns expandable trees for objects only when the request asks for inspection', async () => {
+    const code = 'console.log({ name: "Ada", tags: new Set(["a"]) });\n42;';
+    const plain = await new NodeRuntime().run(request(code));
+    expect(plain.details).toEqual([null, null]);
+    const output = vi.fn();
+    const inspected = await new NodeRuntime().run({ ...request(code), inspect: true }, output);
+    expect(inspected.error).toBeUndefined();
+    expect(inspected.details?.[0]?.[0]).toMatchObject({
+      type: 'object',
+      entries: [
+        { key: 'name', value: { type: 'string', text: 'Ada' } },
+        { key: 'tags', value: { type: 'set', text: 'Set(1)' } },
+      ],
+    });
+    expect(inspected.details?.[1]).toBeNull();
+    expect(output.mock.calls[0][2]).toEqual(inspected.details?.[0]);
+    expect(validRequest({ ...request(code), inspect: 'yes' })).toBe(false);
+  });
+
   it('does not inherit arbitrary host environment variables', async () => {
     vi.stubEnv('JSGOAPP_TEST_SECRET', 'host-only');
     try {

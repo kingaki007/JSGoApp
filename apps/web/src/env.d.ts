@@ -11,7 +11,12 @@ declare global {
       stop(): Promise<void>;
       /** @param listener Receives active-run console output; returns a subscription cleanup function. */
       onOutput(
-        listener: (message: { id: string; line: string; sourceLine?: number }) => void,
+        listener: (message: {
+          id: string;
+          line: string;
+          sourceLine?: number;
+          values?: unknown;
+        }) => void,
       ): () => void;
     };
   }

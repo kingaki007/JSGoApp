@@ -1,7 +1,8 @@
-/** Verifies preference validation, line grouping for aligned results, and compiled-line translation. */
+/** Verifies preferences, line grouping for aligned results, line translation, and expandable values. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import OutputPanel, { alignOutput } from '../src/OutputPanel';
+import ValueTree from '../src/ValueTree';
 import {
   defaultSettings,
   loadSettings,
@@ -77,6 +78,7 @@ describe('line-aligned results', () => {
       language: 'javascript',
       lines: ['4'],
       sourceLines: [1],
+      details: [null],
       status: 'complete',
     };
     const list = renderToStaticMarkup(
@@ -86,7 +88,13 @@ describe('line-aligned results', () => {
     expect(list).not.toContain('output-aligned');
     const aligned = renderToStaticMarkup(
       <OutputPanel
-        result={{ ...result, lines: ['4', 'late'], sourceLines: [1, 0], error: 'Boom' }}
+        result={{
+          ...result,
+          lines: ['4', 'late'],
+          sourceLines: [1, 0],
+          details: [null, null],
+          error: 'Boom',
+        }}
         isRunning={false}
         onClear={() => {}}
         alignment={{ lineTop: () => 0, lineHeight: 24, fontSize: 14 }}
@@ -96,5 +104,64 @@ describe('line-aligned results', () => {
     // Unplaced output and errors stay readable even before row positions are measured.
     expect(aligned).toContain('late');
     expect(aligned).toContain('Boom');
+  });
+
+  it('gives a row values only when one of its entries is inspectable', () => {
+    const object = { type: 'object' as const, text: 'Object', entries: [] };
+    const output = alignOutput(['label', '{}', 'plain'], [2, 2, 5], [null, [object], null]);
+    expect(output.rows).toEqual([
+      { line: 2, text: 'label {}', values: [{ type: 'string', text: 'label' }, object] },
+      { line: 5, text: 'plain' },
+    ]);
+  });
+});
+
+describe('expandable values', () => {
+  const value = {
+    type: 'object' as const,
+    text: 'Object',
+    entries: [
+      { key: 'name', value: { type: 'string' as const, text: '<b>Ada</b>' } },
+      { key: 'tags', value: { type: 'array' as const, text: 'Array(2)', omitted: 2 } },
+    ],
+    omitted: 3,
+  };
+
+  it('shows a one-line preview while collapsed and escapes logged markup', () => {
+    const markup = renderToStaticMarkup(<ValueTree value={value} />);
+    expect(markup).toContain('aria-expanded="false"');
+    expect(markup).toContain('{name: &quot;&lt;b&gt;Ada&lt;/b&gt;&quot;, tags: Array(2) …, …}');
+    expect(markup).not.toContain('value-children');
+  });
+
+  it('lists entries, nested limits, and omitted counts when open', () => {
+    const markup = renderToStaticMarkup(<ValueTree value={value} defaultOpen />);
+    expect(markup).toContain('aria-expanded="true"');
+    expect(markup).toContain('value-children');
+    expect(markup).toContain('name: ');
+    expect(markup).toContain('value-string');
+    expect(markup).toContain('Array(2) …');
+    expect(markup).toContain('3 more not shown');
+  });
+
+  it('renders trees for inspectable entries in the list view and text for the rest', () => {
+    const markup = renderToStaticMarkup(
+      <OutputPanel
+        result={{
+          id: 'run',
+          documentId: 'tab',
+          language: 'javascript',
+          lines: ['plain', '{"name":"<b>Ada</b>"}'],
+          sourceLines: [1, 2],
+          details: [null, [value]],
+          status: 'complete',
+        }}
+        isRunning={false}
+        onClear={() => {}}
+      />,
+    );
+    expect(markup).toContain('<pre class="output-line">plain</pre>');
+    expect(markup).toContain('output-values');
+    expect(markup).toContain('value-toggle');
   });
 });

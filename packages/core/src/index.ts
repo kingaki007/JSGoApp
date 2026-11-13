@@ -1,5 +1,7 @@
 /** Defines shared language/project models, runtime contracts, and feature-access rules for all apps. */
 export * from './features';
+import type { InspectedValue } from './inspect';
+export type { InspectedEntry, InspectedValue } from './inspect';
 export type Language = 'javascript' | 'typescript';
 export type Environment = 'browser' | 'node';
 
@@ -31,6 +33,8 @@ export interface RunRequest {
   environment: Environment;
   /** Also reports expression statements that evaluate to undefined. */
   showUndefined?: boolean;
+  /** Also sends expandable trees for objects, arrays, Maps, and Sets. */
+  inspect?: boolean;
 }
 
 export interface RunResult {
@@ -38,11 +42,20 @@ export interface RunResult {
   lines: string[];
   /** 1-based line of the executed code that produced each entry in lines; 0 when unknown. */
   sourceLines?: number[];
+  /** Inspected arguments of each entry in lines; null when the text is the whole value. */
+  details?: Array<InspectedValue[] | null>;
   error?: string;
 }
 
-/** Receives one output entry and the 1-based executed-code line that produced it (0 when unknown). */
-export type OutputListener = (line: string, sourceLine?: number) => void;
+/**
+ * Receives one output entry, the 1-based executed-code line that produced it (0 when unknown),
+ * and its inspected arguments when the entry contains expandable values.
+ */
+export type OutputListener = (
+  line: string,
+  sourceLine?: number,
+  values?: InspectedValue[] | null,
+) => void;
 
 /** Result callback injected into instrumented code; `at` records a console call's line. */
 export interface CaptureCallback {

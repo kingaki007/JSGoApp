@@ -1,6 +1,9 @@
 /** Presents console output as a list or aligned with editor lines, plus status, errors, and clearing. */
 import { useLayoutEffect, useRef, useState } from 'react';
+import type { InspectedValue } from '@code-editor/core';
+import { summarize } from '@code-editor/core/inspect';
 import type { ExecutionView } from './useExecution';
+import { ValueList } from './ValueTree';
 
 export interface LineAlignment {
   /** @param line 1-based draft line. @returns Viewport Y of its top edge, or null when unavailable. */
@@ -13,7 +16,7 @@ export interface LineAlignment {
 
 export interface AlignedOutput {
   /** One entry per draft line with output, in line order; values from one line are joined. */
-  rows: Array<{ line: number; text: string }>;
+  rows: Array<{ line: number; text: string; values?: InspectedValue[] }>;
   /** Output whose source line is unknown, shown below the aligned rows. */
   unplaced: string[];
 }
@@ -22,22 +25,43 @@ export interface AlignedOutput {
  * Groups output by the draft line that produced it.
  * @param lines Output entries in execution order.
  * @param sourceLines Draft line per entry; 0 or missing marks an unknown origin.
+ * @param details Inspected arguments per entry; a row gains values when any of its entries has them.
  */
 export function alignOutput(
   lines: readonly string[],
   sourceLines: readonly number[],
+  details: ReadonlyArray<InspectedValue[] | null> = [],
 ): AlignedOutput {
-  const grouped = new Map<number, string[]>();
+  const grouped = new Map<
+    number,
+    { texts: string[]; values: InspectedValue[]; inspectable: boolean }
+  >();
   const unplaced: string[] = [];
   lines.forEach((text, index) => {
     const line = sourceLines[index];
-    if (!line) unplaced.push(text);
-    else grouped.set(line, [...(grouped.get(line) ?? []), text.replace(/\s*\n\s*/g, ' ')]);
+    if (!line) {
+      unplaced.push(text);
+      return;
+    }
+    const row = grouped.get(line) ?? { texts: [], values: [], inspectable: false };
+    row.texts.push(text.replace(/\s*\n\s*/g, ' '));
+    const inspected = details[index];
+    // Text-only entries join an inspectable row as plain strings so nothing is lost when it opens.
+    row.values.push(...(inspected ?? [{ type: 'string' as const, text }]));
+    row.inspectable ||= !!inspected;
+    grouped.set(line, row);
   });
   return {
     rows: [...grouped]
       .sort(([first], [second]) => first - second)
-      .map(([line, texts]) => ({ line, text: texts.join('  ') })),
+      .map(([line, row]) => ({
+        line,
+        // Inspectable rows preview their values the same way the opened tree labels them.
+        text: row.inspectable
+          ? row.values.map((value) => summarize(value)).join(' ')
+          : row.texts.join('  '),
+        ...(row.inspectable ? { values: row.values } : {}),
+      })),
     unplaced,
   };
 }
@@ -74,7 +98,10 @@ export default function OutputPanel({
     const top = content.current?.getBoundingClientRect().top ?? null;
     setOrigin((current) => (current === top ? current : top));
   });
-  const aligned = alignment && result ? alignOutput(result.lines, result.sourceLines) : null;
+  const aligned =
+    alignment && result ? alignOutput(result.lines, result.sourceLines, result.details) : null;
+  // One aligned row at a time can be opened; it overlays the rows below until closed.
+  const [opened, setOpened] = useState<{ run: string; line: number } | null>(null);
   const errorClass = `output-error ${result?.status === 'stopped' ? 'output-stopped' : ''}`;
 
   return (
@@ -105,7 +132,29 @@ export default function OutputPanel({
           {origin !== null &&
             aligned.rows.map((row) => {
               const top = alignment.lineTop(row.line);
-              return top === null ? null : (
+              if (top === null) return null;
+              if (row.values && opened?.run === result?.id && opened?.line === row.line)
+                return (
+                  <div
+                    className="output-row output-row-open"
+                    key={row.line}
+                    style={{ top: top - origin, fontSize: alignment.fontSize }}
+                  >
+                    <button
+                      type="button"
+                      className="value-toggle"
+                      aria-expanded="true"
+                      aria-label={`Collapse result of line ${row.line}`}
+                      onClick={() => setOpened(null)}
+                    >
+                      <span className="value-arrow" aria-hidden="true">
+                        ▾
+                      </span>
+                    </button>
+                    <ValueList values={row.values} defaultOpen />
+                  </div>
+                );
+              return (
                 <pre
                   className="output-row"
                   key={row.line}
@@ -118,7 +167,21 @@ export default function OutputPanel({
                   }}
                 >
                   <span className="visually-hidden">Line {row.line}: </span>
-                  {row.text}
+                  {row.values ? (
+                    <button
+                      type="button"
+                      className="value-toggle"
+                      aria-expanded="false"
+                      onClick={() => setOpened({ run: result?.id ?? '', line: row.line })}
+                    >
+                      <span className="value-arrow" aria-hidden="true">
+                        ▸
+                      </span>
+                      {row.text}
+                    </button>
+                  ) : (
+                    row.text
+                  )}
                 </pre>
               );
             })}
@@ -138,11 +201,18 @@ export default function OutputPanel({
           {!result && (
             <p className="output-placeholder">Start typing or press Run to see output.</p>
           )}
-          {result?.lines.map((line, index) => (
-            <pre className="output-line" key={index}>
-              {line || ' '}
-            </pre>
-          ))}
+          {result?.lines.map((line, index) => {
+            const values = result.details[index];
+            return values ? (
+              <div className="output-line output-values" key={index}>
+                <ValueList values={values} />
+              </div>
+            ) : (
+              <pre className="output-line" key={index}>
+                {line || ' '}
+              </pre>
+            );
+          })}
           {result?.error && <pre className={errorClass}>{result.error}</pre>}
           {result?.status === 'complete' && result.lines.length === 0 && (
             <p className="output-placeholder">

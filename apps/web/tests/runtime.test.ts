@@ -41,6 +41,7 @@ describe('execution lifecycle', () => {
       id: 'timeout',
       lines: ['before loop'],
       sourceLines: [0],
+      details: [null],
       error: 'Execution exceeded 5 seconds.',
     });
     expect(worker.terminate).toHaveBeenCalledOnce();
@@ -56,6 +57,7 @@ describe('execution lifecycle', () => {
       id: 'stop',
       lines: ['partial'],
       sourceLines: [0],
+      details: [null],
       error: 'Execution stopped.',
     });
     expect(worker.terminate).toHaveBeenCalledOnce();

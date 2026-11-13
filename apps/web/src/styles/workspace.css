@@ -497,6 +497,74 @@
   background: var(--color-surface);
 }
 
+/* Expandable values: objects and collections open into a tree of their entries. */
+.value-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.value-toggle:hover .value-arrow {
+  color: var(--color-text);
+}
+.value-arrow {
+  display: inline-block;
+  width: var(--space-4);
+  color: var(--color-text-muted);
+}
+.value-children {
+  margin: 0;
+  padding: 0 0 0 var(--space-5);
+  list-style: none;
+}
+.value-leaf {
+  padding-left: var(--space-4);
+}
+.output-values > span > .value-leaf,
+.output-row-open > span > .value-leaf {
+  padding-left: 0;
+}
+.value-key {
+  color: var(--syntax-type);
+}
+.value-string {
+  color: var(--syntax-string);
+}
+.value-number,
+.value-bigint {
+  color: var(--syntax-number);
+}
+.value-boolean,
+.value-null,
+.value-undefined,
+.value-function,
+.value-symbol {
+  color: var(--syntax-keyword);
+}
+.value-error {
+  color: var(--editor-error);
+}
+.value-omitted,
+.value-circular {
+  color: var(--color-text-muted);
+}
+.output-row-open {
+  z-index: 1;
+  max-height: 70%;
+  padding: var(--space-0) var(--space-2) var(--space-2) var(--space-0);
+  overflow: auto;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-control);
+  line-height: var(--line-height-body);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* Stack the editor and results when side-by-side panes would be too narrow. */
 @media (max-width: 1000px) {
   .workspace {

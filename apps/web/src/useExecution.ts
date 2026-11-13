@@ -1,7 +1,7 @@
 /** Coordinates source compilation, worker execution, streamed output, and cancellation for the active draft. */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CodeEditorHandle } from '@code-editor/editor';
-import type { Environment, Language, RunResult } from '@code-editor/core';
+import type { Environment, InspectedValue, Language, RunResult } from '@code-editor/core';
 import { BrowserRuntime } from './runtime';
 import { NodeRuntime } from './nodeRuntime';
 
@@ -11,6 +11,8 @@ export interface ExecutionView extends RunResult {
   language: Language;
   /** Draft line for each entry in lines; 0 when the origin is unknown. */
   sourceLines: number[];
+  /** Inspected arguments for each entry in lines; null when the text is the whole value. */
+  details: Array<InspectedValue[] | null>;
   status: 'running' | 'complete' | 'error' | 'stopped';
 }
 
@@ -31,6 +33,7 @@ export function toDraftLine(line: number | undefined, lineMap?: number[]): numbe
  * @param source Current source code captured when Run is requested.
  * @param environment Browser worker or actual Node execution on the host.
  * @param showUndefined Whether undefined expression results are reported.
+ * @param inspect Whether runtimes also send expandable trees for objects and collections.
  */
 export function useExecution(
   documentId: string,
@@ -38,6 +41,7 @@ export function useExecution(
   source: string,
   environment: Environment,
   showUndefined = false,
+  inspect = false,
 ) {
   const [browser] = useState(() => new BrowserRuntime());
   const [node] = useState(() => new NodeRuntime());
@@ -65,13 +69,27 @@ export function useExecution(
       const id = crypto.randomUUID();
       requestId.current = id;
       setRunning(true);
-      setResult({ id, documentId, language, lines: [], sourceLines: [], status: 'running' });
+      setResult({
+        id,
+        documentId,
+        language,
+        lines: [],
+        sourceLines: [],
+        details: [],
+        status: 'running',
+      });
       try {
         const { code, lineMap } = await editor.compile(source, language);
         if (requestId.current !== id) return;
         const output = await runtime.run(
-          { id, code, environment, ...(showUndefined ? { showUndefined } : {}) },
-          (line, sourceLine) => {
+          {
+            id,
+            code,
+            environment,
+            ...(showUndefined ? { showUndefined } : {}),
+            ...(inspect ? { inspect } : {}),
+          },
+          (line, sourceLine, values) => {
             if (requestId.current !== id) return;
             setResult((current) =>
               current?.id === id
@@ -79,6 +97,7 @@ export function useExecution(
                     ...current,
                     lines: [...current.lines, line],
                     sourceLines: [...current.sourceLines, toDraftLine(sourceLine, lineMap)],
+                    details: [...current.details, values ?? null],
                   }
                 : current,
             );
@@ -90,6 +109,7 @@ export function useExecution(
           sourceLines: output.lines.map((_line, index) =>
             toDraftLine(output.sourceLines?.[index], lineMap),
           ),
+          details: output.lines.map((_line, index) => output.details?.[index] ?? null),
           documentId,
           language,
           status: output.error ? 'error' : 'complete',
@@ -102,6 +122,7 @@ export function useExecution(
           language,
           lines: [],
           sourceLines: [],
+          details: [],
           error: error instanceof Error ? error.message : String(error),
           status: 'error',
         });
@@ -112,7 +133,7 @@ export function useExecution(
         }
       }
     },
-    [documentId, environment, language, runtime, source, showUndefined],
+    [documentId, environment, language, runtime, source, showUndefined, inspect],
   );
 
   /** Cancels compilation results and terminates an active worker while keeping existing output. */

@@ -13,7 +13,7 @@ describe('scratchpad execution', () => {
     expect(result.error).toBeUndefined();
     expect(result.lines).toEqual(['1', 'logged', '1', '42']);
     expect(result.sourceLines).toEqual([1, 1, 1, 1]);
-    expect(output.mock.calls).toEqual(result.lines.map((line) => [line, 1]));
+    expect(output.mock.calls).toEqual(result.lines.map((line) => [line, 1, null]));
   });
   it('streams logs and waits for explicitly awaited work', async () => {
     const output = vi.fn();
@@ -26,10 +26,11 @@ describe('scratchpad execution', () => {
       id: 'run',
       lines: ['before', '{"answer":42}'],
       sourceLines: [1, 1],
+      details: [null, null],
     });
     expect(output.mock.calls).toEqual([
-      ['before', 1],
-      ['{"answer":42}', 1],
+      ['before', 1, null],
+      ['{"answer":42}', 1, null],
     ]);
   });
 
@@ -49,6 +50,26 @@ describe('scratchpad execution', () => {
     const shown = await executeCode('shown', code, () => {}, true);
     expect(shown.lines).toEqual(['logged', 'undefined', 'undefined']);
     expect(shown.sourceLines).toEqual([1, 2, 4]);
+  });
+
+  it('sends expandable trees for objects only when inspection is requested', async () => {
+    const code = 'console.log("user", { name: "Ada" });\n[1, 2];\n"text";';
+    const plain = await executeCode('plain', code, () => {});
+    expect(plain.details).toEqual([null, null, null]);
+    const output = vi.fn();
+    const inspected = await executeCode('inspected', code, output, false, true);
+    expect(inspected.lines).toEqual(['user {"name":"Ada"}', '[1,2]', 'text']);
+    expect(inspected.details?.[0]).toEqual([
+      { type: 'string', text: 'user' },
+      {
+        type: 'object',
+        text: 'Object',
+        entries: [{ key: 'name', value: { type: 'string', text: 'Ada' } }],
+      },
+    ]);
+    expect(inspected.details?.[1]?.[0]).toMatchObject({ type: 'array', text: 'Array(2)' });
+    expect(inspected.details?.[2]).toBeNull();
+    expect(output.mock.calls[0][2]).toEqual(inspected.details?.[0]);
   });
 
   it('keeps earlier output when execution throws', async () => {
