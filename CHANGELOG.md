@@ -5,6 +5,15 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.13.0] - 2026-11-13
+
+- Add `pnpm package:desktop`, which builds the workspace and assembles a runnable,
+  unsigned desktop app folder for the current Windows or Linux machine in
+  `release/JSGoApp-<platform>-<arch>/`. It needs no dev server, runner service, or network.
+- Rerunning the command replaces the folder; drafts and settings persist in Electron's
+  user-data folder.
+- Installers, icons, signing, automatic updates, and macOS remain future work.
+
 ## [0.12.0] - 2026-11-13
 
 - Enable the Web and Split result views in the Browser environment (`webView`, open on
