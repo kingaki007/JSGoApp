@@ -5,6 +5,12 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.13.1] - 2026-11-14
+
+- Fix hover documentation, suggestions, and signature help being cut off at the top and
+  sides of the editor, most visibly on the first lines. These popups are now positioned
+  relative to the window and may extend past the editor, in the web and desktop apps.
+
 ## [0.13.0] - 2026-11-13
 
 - Add `pnpm package:desktop`, which builds the workspace and assembles a runnable,

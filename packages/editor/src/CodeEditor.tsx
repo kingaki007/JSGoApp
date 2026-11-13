@@ -235,6 +235,9 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
       options={{
         ariaLabel: `${languages[language].label} code editor`,
         automaticLayout: true,
+        // Hover, suggestion, and signature popups may extend past the editor; without this they
+        // are clipped by the editor container's edges, most visibly on the first lines.
+        fixedOverflowWidgets: true,
         minimap: { enabled: false },
         padding: { top: 24, bottom: 24 },
         scrollBeyondLastLine: false,
