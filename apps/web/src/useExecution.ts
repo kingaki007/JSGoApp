@@ -34,6 +34,12 @@ export function toDraftLine(line: number | undefined, lineMap?: number[]): numbe
   return lineMap ? (lineMap[line - 1] ?? 0) : line;
 }
 
+/** @param error Value thrown while compiling. @returns Its draft line when the compiler gave one. */
+function compileErrorLine(error: unknown): number | undefined {
+  const line = (error as { line?: unknown } | null)?.line;
+  return typeof line === 'number' && Number.isInteger(line) && line > 0 ? line : undefined;
+}
+
 /**
  * Keeps run state separate from the editor and ignores results from canceled runs.
  * @param documentId Active draft; changing it cancels the current run and hides its output.
@@ -135,6 +141,11 @@ export function useExecution(
           levels: output.lines.map((_line, index) => output.levels?.[index] ?? 'log'),
           documentId,
           language,
+          // Runtimes report lines of the executed code; show them as draft lines.
+          errorLine: toDraftLine(output.errorLine, lineMap) || undefined,
+          errorFrames: (output.errorFrames ?? [])
+            .map((frame) => ({ name: frame.name, line: toDraftLine(frame.line, lineMap) }))
+            .filter((frame) => frame.line > 0),
           status: output.error ? 'error' : 'complete',
         });
       } catch (error) {
@@ -148,6 +159,8 @@ export function useExecution(
           details: [],
           levels: [],
           error: error instanceof Error ? error.message : String(error),
+          // Compile errors carry the draft line they were found on.
+          errorLine: compileErrorLine(error),
           status: 'error',
         });
       } finally {

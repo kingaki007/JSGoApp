@@ -169,6 +169,84 @@ describe('console levels', () => {
   });
 });
 
+describe('located errors', () => {
+  const failed: ExecutionView = {
+    id: 'run',
+    documentId: 'tab',
+    language: 'javascript',
+    lines: ['start'],
+    sourceLines: [4],
+    details: [null],
+    levels: ['log'],
+    error: 'Unexpected token o',
+    errorLine: 2,
+    errorFrames: [
+      { name: 'parse', line: 2 },
+      { name: '', line: 5 },
+    ],
+    status: 'error',
+  };
+
+  it('shows the line and a call stack in the list view when the feature is on', () => {
+    const markup = renderToStaticMarkup(
+      <OutputPanel result={failed} isRunning={false} onClear={() => {}} locateErrors />,
+    );
+    expect(markup).toContain('<span class="output-error-line">Line 2</span>Unexpected token o');
+    expect(markup).toContain('Call stack (2 frames)');
+    expect(markup).toContain('parse <span>line 2</span>');
+    expect(markup).toContain('(top level) <span>line 5</span>');
+  });
+
+  it('shows only the message when the feature is off', () => {
+    const markup = renderToStaticMarkup(
+      <OutputPanel result={failed} isRunning={false} onClear={() => {}} />,
+    );
+    expect(markup).toContain('Unexpected token o');
+    expect(markup).not.toContain('output-error-line');
+    expect(markup).not.toContain('Call stack');
+  });
+
+  it('omits the stack when it would only repeat the error line', () => {
+    const markup = renderToStaticMarkup(
+      <OutputPanel
+        result={{ ...failed, errorFrames: [{ name: '', line: 2 }] }}
+        isRunning={false}
+        onClear={() => {}}
+        locateErrors
+      />,
+    );
+    expect(markup).toContain('Line 2');
+    expect(markup).not.toContain('Call stack');
+  });
+
+  it('keeps the message at the bottom of the aligned view when the line is unknown', () => {
+    const alignment = { lineTop: () => 0, lineHeight: 24, fontSize: 14 };
+    const unknown = renderToStaticMarkup(
+      <OutputPanel
+        result={{ ...failed, errorLine: undefined, errorFrames: [] }}
+        isRunning={false}
+        onClear={() => {}}
+        alignment={alignment}
+        locateErrors
+      />,
+    );
+    expect(unknown).toContain('output-aligned-footer');
+    expect(unknown).toContain('Unexpected token o');
+    // With a known line the message moves beside that line; only the stack stays below.
+    const located = renderToStaticMarkup(
+      <OutputPanel
+        result={failed}
+        isRunning={false}
+        onClear={() => {}}
+        alignment={alignment}
+        locateErrors
+      />,
+    );
+    expect(located).toContain('Call stack (2 frames)');
+    expect(located).not.toContain('output-error-line');
+  });
+});
+
 describe('expandable values', () => {
   const value = {
     type: 'object' as const,

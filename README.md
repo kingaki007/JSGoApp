@@ -122,6 +122,14 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   `clear`; previously calling these threw an error. Groups are not indented,
   `trace` has no stack, and `console.table` still prints its data as a value.
 
+- **Error locations** (`errorLocations`): a failed run shows where the error
+  originated. With Match lines the message appears beside that line, in red; in
+  the list view it is prefixed with the line number. When the error came through
+  function calls, a collapsible call stack lists each function and line. Lines
+  refer to the draft, including for TypeScript and for Node.js code that uses
+  imports. Syntax errors are located too. Values thrown without a stack, such as
+  `throw "text"`, show their message without a line.
+
 RunJS capabilities not yet implemented: npm package installation, environment
 variables, a snippet library, opening and saving
 files, Vim keybindings, loop protection, and the combined Browser + Node runtime.

@@ -8,6 +8,7 @@ import {
   type RunResult,
 } from '@code-editor/core';
 import { readLevel, type ConsoleLevel } from '@code-editor/core/console';
+import { readErrorFrames, type ErrorFrame } from '@code-editor/core/errors';
 import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 
 export interface RunnerProcess {
@@ -109,7 +110,7 @@ export class NodeRuntime {
       let done = false;
       let child: RunnerProcess | undefined;
       /** @param error Optional reason for stopping; every exit releases the child and deadline. */
-      const finish = (error?: string) => {
+      const finish = (error?: string, location?: { line: number; frames: ErrorFrame[] }) => {
         if (done) return;
         done = true;
         clearTimeout(timer);
@@ -122,6 +123,9 @@ export class NodeRuntime {
           details,
           levels,
           ...(error ? { error } : {}),
+          ...(error && location?.line
+            ? { errorLine: location.line, errorFrames: location.frames }
+            : {}),
         });
       };
       const timer = setTimeout(() => finish('Execution exceeded 5 seconds.'), this.#timeout);
@@ -151,7 +155,10 @@ export class NodeRuntime {
             size += line.length;
             onOutput?.(line, sourceLine, values, level);
           } else if (data.type === 'complete') {
-            finish(typeof data.error === 'string' ? data.error.slice(0, 10_000) : undefined);
+            finish(typeof data.error === 'string' ? data.error.slice(0, 10_000) : undefined, {
+              line: normalizeSourceLine(data.errorLine),
+              frames: readErrorFrames(data.errorFrames),
+            });
           }
         });
         child.send(request);

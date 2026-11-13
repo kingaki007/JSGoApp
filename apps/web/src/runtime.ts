@@ -7,6 +7,7 @@ import {
   type RuntimeAdapter,
 } from '@code-editor/core';
 import { readLevel, type ConsoleLevel } from '@code-editor/core/console';
+import { readErrorFrames, type ErrorFrame } from '@code-editor/core/errors';
 import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 import { createFrameHost, type FrameHost } from './frameHost';
 
@@ -73,8 +74,13 @@ export class BrowserRuntime implements RuntimeAdapter {
       /**
        * @param error Optional failure reported to the user.
        * @param keepPage Whether the page stays for the Web view; runs ended by the host never keep it.
+       * @param location Where the snippet's own error originated, when the page could tell.
        */
-      const finish = (error?: string, keepPage = false) => {
+      const finish = (
+        error?: string,
+        keepPage = false,
+        location?: { line: number; frames: ErrorFrame[] },
+      ) => {
         if (finished) return;
         finished = true;
         clearTimeout(timer);
@@ -88,6 +94,9 @@ export class BrowserRuntime implements RuntimeAdapter {
           details,
           levels,
           ...(error ? { error } : {}),
+          ...(error && location?.line
+            ? { errorLine: location.line, errorFrames: location.frames }
+            : {}),
         });
       };
       /** Ends the run on Stop or replacement while keeping output already received. */
@@ -126,6 +135,10 @@ export class BrowserRuntime implements RuntimeAdapter {
               finish(
                 typeof result.error === 'string' ? result.error.slice(0, 10_000) : undefined,
                 true,
+                {
+                  line: normalizeSourceLine(result.errorLine),
+                  frames: readErrorFrames(result.errorFrames),
+                },
               );
             }
           });

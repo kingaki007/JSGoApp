@@ -1,6 +1,8 @@
 /** Defines shared language/project models, runtime contracts, and feature-access rules for all apps. */
 export * from './features';
 import type { ConsoleLevel } from './console';
+import type { ErrorFrame } from './errors';
+export type { ErrorFrame } from './errors';
 import type { InspectedValue } from './inspect';
 export type { ConsoleLevel } from './console';
 export type { InspectedEntry, InspectedValue } from './inspect';
@@ -49,6 +51,10 @@ export interface RunResult {
   /** Console level of each entry in lines; expression results count as plain logs. */
   levels?: ConsoleLevel[];
   error?: string;
+  /** 1-based line of the executed code where the error originated; 0 or absent when unknown. */
+  errorLine?: number;
+  /** Snippet frames of the error, innermost first, with lines of the executed code. */
+  errorFrames?: ErrorFrame[];
 }
 
 /**

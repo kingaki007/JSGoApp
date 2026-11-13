@@ -4,9 +4,13 @@ import { inspect } from 'node:util';
 import { isBuiltin, createRequire } from 'node:module';
 import { createCapture, type RunRequest } from '@code-editor/core';
 import { createConsole, type ConsoleLevel } from '@code-editor/core/console';
+import { traceError } from '@code-editor/core/errors';
 import { captureExpressions } from '@code-editor/core/expressions';
+import { decodeLineMap } from '@code-editor/core/sourceMap';
 import { createInspector } from '@code-editor/core/inspect';
 const require = createRequire(import.meta.url);
+// Names the snippet in engine stacks, so its frames can be told apart from the runner's own.
+const scriptName = 'jsgoapp-node.js';
 const port = (
   process as NodeJS.Process & {
     parentPort?: {
@@ -31,14 +35,22 @@ async function execute(request: RunRequest) {
   let size = 0;
   let currentLine = 0;
   let finished = false;
+  // Module syntax is compiled to CommonJS before running, which moves lines; this maps them back.
+  let compiledLines: number[] | undefined;
   /** @param error Optional top-level or asynchronous error; completion is emitted exactly once. */
   function finish(error?: unknown) {
     if (finished) return;
     finished = true;
+    const trace = error
+      ? traceError(error, scriptName, 1, (line) =>
+          compiledLines ? (compiledLines[line - 1] ?? 0) : line,
+        )
+      : undefined;
     send({
       type: 'complete',
       id: request.id,
       ...(error ? { error: error instanceof Error ? error.message : String(error) } : {}),
+      ...(trace?.line ? { errorLine: trace.line, errorFrames: trace.frames } : {}),
     });
   }
   const inspector = createInspector(request.inspect === true);
@@ -90,9 +102,10 @@ async function execute(request: RunRequest) {
   process.once('unhandledRejection', finish);
   try {
     const transformed = captureExpressions(request.code);
-    const { outputText, diagnostics } = ts.transpileModule(transformed.code, {
+    const { outputText, diagnostics, sourceMapText } = ts.transpileModule(transformed.code, {
       reportDiagnostics: true,
       compilerOptions: {
+        sourceMap: true,
         target: ts.ScriptTarget.ESNext,
         module: ts.ModuleKind.CommonJS,
         esModuleInterop: true,
@@ -102,6 +115,13 @@ async function execute(request: RunRequest) {
       (diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error,
     );
     if (syntax) throw new Error(ts.flattenDiagnosticMessageText(syntax.messageText, '\n'));
+    try {
+      const mappings: unknown = JSON.parse(sourceMapText ?? '{}').mappings;
+      if (typeof mappings === 'string') compiledLines = decodeLineMap(mappings);
+    } catch {
+      // Without a usable map, error lines are reported as unknown rather than guessed.
+      compiledLines = [];
+    }
     const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
     const module = { exports: {} };
     await new AsyncFunction(
@@ -110,7 +130,7 @@ async function execute(request: RunRequest) {
       'module',
       'console',
       transformed.captureName,
-      '"use strict";\n' + outputText + '\n//# sourceURL=jsgoapp-node.js',
+      '"use strict";\n' + outputText + '\n//# sourceURL=' + scriptName,
     )(
       requireBuiltin,
       module.exports,

@@ -6,20 +6,21 @@ Web and Electron share the configuration in `packages/core/src/features.ts`.
 All current users are anonymous and receive **Max** by default. Login is not
 required. This change provides feature gates, without adding billing or checkout.
 
-| Feature name           | Display name                                | Free | Plus | Max |
-| ---------------------- | ------------------------------------------- | ---- | ---- | --- |
-| `definitionNavigation` | Built-in definition navigation              | Off  | Off  | On  |
-| `autocomplete`         | Autocomplete                                | Off  | On   | On  |
-| `hoverDocumentation`   | Function signatures and hover documentation | Off  | On   | On  |
-| `matchLines`           | Results aligned with source lines           | On   | On   | On  |
-| `workspaceSettings`    | Editor and execution preferences            | On   | On   | On  |
-| `codeFormatting`       | Code formatting                             | On   | On   | On  |
-| `multipleTabs`         | Multiple scratchpad tabs                    | On   | On   | On  |
-| `objectInspection`     | Expandable values in results                | On   | On   | On  |
-| `webView`              | Web view of the Browser page                | On   | On   | On  |
-| `consoleLevels`        | Styled console warnings and errors          | On   | On   | On  |
+| Feature name           | Display name                                    | Free | Plus | Max |
+| ---------------------- | ----------------------------------------------- | ---- | ---- | --- |
+| `definitionNavigation` | Built-in definition navigation                  | Off  | Off  | On  |
+| `autocomplete`         | Autocomplete                                    | Off  | On   | On  |
+| `hoverDocumentation`   | Function signatures and hover documentation     | Off  | On   | On  |
+| `matchLines`           | Results aligned with source lines               | On   | On   | On  |
+| `workspaceSettings`    | Editor and execution preferences                | On   | On   | On  |
+| `codeFormatting`       | Code formatting                                 | On   | On   | On  |
+| `multipleTabs`         | Multiple scratchpad tabs                        | On   | On   | On  |
+| `objectInspection`     | Expandable values in results                    | On   | On   | On  |
+| `webView`              | Web view of the Browser page                    | On   | On   | On  |
+| `consoleLevels`        | Styled console warnings and errors              | On   | On   | On  |
+| `errorLocations`       | Errors shown at their source line, with a stack | On   | On   | On  |
 
-The seven workbench features are implemented and open on every plan. To put one
+The eight workbench features are implemented and open on every plan. To put one
 behind the paywall, remove its name from `featurePolicy.plans.free` (and from
 `.plus` to make it Max-only). No other code changes are needed.
 
@@ -94,6 +95,9 @@ secure a paid service against a modified client.
 | `workspaceSettings` | Settings popover; preferences persist in the `jsgoapp.settings` local-storage entry         | Defaults apply; the Auto run checkbox still works for the session        |
 | `codeFormatting`    | Format button and Shift+Alt+F format the draft with Prettier                                | No Format button; Format Document has no formatter                       |
 | `multipleTabs`      | Create, rename, and close scratchpad tabs                                                   | Existing tabs remain selectable and editable; no tab management controls |
+
+Without `errorLocations`, a failed run shows its error message at the end of the
+output, without a line or call stack.
 
 Without `consoleLevels`, every console entry looks alike; warnings and errors are
 still shown, without colour or a spoken prefix.

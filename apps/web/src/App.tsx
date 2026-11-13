@@ -284,6 +284,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
         onViewChange={setResultView}
         webAvailable={webAvailable}
         styleLevels={features.consoleLevels}
+        locateErrors={features.errorLocations}
         onWebMount={setWebMount}
       />
 

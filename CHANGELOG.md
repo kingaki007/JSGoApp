@@ -5,6 +5,21 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.15.0] - 2026-11-14
+
+- Show where a failed run's error originated (`errorLocations`, open on every plan). With
+  Match lines the message appears beside that line; the list view prefixes the line
+  number. Errors that came through function calls get a collapsible call stack.
+- Locate errors from the engine's stack using only the snippet's own frames, in the
+  Browser page and the Node runner. The line offset of generated functions is measured
+  per engine. Syntax errors use the parser's position, and TypeScript syntax errors
+  carry their draft line.
+- Map Node.js error lines back through the CommonJS compile step, so code with imports
+  reports the right line.
+- Move the source-map decoder from the editor package to the shared core package so the
+  Node runner can use it.
+- Add tracing, transport, and rendering coverage, bringing the suite to 149 tests.
+
 ## [0.14.0] - 2026-11-14
 
 - Style console levels in the results pane (`consoleLevels`, open on every plan): warnings

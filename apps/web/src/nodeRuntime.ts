@@ -7,6 +7,7 @@ import {
   type RuntimeAdapter,
 } from '@code-editor/core';
 import { readLevel, type ConsoleLevel } from '@code-editor/core/console';
+import { readErrorFrames } from '@code-editor/core/errors';
 import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 
 /** Owns one Node transport and cancels its process when execution is stopped or replaced. */
@@ -86,6 +87,12 @@ export class NodeRuntime implements RuntimeAdapter {
               levels,
               ...(typeof message.result.error === 'string'
                 ? { error: message.result.error.slice(0, 10_000) }
+                : {}),
+              ...(normalizeSourceLine(message.result.errorLine)
+                ? {
+                    errorLine: normalizeSourceLine(message.result.errorLine),
+                    errorFrames: readErrorFrames(message.result.errorFrames),
+                  }
                 : {}),
             };
           }
