@@ -208,6 +208,18 @@ do not run as separate servers. `pnpm typecheck` checks every workspace package,
 - Node.js 22.14 or newer.
 - pnpm 12.3.4.
 
+## Package the desktop app locally
+
+```sh
+pnpm package:desktop
+```
+
+This produces `release/JSGoApp-<platform>-<arch>/` with a `JSGoApp` executable
+for the current Windows or Linux machine. No backend, dev server, or network
+connection is needed to run it. Run the command again to update it; drafts and
+settings are kept. See [execution environments](docs/execution-environments.md)
+for the layout and limits. It is an unsigned folder, not an installer.
+
 ## Run locally
 
 ```sh

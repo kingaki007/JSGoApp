@@ -1,6 +1,6 @@
 {
   "name": "code-editor",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.3.4",
@@ -17,6 +17,7 @@
     "test": "pnpm --filter @code-editor/runtime-node build && vitest run --config vitest.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "package:desktop": "pnpm build && tsx scripts/package-desktop.ts",
     "version:next": "tsx scripts/version.ts",
     "version:check": "tsx scripts/version.ts --check",
     "check": "pnpm version:check && pnpm format:check && pnpm typecheck && pnpm test && pnpm build"

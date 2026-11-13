@@ -217,5 +217,33 @@ and local storage work without disabling web security. The utility-process
 smoke test also checks the deadline and built asset loading; run `pnpm build`
 before invoking it.
 
-This is an Electron development shell, not an installer release. Windows/macOS/Linux packaging, signing, and
-updates remain future milestones; macOS and Linux have not yet been verified.
+## Local desktop package
+
+```sh
+pnpm package:desktop
+```
+
+This builds every workspace entry and assembles a runnable app folder for the
+current machine in `release/JSGoApp-<platform>-<arch>/` (ignored by Git). Start
+it with `JSGoApp.exe` on Windows or `jsgoapp` on Linux. It needs no dev server,
+no local runner service, and no network connection: the UI is loaded from the
+`jsgoapp://app` origin and Node.js snippets run in Electron's own Node.
+
+`scripts/package-desktop.ts` copies the Electron runtime from
+`apps/desktop/node_modules/electron/dist`, renames its executable, and adds
+`resources/app` with the built main and preload scripts, the built web UI, the
+Node runner, and the TypeScript compiler entry the runner loads. The folder
+layout inside `resources/app` mirrors the repository so the main process finds
+the UI at the same relative path.
+
+To update the app, close it, pull or merge the new code, and run the command
+again; the folder is replaced. Drafts and settings are kept because Electron
+stores them in the user-data folder (`%APPDATA%\JSGoApp` on Windows,
+`~/.config/JSGoApp` on Linux), not in the app folder. The packaged app keeps its
+own drafts, separate from `pnpm dev:desktop` and from the web app.
+
+This is an unsigned folder with the stock Electron icon, not an installer.
+Windows may show a SmartScreen prompt if the folder is copied to another
+machine. macOS is not supported by this script because it needs an app bundle.
+Installers, icons, signing, and automatic updates remain future milestones;
+macOS and Linux have not yet been verified.
