@@ -5,6 +5,12 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.13.2] - 2026-11-14
+
+- Make `pnpm package:desktop` build into a staging folder and swap it in at the end. If
+  JSGoApp is open, the command stops with a clear message and leaves the existing app
+  unchanged; previously it deleted the app folder in place, which could fail part-way.
+
 ## [0.13.1] - 2026-11-14
 
 - Fix hover documentation, suggestions, and signature help being cut off at the top and

@@ -38,7 +38,10 @@ async function copyInto(from: string, to: string, app: string): Promise<void> {
   await cp(join(root, from), target, { recursive: true });
 }
 
-/** Builds `release/JSGoApp-<platform>-<arch>` and returns the path of its executable. */
+/**
+ * Builds `release/JSGoApp-<platform>-<arch>` and returns the path of its executable.
+ * The previous build is replaced only after the new one is complete.
+ */
 async function packageDesktop(): Promise<string> {
   const executable = executables[process.platform];
   if (!executable)
@@ -51,13 +54,11 @@ async function packageDesktop(): Promise<string> {
   await requireBuilt(join(root, 'apps/desktop/dist/main.js'), 'Run pnpm build first.');
   await requireBuilt(join(root, 'packages/runtime-node/dist/runner.js'), 'Run pnpm build first.');
 
-  const output = join(root, 'release', `${productName}-${process.platform}-${process.arch}`);
-  try {
-    // Replace the previous build completely so removed files do not linger.
-    await rm(output, { recursive: true, force: true });
-  } catch {
-    throw new Error(`Could not replace ${output}. Close ${productName} and try again.`);
-  }
+  const destination = join(root, 'release', `${productName}-${process.platform}-${process.arch}`);
+  // Build beside the existing app and swap at the end, so a failed or blocked build never
+  // leaves a half-replaced app behind.
+  const output = `${destination}.new`;
+  await rm(output, { recursive: true, force: true });
   await cp(join(electronPackage, 'dist'), output, { recursive: true });
   await rename(join(output, executable.from), join(output, executable.to));
   // Electron runs `resources/app` when present; its demo app is not needed.
@@ -86,7 +87,22 @@ async function packageDesktop(): Promise<string> {
     // productName names the user-data folder, which is kept when the app folder is replaced.
     `${JSON.stringify({ name: 'jsgoapp', productName, version, main: 'apps/desktop/dist/main.js' }, null, 2)}\n`,
   );
-  return join(output, executable.to);
+  const previous = `${destination}.old`;
+  await rm(previous, { recursive: true, force: true });
+  try {
+    // Windows refuses to move a folder whose program is running, which leaves it untouched.
+    await rename(destination, previous);
+  } catch (error) {
+    if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') {
+      await rm(output, { recursive: true, force: true });
+      throw new Error(
+        `${productName} is open, so ${destination} was not changed. Close it and run this again.`,
+      );
+    }
+  }
+  await rename(output, destination);
+  await rm(previous, { recursive: true, force: true });
+  return join(destination, executable.to);
 }
 
 console.log(`Packaged ${productName}: ${await packageDesktop()}`);
