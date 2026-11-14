@@ -12,6 +12,8 @@ import { BrowserRuntime } from './runtime';
 import { NodeRuntime } from './nodeRuntime';
 
 export interface ExecutionView extends RunResult {
+  /** Fetches one Browser object branch from this run, only when expanded. */
+  loadValue?: (reference: string) => Promise<InspectedValue>;
   /** Draft that produced this output; output is hidden once another draft is shown. */
   documentId: string;
   language: Language;
@@ -95,6 +97,10 @@ export function useExecution(
     async (editor: CodeEditorHandle | null) => {
       if (!editor || requestId.current) return;
       const id = crypto.randomUUID();
+      const loadValue =
+        environment === 'browser' && inspect
+          ? (reference: string) => browser.inspect(id, reference)
+          : undefined;
       requestId.current = id;
       setRunning(true);
       setResult({
@@ -106,6 +112,7 @@ export function useExecution(
         details: [],
         levels: [],
         status: 'running',
+        loadValue,
       });
       try {
         const { code, lineMap } = await editor.compile(source, language);
@@ -137,6 +144,7 @@ export function useExecution(
         if (requestId.current !== id) return;
         setResult({
           ...output,
+          loadValue,
           sourceLines: output.lines.map((_line, index) =>
             toDraftLine(output.sourceLines?.[index], lineMap),
           ),
@@ -173,7 +181,7 @@ export function useExecution(
         }
       }
     },
-    [documentId, environment, language, runtime, source, showUndefined, inspect, envVars],
+    [documentId, environment, language, runtime, source, showUndefined, inspect, envVars, browser],
   );
 
   /** Cancels compilation results and ends the active run while keeping existing output. */
@@ -193,8 +201,11 @@ export function useExecution(
 
   /** Clears finished output; active runs keep their output until they finish or stop. */
   const clear = useCallback(() => {
-    if (!requestId.current) setResult(null);
-  }, []);
+    if (!requestId.current) {
+      runtime.stop();
+      setResult(null);
+    }
+  }, [runtime]);
 
   return {
     result: result?.documentId === documentId ? result : null,

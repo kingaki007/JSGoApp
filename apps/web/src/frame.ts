@@ -1,6 +1,7 @@
 /** Runs inside the sandboxed execution page: accepts one run request and posts its output to the app. */
 import { readEnv } from '@code-editor/core/env';
 import { executeCode, watchFailures, type FrameMessage, type FrameRequest } from './execution';
+import { createLiveInspector } from './liveInspector';
 
 /** @param message Output, completion, or readiness notice for the app that owns this page. */
 function post(message: FrameMessage) {
@@ -27,13 +28,47 @@ function whenSized(): Promise<void> {
 }
 
 let started = false;
+let runId: string | undefined;
+let inspectionEnabled = false;
+const inspector = createLiveInspector();
 window.addEventListener('message', (event: MessageEvent<Partial<FrameRequest> | null>) => {
   const request = event.data;
   // Only the embedding app may start a run, and each page runs exactly one snippet.
-  if (event.source !== parent || started || !request) return;
+  if (event.source !== parent || !request) return;
+  const command = request as Record<string, unknown>;
+  if (command.type === 'inspect') {
+    if (
+      !inspectionEnabled ||
+      command.id !== runId ||
+      typeof command.requestId !== 'string' ||
+      typeof command.reference !== 'string' ||
+      command.requestId.length > 80 ||
+      command.reference.length > 80
+    )
+      return;
+    try {
+      post({
+        type: 'inspection',
+        id: runId!,
+        requestId: command.requestId,
+        value: inspector.expand(command.reference),
+      });
+    } catch {
+      post({
+        type: 'inspection',
+        id: runId!,
+        requestId: command.requestId,
+        error: 'This value could not be inspected.',
+      });
+    }
+    return;
+  }
+  if (started) return;
   if (typeof request.id !== 'string' || typeof request.code !== 'string') return;
   started = true;
   const { id } = request;
+  runId = id;
+  inspectionEnabled = request.inspect === true;
   const code = request.code;
   void whenSized()
     .then(() =>
@@ -45,6 +80,7 @@ window.addEventListener('message', (event: MessageEvent<Partial<FrameRequest> | 
         {
           showUndefined: request.showUndefined === true,
           inspect: request.inspect === true,
+          inspectArguments: inspectionEnabled ? inspector.inspect : undefined,
           timeoutMs: typeof request.timeoutMs === 'number' ? request.timeoutMs : undefined,
           failures: watchFailures(window),
           env: readEnv(request.env) ?? undefined,

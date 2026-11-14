@@ -42,6 +42,46 @@ describe('browser page lifecycle', () => {
   beforeEach(() => void vi.useFakeTimers());
   afterEach(() => void vi.useRealTimers());
 
+  it('requests a branch after completion and rejects pending requests when its run is released', async () => {
+    const { runtime, hosts } = fixture();
+    const running = runtime.run({ ...request('live'), inspect: true });
+    await vi.advanceTimersByTimeAsync(0);
+    const host = hosts[0];
+    host.send({ type: 'complete', result: { id: 'live' } });
+    await running;
+    expect(host.dispose).not.toHaveBeenCalled();
+    const branch = runtime.inspect('live', '1');
+    const sent = host.post.mock.calls.at(-1)![0];
+    expect(sent).toMatchObject({ type: 'inspect', id: 'live', reference: '1' });
+    const value = {
+      type: 'object',
+      text: 'Object',
+      entries: [{ key: 'last', value: { type: 'number', text: '238' } }],
+    };
+    host.send({ type: 'inspection', id: 'old', requestId: sent.requestId, value });
+    host.send({ type: 'inspection', id: 'live', requestId: sent.requestId, value });
+    expect(await branch).toEqual(value);
+    const pending = runtime.inspect('live', '2');
+    const rejected = expect(pending).rejects.toThrow('no longer available');
+    runtime.stop();
+    await rejected;
+    await expect(runtime.inspect('live', '1')).rejects.toThrow('no longer available');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('times out an unresponsive branch without retaining the pending request', async () => {
+    const { runtime, hosts } = fixture();
+    const running = runtime.run({ ...request('live'), inspect: true });
+    await vi.advanceTimersByTimeAsync(0);
+    hosts[0].send({ type: 'complete', result: { id: 'live' } });
+    await running;
+    const pending = expect(runtime.inspect('live', '1')).rejects.toThrow('timed out');
+    await vi.advanceTimersByTimeAsync(3000);
+    await pending;
+    runtime.stop();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('sends the request with its time limit once the page is ready, then streams and completes', async () => {
     const { runtime, hosts } = fixture();
     const output = vi.fn();
@@ -62,6 +102,8 @@ describe('browser page lifecycle', () => {
       levels: ['warn'],
     });
     expect(output).toHaveBeenCalledWith('{}', 3, values, 'warn');
+    expect(host.dispose).not.toHaveBeenCalled();
+    runtime.stop();
     expect(host.dispose).toHaveBeenCalledOnce();
     expect(vi.getTimerCount()).toBe(0);
   });

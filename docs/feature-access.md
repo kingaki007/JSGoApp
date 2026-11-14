@@ -153,6 +153,15 @@ console; Browser code still runs in its page with a real DOM, off screen.
 Without `objectInspection`, objects and collections print as plain text, as they
 did before the feature existed, and runtimes are not asked to inspect values.
 
+With `objectInspection`, aligned result rows expand independently: opening or
+closing one leaves the others unchanged. Expanded values stay inline in the
+results pane, without separate row boxes or scroll areas.
+
+Browser inspection requests object children only on expansion. Large property
+inventories become expandable ranges; Node inspection retains bounded snapshots.
+Match lines preserves source-line spacing up to a 32px gap, avoiding oversized
+blank spaces in the independently scrollable results pane.
+
 Revoking `multipleTabs` never hides or deletes tabs a user already created.
 
 ## Editor behavior

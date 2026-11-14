@@ -18,9 +18,25 @@ import { createTableBuilder } from '@code-editor/core/table';
 
 /** Run request sent to the page, with the limit its loops enforce from inside. */
 export type FrameRequest = RunRequest & { timeoutMs: number };
+export interface InspectionRequest {
+  type: 'inspect';
+  id: string;
+  requestId: string;
+  reference: string;
+}
+export type FrameCommand = FrameRequest | InspectionRequest;
 
 /** Everything the page posts to the app: readiness, streamed output, and completion. */
-export type FrameMessage = ExecutionMessage | { type: 'ready' };
+export type FrameMessage =
+  | ExecutionMessage
+  | { type: 'ready' }
+  | {
+      type: 'inspection';
+      id: string;
+      requestId: string;
+      value?: InspectedValue;
+      error?: string;
+    };
 
 // How long a finished run waits for a late rejection or timer error to be reported.
 export const failureSettleMs = 25;
@@ -113,6 +129,8 @@ export function watchFailures(
 }
 
 export interface ExecutionOptions {
+  /** Optional Browser registry producing shallow handles instead of complete snapshots. */
+  inspectArguments?: (values: readonly unknown[]) => InspectedValue[] | null;
   /** Whether expression statements evaluating to undefined are reported. */
   showUndefined?: boolean;
   /** Whether objects and collections are also sent as expandable trees. */
@@ -142,13 +160,15 @@ export async function executeCode(
     timeoutMs,
     failures,
     env,
+    inspectArguments,
   }: ExecutionOptions = {},
 ): Promise<RunResult> {
   const lines: string[] = [];
   const sourceLines: number[] = [];
   const details: Array<InspectedValue[] | null> = [];
   const levels: ConsoleLevel[] = [];
-  const inspector = createInspector(inspectValues);
+  const inspector =
+    inspectValues && inspectArguments ? inspectArguments : createInspector(inspectValues);
   const buildTable = createTableBuilder();
   let currentLine = 0;
   let size = 0;
@@ -171,13 +191,16 @@ export async function executeCode(
       return;
     }
     const table = kind === 'table' ? buildTable(values[0], values[1]) : null;
-    const line = (table ? table.text : values.map(format).join(' ')).slice(
-      0,
-      Math.min(10_000, 90_000 - size),
-    );
+    const inspected = table ? [table.value] : inspector(values);
+    const line = (
+      table
+        ? table.text
+        : inspectArguments && inspected
+          ? inspected.map((value) => summarize(value)).join(' ')
+          : values.map(format).join(' ')
+    ).slice(0, Math.min(10_000, 90_000 - size));
     size += line.length;
     lines.push(line);
-    const inspected = table ? [table.value] : inspector(values);
     sourceLines.push(currentLine);
     details.push(inspected);
     levels.push(level);

@@ -61,8 +61,8 @@ Use `await` to inspect an asynchronous result.
 Browser console output inspects values without invoking `toJSON` hooks or custom
 getters. `window` appears as an expandable `Window`; `document` and DOM elements
 appear as expandable markup trees. Inaccessible references display as
-`[Uninspectable]` so logging does not stop the snippet. These are bounded snapshots
-at log time, rather than the browser DevTools' live object handles.
+`[Uninspectable]` so logging does not stop the snippet. Browser object previews
+carry run-scoped references: expanding a branch requests its properties on demand.
 
 Once the editor is ready, non-empty code runs after two seconds without edits.
 Every edit cancels an in-flight run and replaces the pending timer. Changing
@@ -126,11 +126,16 @@ plan; see [subscription feature configuration](docs/feature-access.md).
 - **Expandable values** (`objectInspection`): objects, arrays, Maps, Sets, class
   instances, and errors appear as a one-line preview that opens into a tree of
   their entries. Values expand in place, including with Match lines on, moving
-  later results down so tables and objects never cover subsequent output. Values are
-  captured when they are logged, so later mutations do not change them. Getters
-  are shown as `[Getter]` and never invoked. Trees keep 5 levels and 100 entries
-  per value; larger values state how many entries are not shown. Strings and
-  other primitives stay plain text.
+  later results down so tables and objects never cover subsequent output. Multiple
+  rows can stay expanded independently, without separate bordered boxes or nested
+  row scrollbars. Browser properties are read when their branch is first opened;
+  larger objects expose expandable property ranges, with at most 100 entries per
+  response and no fixed nesting cutoff. Range numbers are positions in the
+  property inventory, not array lengths. Opened branches are cached in the view.
+  References expire on the next run, Clear, Stop, or a tab/environment/view change.
+  Node output still uses bounded log-time snapshots (5 levels, 100 entries per
+  value). Custom getters are labelled rather than invoked. Strings and other
+  primitives stay plain text. Console tables remain bounded snapshots.
 
 - **Web view** (`webView`): in the Browser environment the results pane offers
   Web, Console, and Split. Web shows the page your code renders (`document`,

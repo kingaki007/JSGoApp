@@ -195,7 +195,17 @@ export default function OutputPanel({
       ? { className: ' output-level-error', prefix: 'Error: ' }
       : presentLevel(row.level);
   // Expanded rows stay in normal flow so later output remains visible and reachable.
-  const [opened, setOpened] = useState<{ run: string; line: number } | null>(null);
+  const [opened, setOpened] = useState<{ run: string; lines: Set<number> } | null>(null);
+  /** @param line Source row to toggle without affecting other expanded rows in this run. */
+  const toggleRow = (line: number) => {
+    const run = result?.id ?? '';
+    setOpened((current) => {
+      const lines = new Set(current?.run === run ? current.lines : []);
+      if (lines.has(line)) lines.delete(line);
+      else lines.add(line);
+      return { run, lines };
+    });
+  };
   const errorClass = `output-error ${result?.status === 'stopped' ? 'output-stopped' : ''}`;
 
   return (
@@ -228,11 +238,11 @@ export default function OutputPanel({
               if (top === null) return null;
               const previousTop =
                 index > 0 ? alignment.lineTop(aligned.rows[index - 1].line) : null;
-              const marginTop = Math.max(
-                0,
-                top - (previousTop === null ? 0 : previousTop + alignment.lineHeight),
+              const marginTop = Math.min(
+                32,
+                Math.max(0, top - (previousTop === null ? 0 : previousTop + alignment.lineHeight)),
               );
-              if (row.values && opened?.run === result?.id && opened?.line === row.line)
+              if (row.values && opened?.run === result?.id && opened?.lines.has(row.line))
                 return (
                   <div
                     className={`output-row output-row-open${rowLevel(row).className}`}
@@ -248,7 +258,7 @@ export default function OutputPanel({
                       className="value-toggle"
                       aria-expanded="true"
                       aria-label={`Collapse result of line ${row.line}`}
-                      onClick={() => setOpened(null)}
+                      onClick={() => toggleRow(row.line)}
                     >
                       <span className="value-arrow" aria-hidden="true">
                         ▾
@@ -257,7 +267,12 @@ export default function OutputPanel({
                     {copyOutput && (
                       <CopyButton text={row.rawText} label={`result of line ${row.line}`} />
                     )}
-                    <ValueList values={row.values} defaultOpen />
+                    <ValueList
+                      key={result?.id}
+                      values={row.values}
+                      defaultOpen
+                      loadValue={result?.loadValue}
+                    />
                   </div>
                 );
               return (
@@ -280,7 +295,8 @@ export default function OutputPanel({
                       type="button"
                       className="value-toggle"
                       aria-expanded="false"
-                      onClick={() => setOpened({ run: result?.id ?? '', line: row.line })}
+                      aria-label={`Expand result of line ${row.line}`}
+                      onClick={() => toggleRow(row.line)}
                     >
                       <span className="value-arrow" aria-hidden="true">
                         ▸
@@ -333,7 +349,7 @@ export default function OutputPanel({
                     {presentLevel(result.levels[index]).prefix}
                   </span>
                 )}
-                <ValueList values={values} />
+                <ValueList key={result?.id} values={values} loadValue={result?.loadValue} />
                 {copyOutput && <CopyButton text={line} label="this entry" />}
               </div>
             ) : (
