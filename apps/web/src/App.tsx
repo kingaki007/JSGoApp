@@ -22,6 +22,7 @@ import { useExecution } from './useExecution';
 import { useDrafts, tabTitle } from './useDrafts';
 import { useAutoRun } from './useAutoRun';
 import { useRunShortcuts } from './useRunShortcuts';
+import { useClearShortcut } from './useClearShortcut';
 import { useSettings } from './settings';
 import { useEnvVars } from './environmentVariables';
 import './styles/workspace.css';
@@ -104,6 +105,17 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     enabled: features.runShortcuts && ready,
     onRun: autoRun.runNow,
     onStop: autoRun.stop,
+  });
+  /** Clears the active tab's code, confirming first unless Confirm close is turned off. */
+  const clearActiveTab = useCallback(() => {
+    if (!active.code.trim()) return;
+    if (settings.confirmClose && !window.confirm(`Clear ${activeTitle} and discard its code?`))
+      return;
+    drafts.updateCode(active.id, '');
+  }, [active.id, active.code, activeTitle, drafts.updateCode, settings.confirmClose]);
+  useClearShortcut({
+    enabled: features.clearEditor && ready,
+    onClear: clearActiveTab,
   });
 
   // A page cannot move between containers, so showing or hiding the Web view starts a fresh run
@@ -236,6 +248,17 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
                 onClick={() => void editorRef.current?.format()}
               >
                 Format
+              </button>
+            )}
+            {features.clearEditor && (
+              <button
+                type="button"
+                className="run-button stop-button"
+                disabled={!ready || !active.code.trim()}
+                title="Clear editor contents (Ctrl+Shift+K)"
+                onClick={clearActiveTab}
+              >
+                Clear
               </button>
             )}
             <EnvironmentPicker

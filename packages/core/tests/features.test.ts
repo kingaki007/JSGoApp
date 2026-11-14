@@ -85,6 +85,7 @@ describe('subscription feature policy', () => {
       'runShortcuts',
       'copyOutput',
       'autoTabTitles',
+      'clearEditor',
     ] as const;
     for (const tier of ['free', 'plus', 'max'] as const)
       for (const feature of workbench)

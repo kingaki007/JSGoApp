@@ -24,8 +24,9 @@ required. This change provides feature gates, without adding billing or checkout
 | `runShortcuts`         | Run and Stop keyboard shortcuts                 | On   | On   | On  |
 | `copyOutput`           | Copy an output entry to the clipboard           | On   | On   | On  |
 | `autoTabTitles`        | Name untitled tabs from their first code line   | On   | On   | On  |
+| `clearEditor`          | Clear the active tab's code                     | On   | On   | On  |
 
-The thirteen workbench features are implemented and open on every plan. To put one
+The fourteen workbench features are implemented and open on every plan. To put one
 behind the paywall, remove its name from `featurePolicy.plans.free` (and from
 `.plus` to make it Max-only). No other code changes are needed.
 
@@ -109,6 +110,9 @@ selectable as text, same as before this feature existed.
 
 Without `autoTabTitles`, every new tab keeps its `untitled-N` name until
 explicitly renamed, same as before this feature existed.
+
+Without `clearEditor`, there is no Clear button or Ctrl+Shift+K shortcut; the
+code can still be deleted by hand.
 
 Without `environmentVariables`, the Env vars control is hidden and `process.env`
 holds no custom values; built-in `process` fields such as `process.versions`

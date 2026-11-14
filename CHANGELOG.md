@@ -5,6 +5,12 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.23.0] - 2026-11-15
+
+- Add a Clear button and Ctrl+Shift+K shortcut (`clearEditor`, open on every plan)
+  that empty the active tab's code. Confirms first under the same Confirm close
+  setting as closing a tab, since both discard the code.
+
 ## [0.22.0] - 2026-11-15
 
 - Add a Confirm close setting (under `workspaceSettings`, open on every plan).

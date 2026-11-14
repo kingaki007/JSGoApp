@@ -91,6 +91,9 @@ plan; see [subscription feature configuration](docs/feature-access.md).
 - **Format** (`codeFormatting`): the Format button and Shift+Alt+F format the draft
   with Prettier's default style as one undoable edit. Prettier loads on first use.
   A draft with a syntax error is left unchanged.
+- **Clear** (`clearEditor`): the Clear button and Ctrl+Shift+K (Cmd+Shift+K on macOS)
+  empty the active tab's code. Asks for confirmation under the same Confirm close
+  setting as closing a tab, since both discard the code.
 - **Tabs** (`multipleTabs`): create JavaScript or TypeScript tabs with +JS and
   +TS, double-click a name to rename it, and close a tab with ×. Closing a tab
   that contains code asks for confirmation because its code is discarded, unless
