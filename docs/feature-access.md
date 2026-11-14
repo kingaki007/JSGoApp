@@ -25,10 +25,18 @@ required. This change provides feature gates, without adding billing or checkout
 | `copyOutput`           | Copy an output entry to the clipboard           | On   | On   | On  |
 | `autoTabTitles`        | Name untitled tabs from their first code line   | On   | On   | On  |
 | `clearEditor`          | Clear the active tab's code                     | On   | On   | On  |
+| `reopenClosedTab`      | Reopen the most recently closed tab             | On   | On   | On  |
+| `openFile`             | Open a file from disk                           | Off  | On   | On  |
+| `saveFile`             | Save the active tab to disk                     | Off  | On   | On  |
+| `saveFileAs`           | Save the active tab to a new file               | Off  | On   | On  |
 
-The fourteen workbench features are implemented and open on every plan. To put one
+The fifteen workbench features are implemented and open on every plan. To put one
 behind the paywall, remove its name from `featurePolicy.plans.free` (and from
 `.plus` to make it Max-only). No other code changes are needed.
+
+`openFile`, `saveFile`, and `saveFileAs` are reserved flags only: they are already
+paywalled off Free to match RunJS's own Open/Save/Save As (also paid there), but no
+Open/Save/Save As UI exists yet. They do nothing until that capability is built.
 
 ## Changing access
 
@@ -113,6 +121,9 @@ explicitly renamed, same as before this feature existed.
 
 Without `clearEditor`, there is no Clear button or Ctrl+Shift+K shortcut; the
 code can still be deleted by hand.
+
+Without `reopenClosedTab`, there is no ↺ button or Ctrl+Shift+T shortcut; a
+closed tab's code is gone for good.
 
 Without `environmentVariables`, the Env vars control is hidden and `process.env`
 holds no custom values; built-in `process` fields such as `process.versions`

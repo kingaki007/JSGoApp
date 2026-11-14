@@ -23,6 +23,7 @@ import { useDrafts, tabTitle } from './useDrafts';
 import { useAutoRun } from './useAutoRun';
 import { useRunShortcuts } from './useRunShortcuts';
 import { useClearShortcut } from './useClearShortcut';
+import { useReopenShortcut } from './useReopenShortcut';
 import { useSettings } from './settings';
 import { useEnvVars } from './environmentVariables';
 import './styles/workspace.css';
@@ -117,6 +118,10 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     enabled: features.clearEditor && ready,
     onClear: clearActiveTab,
   });
+  useReopenShortcut({
+    enabled: features.reopenClosedTab && ready,
+    onReopen: drafts.reopenClosedTab,
+  });
 
   // A page cannot move between containers, so showing or hiding the Web view starts a fresh run
   // in the new location. With Auto run off the user starts it, as for any other change.
@@ -195,6 +200,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
           activeId={active.id}
           editable={features.multipleTabs}
           canAdd={drafts.canAddTab}
+          canReopen={features.reopenClosedTab && drafts.canReopenClosedTab}
           titleFromCode={features.autoTabTitles}
           onSelect={(id) => {
             if (id !== active.id) {
@@ -206,6 +212,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
             autoRun.stop();
             drafts.addTab(next);
           }}
+          onReopen={drafts.reopenClosedTab}
           onClose={(id) => {
             const tab = drafts.tabs.find((candidate) => candidate.id === id);
             const title = tab && (features.autoTabTitles ? tabTitle(tab) : tab.name);

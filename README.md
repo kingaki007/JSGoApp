@@ -99,6 +99,10 @@ plan; see [subscription feature configuration](docs/feature-access.md).
   that contains code asks for confirmation because its code is discarded, unless
   the Confirm close setting is turned off. Up to 30 tabs are stored. Existing
   two-scratchpad drafts are migrated automatically.
+- **Reopen closed tab** (`reopenClosedTab`): the ↺ button and Ctrl+Shift+T
+  (Cmd+Shift+T on macOS) restore the most recently closed tab with its original
+  code, name, and id. Up to 10 closed tabs are kept for this session only; they
+  are not saved to disk and are gone after a reload.
 
 - **Expandable values** (`objectInspection`): objects, arrays, Maps, Sets, class
   instances, and errors appear as a one-line preview that opens into a tree of

@@ -86,6 +86,7 @@ describe('subscription feature policy', () => {
       'copyOutput',
       'autoTabTitles',
       'clearEditor',
+      'reopenClosedTab',
     ] as const;
     for (const tier of ['free', 'plus', 'max'] as const)
       for (const feature of workbench)
@@ -95,6 +96,18 @@ describe('subscription feature policy', () => {
     expect(resolveFeatureAccess(activeAccount('free'), policy).multipleTabs).toBe(false);
     expect(resolveFeatureAccess(activeAccount('free'), policy).matchLines).toBe(true);
     expect(resolveFeatureAccess(activeAccount('plus'), policy).multipleTabs).toBe(true);
+  });
+
+  it.each([
+    ['free', false],
+    ['plus', true],
+    ['max', true],
+  ] as const)('paywalls the reserved file-system flags off Free, on %s', (tier, granted) => {
+    expect(resolveFeatureAccess(activeAccount(tier))).toMatchObject({
+      openFile: granted,
+      saveFile: granted,
+      saveFileAs: granted,
+    });
   });
 
   it('allows changing anonymous access without changing authenticated account grants', () => {
