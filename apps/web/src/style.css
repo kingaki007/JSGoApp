@@ -43,6 +43,11 @@ select:focus-visible {
 }
 
 .app-header {
+  position: relative;
+  /* Keeps header popovers (Env vars, Settings) above the editor toolbar's own
+     Env dropdown, which shares the same local z-index and would otherwise win
+     on DOM order alone. */
+  z-index: 20;
   grid-column: 1 / -1;
   display: flex;
   justify-content: space-between;

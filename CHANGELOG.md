@@ -5,6 +5,15 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.21.1] - 2026-11-14
+
+- Rename the README's workbench-capabilities section and tidy its surrounding text.
+- Remove environment variables from the README's "not yet implemented" list; it has
+  been implemented since v0.18.0 and was left there by mistake.
+- Fix the Env vars and Settings popovers rendering behind the editor toolbar's own
+  Env dropdown and Format button, instead of above them. The header now keeps its
+  own popovers on top regardless of where the overlapping control sits in the page.
+
 ## [0.21.0] - 2026-11-14
 
 - Name untitled tabs from their first code line (`autoTabTitles`, open on every plan),

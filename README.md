@@ -70,11 +70,11 @@ finishing, errors, output updates, theme changes, and Clear output do not create
 new runs. Turning Auto run off cancels pending and active work. The preference
 is saved with the other settings and applies equally to the web and Electron UI.
 
-## RunJS-style workbench
+## Workbench capabilities
 
-These capabilities follow RunJS and are shared by the web and desktop apps. Each
-has its own feature flag in `packages/core/src/features.ts` and is currently open
-on every plan; see [subscription feature configuration](docs/feature-access.md).
+These capabilities are shared by the web and desktop apps. Each has its own
+feature flag in `packages/core/src/features.ts` and is currently open on every
+plan; see [subscription feature configuration](docs/feature-access.md).
 
 - **Match lines** (`matchLines`): each expression result and console call appears
   in the results pane beside the source line that produced it, and scrolls with
@@ -163,9 +163,9 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   before this feature, and the two example scratchpads, keep their names
   unaffected.
 
-RunJS capabilities not yet implemented: npm package installation, environment
-variables, a snippet library, opening and saving
-files, Vim keybindings, loop protection, and the combined Browser + Node runtime.
+Not yet implemented: npm package installation, a snippet library, opening and
+saving files, Vim keybindings, loop protection, and a combined Browser + Node
+runtime.
 
 ## Workspace layout
 
@@ -187,7 +187,7 @@ The Env dropdown selects Browser or Node.js independently of output views and
 language. Browser provides a real `document` and `window` in a hidden page; Node runs
 through Electron IPC on desktop or the local HTTP runner for the web app.
 See [execution environments](docs/execution-environments.md) for the shared
-architecture, RunJS reference, startup commands, and current limitations.
+architecture, startup commands, and current limitations.
 
 ## Local draft recovery
 
