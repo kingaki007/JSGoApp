@@ -42,7 +42,7 @@ export function useLineAlignment({
 }: LineAlignmentOptions) {
   const sideBySide = useSideBySide();
   const matchLines = matchLinesEnabled && matchLinesPreferred && sideBySide && ready;
-  // Scrolling and layout changes move editor lines, so aligned results are re-rendered with them.
+  // Wrapping, typography, and layout change line spacing; editor scrolling does not.
   const [, setViewportRevision] = useState(0);
   const onViewportChange = useCallback(() => setViewportRevision((revision) => revision + 1), []);
   const lineHeight = matchLines ? editorRef.current?.lineHeight() : null;

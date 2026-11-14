@@ -17,8 +17,10 @@ the planned Electron renderer.
   `{ code, lineMap }` from a source snapshot. JavaScript passes through;
   TypeScript uses the editor's language worker, and `lineMap` gives the draft
   line of each emitted line. `format()` runs Format Document. `lineTop(line)`
-  and `lineHeight()` report on-screen line geometry so a host can align content
-  with editor lines. Call after `onReady`.
+  and `lineHeight()` report document line geometry, unaffected by editor scroll,
+  so the host can preserve source-line spacing in an independently scrollable
+  pane. `onViewportChange` reports layout, content-size, and configuration changes,
+  not scrolling. Call after `onReady`.
 - `themeCatalog`: the 16 named Monaco themes (`NamedTheme[]`), each with an
   `id`, `label`, `premium` flag, and the `appChrome` ('light' or 'dark') the
   host should show while it is selected. `defaultThemeId` names the initial

@@ -424,16 +424,20 @@
   font-size: var(--font-size-sm);
 }
 
-/* Line-aligned results: each row is positioned beside the editor line that produced it. */
+/* Source-line spacing is preserved inside an independently scrollable results pane. */
 .output-content.output-aligned {
   position: relative;
-  overflow: hidden;
+  overflow: auto;
   padding: var(--space-0);
 }
+.output-aligned-rows {
+  display: flex;
+  flex-direction: column;
+  padding-inline: var(--space-4);
+}
 .output-row {
-  position: absolute;
-  left: var(--space-4);
-  right: var(--space-4);
+  position: relative;
+  flex-shrink: 0;
   margin: 0;
   overflow: hidden;
   font-family: var(--font-family-code);
@@ -442,11 +446,7 @@
   text-overflow: ellipsis;
 }
 .output-aligned-footer {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  max-height: 40%;
-  overflow: auto;
+  position: relative;
   padding: var(--space-2) var(--space-4);
   border-top: var(--border-width) solid var(--color-border);
   background: var(--color-surface);
@@ -507,8 +507,7 @@
   color: var(--color-text-muted);
 }
 .output-row-open {
-  z-index: 1;
-  max-height: 70%;
+  max-height: 60vh;
   padding: var(--space-0) var(--space-2) var(--space-2) var(--space-0);
   overflow: auto;
   border: var(--border-width) solid var(--color-border-strong);

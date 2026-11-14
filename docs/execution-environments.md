@@ -191,6 +191,10 @@ complete prototype traversal. The page's sandbox permissions remain unchanged.
 The desktop smoke suite logs real browser values in an opaque-origin Chromium
 frame to verify this path, including a cross-origin parent reference.
 
+The Vite virtual runner watches the complete esbuild input graph, including
+execution and shared inspection code, so development edits rebuild the sandbox
+bundle rather than leaving old console behavior cached.
+
 The Node snippet process now stays alive until its host ends it. Previously it
 could exit as soon as the snippet finished, before queued output was delivered,
 which truncated large outputs.

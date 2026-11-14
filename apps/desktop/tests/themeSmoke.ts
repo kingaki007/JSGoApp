@@ -1,5 +1,6 @@
 /** Exercises theme changes in an isolated, hidden Electron renderer using the production app origin. */
 import { BrowserWindow, type protocol } from 'electron';
+import { checkIndependentScrolling } from './scrollSmoke';
 
 // One dark and one light theme from packages/editor/src/themes.ts, used to exercise both
 // app-chrome appearances without hardcoding the full 16-theme catalog in this test.
@@ -25,6 +26,8 @@ export async function checkRendererThemes(
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
+      backgroundThrottling: false,
+      offscreen: true,
       partition: 'theme-smoke',
     },
   });
@@ -101,6 +104,7 @@ export async function checkRendererThemes(
     await verify('light');
     await selectTheme(darkTheme);
     await verify('dark');
+    await checkIndependentScrolling(window, url);
   } finally {
     window.destroy();
   }

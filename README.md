@@ -83,11 +83,12 @@ feature flag in `packages/core/src/features.ts` and is currently open on every
 plan; see [subscription feature configuration](docs/feature-access.md).
 
 - **Match lines** (`matchLines`): each expression result and console call appears
-  in the results pane beside the source line that produced it, and scrolls with
-  the editor. Several values from one line share its row. TypeScript results are
+  in the results pane with the spacing of the source line that produced it.
+  Code and results scroll independently; scrolling either pane leaves the other
+  in place. Several values from one line share its row. TypeScript results are
   mapped back to draft lines through the compiler's source map, so type-only lines
   do not shift them. Errors and output without a known line are listed at the
-  bottom of the pane. The list view is used when Match lines is off or when the
+  end of the results. The list view is used when Match lines is off or when the
   panes are stacked on narrow windows.
 - **Settings** (`workspaceSettings`): Auto run, Match lines, Show undefined, Word
   wrap, Line numbers, Confirm close, and Font size. Preferences persist on this
@@ -124,8 +125,8 @@ plan; see [subscription feature configuration](docs/feature-access.md).
 
 - **Expandable values** (`objectInspection`): objects, arrays, Maps, Sets, class
   instances, and errors appear as a one-line preview that opens into a tree of
-  their entries. In the list view each value expands in place; with Match lines
-  on, clicking a row opens it over the rows below until it is closed. Values are
+  their entries. Values expand in place, including with Match lines on, moving
+  later results down so tables and objects never cover subsequent output. Values are
   captured when they are logged, so later mutations do not change them. Getters
   are shown as `[Getter]` and never invoked. Trees keep 5 levels and 100 entries
   per value; larger values state how many entries are not shown. Strings and

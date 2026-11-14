@@ -34,9 +34,9 @@ export interface CodeEditorHandle {
   /** Runs Format Document on the visible draft; resolves without changes when formatting is unavailable. */
   format(): Promise<void>;
   /**
-   * Locates a draft line on screen so a host can align content beside it.
+   * Locates a draft line in the editor document, independent of either pane's scrolling.
    * @param line 1-based line number in the visible draft.
-   * @returns Viewport Y coordinate of the line's top edge, or null before the editor is ready.
+   * @returns Document Y coordinate of the line's top edge, or null before the editor is ready.
    */
   lineTop(line: number): number | null;
   /** Height in pixels of one editor line, or null before the editor is ready. */
@@ -62,7 +62,7 @@ export interface CodeEditorProps {
   onChange(value: string): void;
   /** Notifies the host when the editor and compilation handle are ready to use. */
   onReady?(): void;
-  /** Reports scrolling, resizing, and line-layout changes that move lines on screen. */
+  /** Reports resizing and line-layout changes; scrolling does not change document geometry. */
   onViewportChange?(): void;
   /** Marks the line where the latest run failed; null or absent shows no marker. */
   errorMarker?: ErrorMarker | null;
@@ -153,10 +153,9 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
   useEffect(() => {
     const host = editorRef.current;
     if (!ready || !host) return;
-    /** Forwards any change in on-screen line positions to the host. */
+    /** Forwards changes in document line positions to the host. */
     const notify = () => viewportListener.current?.();
     const subscriptions = [
-      host.onDidScrollChange(notify),
       host.onDidLayoutChange(notify),
       host.onDidContentSizeChange(notify),
       host.onDidChangeConfiguration(notify),
@@ -199,14 +198,10 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
       async format() {
         await editorRef.current?.getAction('editor.action.formatDocument')?.run();
       },
-      /** @param line 1-based draft line to locate in viewport coordinates. */
+      /** @param line 1-based draft line to locate in document coordinates. */
       lineTop(line) {
         const host = editorRef.current;
-        const node = host?.getDomNode();
-        if (!host || !node) return null;
-        return (
-          node.getBoundingClientRect().top + host.getTopForLineNumber(line) - host.getScrollTop()
-        );
+        return host?.getTopForLineNumber(line) ?? null;
       },
       /** Reads the rendered line height, which follows the selected font size. */
       lineHeight() {
