@@ -21,6 +21,7 @@ import type { ScratchTab } from './draftStorage';
 import { useExecution } from './useExecution';
 import { useDrafts } from './useDrafts';
 import { useAutoRun } from './useAutoRun';
+import { useRunShortcuts } from './useRunShortcuts';
 import { useSettings } from './settings';
 import { useEnvVars } from './environmentVariables';
 import './styles/workspace.css';
@@ -42,6 +43,9 @@ const initialTabs: ScratchTab[] = [
 
 // Matches the workspace.css breakpoint below which the editor and results are stacked.
 const sideBySideQuery = '(min-width: 1001px)';
+
+// Labels the Run/Stop shortcuts with the platform's own modifier key, as RunJS's docs do.
+const shortcutModifier = /Mac|iPhone|iPad/.test(navigator.userAgent) ? 'Cmd' : 'Ctrl';
 
 /** Reports whether the editor and results are side by side, where aligning lines is meaningful. */
 function useSideBySide(): boolean {
@@ -94,6 +98,11 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     run: runCode,
     cancelExecution: execution.cancelActive,
     clearOutput: execution.clear,
+  });
+  useRunShortcuts({
+    enabled: features.runShortcuts && ready,
+    onRun: autoRun.runNow,
+    onStop: autoRun.stop,
   });
 
   // A page cannot move between containers, so showing or hiding the Web view starts a fresh run
@@ -225,7 +234,12 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
               }}
             />
             {execution.isRunning ? (
-              <button type="button" className="run-button stop-button" onClick={autoRun.stop}>
+              <button
+                type="button"
+                className="run-button stop-button"
+                title={features.runShortcuts ? `Stop (${shortcutModifier}+Shift+R)` : undefined}
+                onClick={autoRun.stop}
+              >
                 <span aria-hidden="true">■</span> Stop
               </button>
             ) : (
@@ -233,6 +247,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
                 type="button"
                 className="run-button"
                 disabled={!ready}
+                title={features.runShortcuts ? `Run (${shortcutModifier}+R)` : undefined}
                 onClick={autoRun.runNow}
               >
                 <span aria-hidden="true">▶</span> Run

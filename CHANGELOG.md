@@ -5,6 +5,15 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.19.0] - 2026-11-14
+
+- Add Ctrl+R (Run) and Ctrl+Shift+R (Stop) keyboard shortcuts (`runShortcuts`, open on
+  every plan; Cmd on macOS), overriding the browser's own reload and hard-reload keys
+  while the app has focus. The Run and Stop buttons show the shortcut in their tooltip.
+- Fix the subscription-policy test missing two workbench features (`environmentVariables`,
+  `runShortcuts`) from its all-plans access check, caught while adding this feature.
+- Add shortcut-handling coverage, bringing the suite to 192 tests.
+
 ## [0.18.0] - 2026-11-14
 
 - Add an Env vars panel (`environmentVariables`, open on every plan) in the header,

@@ -15,6 +15,7 @@ export const featureCatalog = {
   errorLocations: { label: 'Errors shown at their source line with a stack', enabled: true },
   consoleTable: { label: 'console.table shown as a table', enabled: true },
   environmentVariables: { label: 'Environment variables for executed code', enabled: true },
+  runShortcuts: { label: 'Run and Stop keyboard shortcuts', enabled: true },
 };
 export type Feature = keyof typeof featureCatalog;
 export type FeatureAccess = Readonly<Record<Feature, boolean>>;
@@ -47,6 +48,7 @@ export const featurePolicy: FeaturePolicy = {
       'errorLocations',
       'consoleTable',
       'environmentVariables',
+      'runShortcuts',
     ],
     plus: [
       'autocomplete',
@@ -61,6 +63,7 @@ export const featurePolicy: FeaturePolicy = {
       'errorLocations',
       'consoleTable',
       'environmentVariables',
+      'runShortcuts',
     ],
     max: [
       'definitionNavigation',
@@ -76,6 +79,7 @@ export const featurePolicy: FeaturePolicy = {
       'errorLocations',
       'consoleTable',
       'environmentVariables',
+      'runShortcuts',
     ],
   },
 };
