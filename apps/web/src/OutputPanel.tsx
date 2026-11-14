@@ -1,5 +1,5 @@
 /** Presents console output as a list or aligned with editor lines, plus status, errors, and clearing. */
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { ConsoleLevel, InspectedValue } from '@code-editor/core';
 import { highestLevel } from '@code-editor/core/console';
 import { summarize } from '@code-editor/core/inspect';
@@ -8,7 +8,7 @@ import CopyButton from './CopyButton';
 import { ValueList } from './ValueTree';
 
 export interface LineAlignment {
-  /** @param line 1-based draft line. @returns Viewport Y of its top edge, or null when unavailable. */
+  /** @param line 1-based draft line. @returns Document Y of its top edge, unaffected by editor scroll. */
   lineTop(line: number): number | null;
   /** Editor line height in pixels, used for each result row. */
   lineHeight: number;
@@ -162,13 +162,6 @@ export default function OutputPanel({
     error: 'Error',
   };
   const status = result ? statusLabels[result.status] : 'Ready';
-  const content = useRef<HTMLDivElement>(null);
-  const [origin, setOrigin] = useState<number | null>(null);
-  // Rows are positioned relative to this panel, so its own position is measured after each layout.
-  useLayoutEffect(() => {
-    const top = content.current?.getBoundingClientRect().top ?? null;
-    setOrigin((current) => (current === top ? current : top));
-  });
   // Without table access, a table entry falls back to its text form.
   const details = (result?.details ?? []).map((values) =>
     !showTables && values?.some((value) => value.type === 'table') ? null : values,
@@ -201,7 +194,7 @@ export default function OutputPanel({
     errorLine && row.line === errorLine
       ? { className: ' output-level-error', prefix: 'Error: ' }
       : presentLevel(row.level);
-  // One aligned row at a time can be opened; it overlays the rows below until closed.
+  // Expanded rows stay in normal flow so later output remains visible and reachable.
   const [opened, setOpened] = useState<{ run: string; line: number } | null>(null);
   const errorClass = `output-error ${result?.status === 'stopped' ? 'output-stopped' : ''}`;
 
@@ -226,20 +219,29 @@ export default function OutputPanel({
       {alignment && aligned ? (
         <div
           className="output-content output-aligned"
-          ref={content}
           tabIndex={0}
           aria-label="Console output aligned with source lines"
         >
-          {origin !== null &&
-            aligned.rows.map((row) => {
+          <div className="output-aligned-rows">
+            {aligned.rows.map((row, index) => {
               const top = alignment.lineTop(row.line);
               if (top === null) return null;
+              const previousTop =
+                index > 0 ? alignment.lineTop(aligned.rows[index - 1].line) : null;
+              const marginTop = Math.max(
+                0,
+                top - (previousTop === null ? 0 : previousTop + alignment.lineHeight),
+              );
               if (row.values && opened?.run === result?.id && opened?.line === row.line)
                 return (
                   <div
                     className={`output-row output-row-open${rowLevel(row).className}`}
                     key={row.line}
-                    style={{ top: top - origin, fontSize: alignment.fontSize }}
+                    style={{
+                      marginTop,
+                      minHeight: alignment.lineHeight,
+                      fontSize: alignment.fontSize,
+                    }}
                   >
                     <button
                       type="button"
@@ -264,7 +266,7 @@ export default function OutputPanel({
                   key={row.line}
                   title={row.text}
                   style={{
-                    top: top - origin,
+                    marginTop,
                     height: alignment.lineHeight,
                     lineHeight: `${alignment.lineHeight}px`,
                     fontSize: alignment.fontSize,
@@ -294,6 +296,7 @@ export default function OutputPanel({
                 </pre>
               );
             })}
+          </div>
           {(aligned.unplaced.length > 0 || (result?.error && (!errorLine || stackShown))) && (
             <div className="output-aligned-footer">
               {aligned.unplaced.map((line, index) => (
@@ -314,7 +317,7 @@ export default function OutputPanel({
           )}
         </div>
       ) : (
-        <div className="output-content" ref={content} tabIndex={0} aria-label="Console output">
+        <div className="output-content" tabIndex={0} aria-label="Console output">
           {!result && (
             <p className="output-placeholder">Start typing or press Run to see output.</p>
           )}

@@ -5,6 +5,16 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.26.2] - 2026-11-15
+
+- Decouple results scrolling from the editor while retaining Match lines spacing.
+  Make aligned results independently scrollable, with unplaced output and errors
+  following the results instead of overlaying the bottom of the pane.
+- Expand aligned tables and objects in the results layout so they push subsequent
+  output down instead of covering it.
+- Watch all sandbox-runner source dependencies in development so changes to
+  console formatting invalidate Vite's cached runner bundle.
+
 ## [0.26.1] - 2026-11-15
 
 - Fix Browser console output failing on `console.log(window)` by formatting safe

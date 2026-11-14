@@ -109,12 +109,12 @@ secure a paid service against a modified client.
 
 ## Workbench behavior
 
-| Feature             | With access                                                                                 | Without access                                                           |
-| ------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `matchLines`        | Results appear beside the line that produced them; a Match lines preference can turn it off | Results appear as a list in execution order                              |
-| `workspaceSettings` | Settings popover; preferences persist in the `jsgoapp.settings` local-storage entry         | Defaults apply; the Auto run checkbox still works for the session        |
-| `codeFormatting`    | Format button and Shift+Alt+F format the draft with Prettier                                | No Format button; Format Document has no formatter                       |
-| `multipleTabs`      | Create, rename, and close scratchpad tabs                                                   | Existing tabs remain selectable and editable; no tab management controls |
+| Feature             | With access                                                                                           | Without access                                                           |
+| ------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `matchLines`        | Results retain source-line spacing and scroll independently; a Match lines preference can turn it off | Results appear as a list in execution order                              |
+| `workspaceSettings` | Settings popover; preferences persist in the `jsgoapp.settings` local-storage entry                   | Defaults apply; the Auto run checkbox still works for the session        |
+| `codeFormatting`    | Format button and Shift+Alt+F format the draft with Prettier                                          | No Format button; Format Document has no formatter                       |
+| `multipleTabs`      | Create, rename, and close scratchpad tabs                                                             | Existing tabs remain selectable and editable; no tab management controls |
 
 Without `runShortcuts`, Ctrl+R and Ctrl+Shift+R (Cmd on macOS) behave as the
 browser's own reload and hard-reload; only the Run and Stop buttons work.
