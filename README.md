@@ -148,6 +148,10 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   variables are added alongside the real `process` object, so `process.versions`
   and other built-in fields keep working; in the Browser page, which has no
   `process` otherwise, a minimal `process.env` object is provided.
+- **Run/Stop shortcuts** (`runShortcuts`): Ctrl+R (Cmd+R on macOS) runs the
+  active draft and Ctrl+Shift+R (Cmd+Shift+R) stops it, overriding the
+  browser's own reload and hard-reload keys while the app has focus. The
+  Run and Stop buttons show the shortcut in their tooltip.
 
 RunJS capabilities not yet implemented: npm package installation, environment
 variables, a snippet library, opening and saving
