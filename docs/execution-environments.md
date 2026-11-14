@@ -144,6 +144,28 @@ Node) before reporting success. Failures that happen after the run has been
 reported, for example in a click handler of a page kept in the Web view, are not
 shown.
 
+## Environment variables
+
+A request may carry `env`, a flat object of string values, validated by
+`@code-editor/core/env` (conventional identifier keys; bounded key count,
+key length, value length, and total size). Both runtimes expose it as
+`process.env.NAME`:
+
+- **Node:** the disposable child or utility process merges `env` onto its own
+  real `process.env` before running the snippet. The process exits after one
+  run, so nothing persists or leaks between runs; `process.versions`,
+  `process.platform`, and other built-in fields are unaffected.
+- **Browser page:** there is no real `process` global at all. `env` is passed
+  as a local function parameter named `process` when the snippet's generated
+  function is constructed, so user code sees `process.env.NAME` without any
+  global ever being touched. (Tests that call the executor directly, outside
+  an actual page, run inside Node's own test process; this parameter-shadowing
+  approach is what keeps that real `globalThis.process` untouched as well.)
+
+Web and Electron hosts validate `env` again before passing it to the
+runtime that owns the process or page, the same defence-in-depth pattern
+used for inspected values and console levels.
+
 `console.table` is recognized by both runtimes regardless of `inspect`: its data
 is sent as a `table`-typed value alongside the usual plain-text grid, built by
 `packages/core/src/table.ts`. Getters in table cells are named, not invoked.

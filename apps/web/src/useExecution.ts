@@ -49,6 +49,7 @@ function compileErrorLine(error: unknown): number | undefined {
  * @param showUndefined Whether undefined expression results are reported.
  * @param inspect Whether runtimes also send expandable trees for objects and collections.
  * @param webMount Web view element that shows the Browser page; null runs pages off screen.
+ * @param envVars Custom values exposed to the snippet as `process.env.NAME`.
  */
 export function useExecution(
   documentId: string,
@@ -58,6 +59,7 @@ export function useExecution(
   showUndefined = false,
   inspect = false,
   webMount: HTMLElement | null = null,
+  envVars: Record<string, string> = {},
 ) {
   const [browser] = useState(() => new BrowserRuntime());
   const [node] = useState(() => new NodeRuntime());
@@ -115,6 +117,7 @@ export function useExecution(
             environment,
             ...(showUndefined ? { showUndefined } : {}),
             ...(inspect ? { inspect } : {}),
+            ...(Object.keys(envVars).length ? { env: envVars } : {}),
           },
           (line, sourceLine, values, level) => {
             if (requestId.current !== id) return;
@@ -170,7 +173,7 @@ export function useExecution(
         }
       }
     },
-    [documentId, environment, language, runtime, source, showUndefined, inspect],
+    [documentId, environment, language, runtime, source, showUndefined, inspect, envVars],
   );
 
   /** Cancels compilation results and ends the active run while keeping existing output. */

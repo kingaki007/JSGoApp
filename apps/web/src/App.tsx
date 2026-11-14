@@ -14,6 +14,7 @@ import { useTheme } from './theme';
 import ThemeSwitcher from './ThemeSwitcher';
 import ResultsPane, { type ResultView } from './ResultsPane';
 import SettingsPanel from './SettingsPanel';
+import EnvironmentVariablesPanel from './EnvironmentVariablesPanel';
 import TabList from './TabList';
 import type { LineAlignment } from './OutputPanel';
 import type { ScratchTab } from './draftStorage';
@@ -21,6 +22,7 @@ import { useExecution } from './useExecution';
 import { useDrafts } from './useDrafts';
 import { useAutoRun } from './useAutoRun';
 import { useSettings } from './settings';
+import { useEnvVars } from './environmentVariables';
 import './styles/workspace.css';
 
 const initialTabs: ScratchTab[] = [
@@ -62,6 +64,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
   const { active } = drafts;
   const language: Language = active.language;
   const { settings, update: updateSettings } = useSettings(features.workspaceSettings);
+  const envVars = useEnvVars(features.environmentVariables);
   const [ready, setReady] = useState(false);
   const { preference, setPreference, resolved } = useTheme();
   const editorRef = useRef<CodeEditorHandle | null>(null);
@@ -78,6 +81,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     settings.showUndefined,
     features.objectInspection,
     webMount,
+    envVars.vars,
   );
   /** Runs the latest editor snapshot without coupling debounce timers to output-state renders. */
   const runCode = useCallback(() => {
@@ -138,6 +142,13 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
             <span className="status-dot ready" />
             {environment === 'node' ? 'Node.js environment' : 'Browser environment'}
           </span>
+          {features.environmentVariables && (
+            <EnvironmentVariablesPanel
+              vars={envVars.vars}
+              onSet={envVars.set}
+              onRemove={envVars.remove}
+            />
+          )}
           {features.workspaceSettings && (
             <SettingsPanel
               settings={settings}

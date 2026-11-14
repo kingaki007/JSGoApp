@@ -4,6 +4,7 @@ import { inspect } from 'node:util';
 import { isBuiltin, createRequire } from 'node:module';
 import { createCapture, type RunRequest } from '@code-editor/core';
 import { createConsole, type ConsoleLevel } from '@code-editor/core/console';
+import { readEnv } from '@code-editor/core/env';
 import { traceError } from '@code-editor/core/errors';
 import { captureExpressions } from '@code-editor/core/expressions';
 import { decodeLineMap } from '@code-editor/core/sourceMap';
@@ -106,6 +107,9 @@ async function execute(request: RunRequest) {
   Object.assign(console, capturedConsole);
   process.once('uncaughtException', finish);
   process.once('unhandledRejection', finish);
+  // This process is disposable and exits after one run, so there is nothing to leak into.
+  const env = readEnv(request.env);
+  if (env) Object.assign(process.env, env);
   try {
     const transformed = captureExpressions(request.code);
     const { outputText, diagnostics, sourceMapText } = ts.transpileModule(transformed.code, {

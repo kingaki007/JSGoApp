@@ -1,6 +1,6 @@
 {
   "name": "@code-editor/core",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -10,7 +10,8 @@
     "./console": "./src/console.ts",
     "./errors": "./src/errors.ts",
     "./sourceMap": "./src/sourceMap.ts",
-    "./table": "./src/table.ts"
+    "./table": "./src/table.ts",
+    "./env": "./src/env.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"

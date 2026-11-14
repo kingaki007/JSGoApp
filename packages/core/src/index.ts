@@ -39,6 +39,8 @@ export interface RunRequest {
   showUndefined?: boolean;
   /** Also sends expandable trees for objects, arrays, Maps, and Sets. */
   inspect?: boolean;
+  /** Custom values exposed to the snippet as `process.env.NAME`; validated by `@code-editor/core/env`. */
+  env?: Record<string, string>;
 }
 
 export interface RunResult {

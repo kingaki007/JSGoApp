@@ -206,4 +206,20 @@ describe('shared Node runner', () => {
       'Invalid Node',
     );
   });
+  it('exposes custom variables through process.env alongside the real Node process object', async () => {
+    const result = await new NodeRuntime().run({
+      ...request('console.log(process.env.API_KEY, typeof process.versions.node);'),
+      env: { API_KEY: 'secret-value' },
+    });
+    expect(result.error).toBeUndefined();
+    expect(result.lines).toEqual(['secret-value string']);
+  });
+  it('does not inherit custom variables from an earlier unrelated run', async () => {
+    const result = await new NodeRuntime().run(request('console.log(typeof process.env.API_KEY);'));
+    expect(result.lines).toEqual(['undefined']);
+  });
+  it('rejects a request whose environment variables are malformed', () => {
+    expect(validRequest({ ...request(''), env: { 'bad key': 'x' } })).toBe(false);
+    expect(validRequest({ ...request(''), env: { OK: 'x' } })).toBe(true);
+  });
 });

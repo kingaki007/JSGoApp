@@ -14,6 +14,7 @@ export const featureCatalog = {
   consoleLevels: { label: 'Styled console warnings and errors', enabled: true },
   errorLocations: { label: 'Errors shown at their source line with a stack', enabled: true },
   consoleTable: { label: 'console.table shown as a table', enabled: true },
+  environmentVariables: { label: 'Environment variables for executed code', enabled: true },
 };
 export type Feature = keyof typeof featureCatalog;
 export type FeatureAccess = Readonly<Record<Feature, boolean>>;
@@ -45,6 +46,7 @@ export const featurePolicy: FeaturePolicy = {
       'consoleLevels',
       'errorLocations',
       'consoleTable',
+      'environmentVariables',
     ],
     plus: [
       'autocomplete',
@@ -58,6 +60,7 @@ export const featurePolicy: FeaturePolicy = {
       'consoleLevels',
       'errorLocations',
       'consoleTable',
+      'environmentVariables',
     ],
     max: [
       'definitionNavigation',
@@ -72,6 +75,7 @@ export const featurePolicy: FeaturePolicy = {
       'consoleLevels',
       'errorLocations',
       'consoleTable',
+      'environmentVariables',
     ],
   },
 };
