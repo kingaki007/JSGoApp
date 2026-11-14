@@ -1,6 +1,6 @@
 /** Verifies console capture, awaited execution, error reporting, and output flood limits. */
 import { describe, expect, it, vi } from 'vitest';
-import { executeCode } from '../src/execution';
+import { executeCode, watchFailures } from '../src/execution';
 
 describe('scratchpad execution', () => {
   it('streams expression results alongside logs, without duplicate output or repeated side effects', async () => {
@@ -48,7 +48,7 @@ describe('scratchpad execution', () => {
   it('reports undefined expression results only on request, never for console calls', async () => {
     const code = 'console.log("logged");\nvoid 0;\nlet value;\nvalue;';
     expect((await executeCode('quiet', code, () => {})).lines).toEqual(['logged']);
-    const shown = await executeCode('shown', code, () => {}, true);
+    const shown = await executeCode('shown', code, () => {}, { showUndefined: true });
     expect(shown.lines).toEqual(['logged', 'undefined', 'undefined']);
     expect(shown.sourceLines).toEqual([1, 2, 4]);
   });
@@ -58,7 +58,7 @@ describe('scratchpad execution', () => {
     const plain = await executeCode('plain', code, () => {});
     expect(plain.details).toEqual([null, null, null]);
     const output = vi.fn();
-    const inspected = await executeCode('inspected', code, output, false, true);
+    const inspected = await executeCode('inspected', code, output, { inspect: true });
     expect(inspected.lines).toEqual(['user {"name":"Ada"}', '[1,2]', 'text']);
     expect(inspected.details?.[0]).toEqual([
       { type: 'string', text: 'user' },
@@ -74,14 +74,9 @@ describe('scratchpad execution', () => {
   });
 
   it('stops a runaway loop from inside when given a time limit', async () => {
-    const result = await executeCode(
-      'loop',
-      'console.log("started"); while (true) {}',
-      () => {},
-      false,
-      false,
-      50,
-    );
+    const result = await executeCode('loop', 'console.log("started"); while (true) {}', () => {}, {
+      timeoutMs: 50,
+    });
     expect(result.lines).toEqual(['started']);
     expect(result.error).toBe('Execution exceeded 0 seconds.');
   });
@@ -152,6 +147,64 @@ describe('scratchpad execution', () => {
     const text = await executeCode('text', 'throw "plain text";', () => {});
     expect(text.error).toBe('plain text');
     expect(text.errorLine).toBeUndefined();
+  });
+
+  it('fails the run when a promise is rejected without being handled while the code is running', async () => {
+    const page = new EventTarget();
+    const reason = new Error('rejected in the background');
+    setTimeout(() => {
+      page.dispatchEvent(
+        Object.assign(new Event('unhandledrejection', { cancelable: true }), { reason }),
+      );
+    }, 10);
+    const result = await executeCode(
+      'background',
+      'console.log("started"); await new Promise((resolve) => setTimeout(resolve, 200)); console.log("not reached");',
+      () => {},
+      { failures: watchFailures(page) },
+    );
+    expect(result.lines).toEqual(['started']);
+    expect(result.error).toBe('rejected in the background');
+  });
+
+  it('fails the run for a rejection or timer error reported just after the code returns', async () => {
+    const page = new EventTarget();
+    // Arrives shortly after the code returns, as browsers report trailing rejections.
+    setTimeout(() => {
+      page.dispatchEvent(
+        Object.assign(new Event('error', { cancelable: true }), {
+          error: new Error('thrown in a timer'),
+        }),
+      );
+    }, 10);
+    const result = await executeCode('trailing', '1 + 1;', () => {}, {
+      failures: watchFailures(page),
+    });
+    expect(result.lines).toEqual(['2']);
+    expect(result.error).toBe('thrown in a timer');
+  });
+
+  it('stops listening when the run ends and leaves successful runs unaffected', async () => {
+    const page = new EventTarget();
+    const remove = vi.spyOn(page, 'removeEventListener');
+    const result = await executeCode('fine', '1 + 1;', () => {}, { failures: watchFailures(page) });
+    expect(result.error).toBeUndefined();
+    expect(remove).toHaveBeenCalledTimes(2);
+    // A failure after the run is over is not reported and does not raise a new unhandled rejection.
+    page.dispatchEvent(
+      Object.assign(new Event('unhandledrejection'), { reason: new Error('late') }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  });
+
+  it('describes error events that carry only a message', async () => {
+    const page = new EventTarget();
+    const watch = watchFailures(page);
+    page.dispatchEvent(
+      Object.assign(new Event('error', { cancelable: true }), { message: 'Script error.' }),
+    );
+    await expect(watch.failed).rejects.toThrow('Script error.');
+    watch.stop();
   });
 
   it('keeps earlier output when execution throws', async () => {

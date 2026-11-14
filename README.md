@@ -130,7 +130,9 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   imports. Syntax errors are located too. The editor also highlights the failing
   line and shows the message when it is hovered; the highlight follows the line
   while you edit and is replaced by the next run. Values thrown without a stack,
-  such as `throw "text"`, show their message without a line.
+  such as `throw "text"`, show their message without a line. Errors thrown in
+  timers and promises rejected without `await` or `catch` fail the run too,
+  instead of passing silently.
 
 RunJS capabilities not yet implemented: npm package installation, environment
 variables, a snippet library, opening and saving

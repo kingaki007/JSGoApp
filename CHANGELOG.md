@@ -5,6 +5,18 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.16.1] - 2026-11-14
+
+- Fail a Browser run when its code throws in a timer or event handler, or rejects a promise
+  without `await` or `catch`. These previously passed silently and the run showed Finished.
+- Report rejections caused by the last statements in both runtimes. Engines report them
+  only after the code returns, so the page waits 25 ms and the Node runner one turn of the
+  event loop before reporting success. Node previously missed this case.
+- Give the Browser executor an options object in place of positional flags.
+- Failures after a run has been reported, such as in a page kept in the Web view, are
+  still not shown.
+- Add background-failure coverage in both runtimes, bringing the suite to 157 tests.
+
 ## [0.16.0] - 2026-11-14
 
 - Highlight the line where the latest run failed in the editor, with a gutter marker and
