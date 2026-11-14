@@ -144,6 +144,12 @@ Node) before reporting success. Failures that happen after the run has been
 reported, for example in a click handler of a page kept in the Web view, are not
 shown.
 
+`console.table` is recognized by both runtimes regardless of `inspect`: its data
+is sent as a `table`-typed value alongside the usual plain-text grid, built by
+`packages/core/src/table.ts`. Getters in table cells are named, not invoked.
+Non-tabular data (anything that is not an array, Map, Set, or plain object)
+falls through to an ordinary logged value.
+
 With `inspect: true` in the request, an output message whose arguments include an
 object or collection also carries `values`: one bounded, JSON-serializable tree
 per console argument (`type`, `text`, optional `entries` and `omitted`). `line`

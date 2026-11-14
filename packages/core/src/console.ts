@@ -24,11 +24,11 @@ export type CapturedConsole = Record<string, (...values: unknown[]) => void>;
 /**
  * Creates a console whose output goes to the host instead of the real console.
  * Methods without a visual equivalent here (grouping, clearing) are accepted so common code runs.
- * @param emit Receives each entry's level and its arguments.
+ * @param emit Receives each entry's level and arguments; `kind` marks a `console.table` call.
  * @param now Clock for `console.time`, replaceable in tests.
  */
 export function createConsole(
-  emit: (level: ConsoleLevel, values: unknown[]) => void,
+  emit: (level: ConsoleLevel, values: unknown[], kind?: 'table') => void,
   now: () => number = () => performance.now(),
 ): CapturedConsole {
   const counts = new Map<string, number>();
@@ -47,7 +47,8 @@ export function createConsole(
     debug: (...values) => emit('debug', values),
     dir: (value) => emit('log', [value]),
     dirxml: (...values) => emit('log', values),
-    table: (...values) => emit('log', values),
+    // The host decides whether the data is tabular; otherwise it is logged like any value.
+    table: (...values) => emit('log', values, 'table'),
     trace: (...values) => emit('debug', ['Trace:', ...values]),
     /** @param condition Checked value. @param values Message shown only when the check fails. */
     assert: (condition, ...values) => {

@@ -8,6 +8,7 @@ import { traceError } from '@code-editor/core/errors';
 import { captureExpressions } from '@code-editor/core/expressions';
 import { decodeLineMap } from '@code-editor/core/sourceMap';
 import { createInspector } from '@code-editor/core/inspect';
+import { createTableBuilder } from '@code-editor/core/table';
 const require = createRequire(import.meta.url);
 // Names the snippet in engine stacks, so its frames can be told apart from the runner's own.
 const scriptName = 'jsgoapp-node.js';
@@ -54,29 +55,34 @@ async function execute(request: RunRequest) {
     });
   }
   const inspector = createInspector(request.inspect === true);
+  const buildTable = createTableBuilder();
   /**
    * Formats one entry safely and sends it to the host within the output limits.
    * @param level Console level of the entry. @param values Console arguments or one result.
+   * @param kind Marks a `console.table` call, whose first argument may be shown as a table.
    */
-  function emit(level: ConsoleLevel, values: unknown[]) {
+  function emit(level: ConsoleLevel, values: unknown[], kind?: 'table') {
     if (finished || count >= 500) return;
     const limited = count === 499 || size >= 90_000;
+    const table = !limited && kind === 'table' ? buildTable(values[0], values[1]) : null;
     const line = limited
       ? '[Output limit reached. Further logs omitted.]'
-      : values
-          .map((value) =>
-            typeof value === 'string'
-              ? value
-              : inspect(value, {
-                  depth: 4,
-                  maxArrayLength: 50,
-                  maxStringLength: 10_000,
-                  getters: false,
-                }),
-          )
-          .join(' ')
-          .slice(0, Math.min(10_000, 90_000 - size));
-    const inspected = limited ? null : inspector(values);
+      : table
+        ? table.text.slice(0, Math.min(10_000, 90_000 - size))
+        : values
+            .map((value) =>
+              typeof value === 'string'
+                ? value
+                : inspect(value, {
+                    depth: 4,
+                    maxArrayLength: 50,
+                    maxStringLength: 10_000,
+                    getters: false,
+                  }),
+            )
+            .join(' ')
+            .slice(0, Math.min(10_000, 90_000 - size));
+    const inspected = limited ? null : table ? [table.value] : inspector(values);
     count = limited ? 500 : count + 1;
     size += line.length;
     send({

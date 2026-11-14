@@ -124,6 +124,7 @@ function ErrorDetails({
  * @param props.alignment Editor line geometry; when present, results sit beside their source lines.
  * @param props.styleLevels Whether warnings, errors, info, and debug entries are styled differently.
  * @param props.locateErrors Whether errors show their source line and call stack.
+ * @param props.showTables Whether `console.table` data is drawn as a table; text is shown otherwise.
  */
 export default function OutputPanel({
   result,
@@ -132,6 +133,7 @@ export default function OutputPanel({
   alignment,
   styleLevels = false,
   locateErrors = false,
+  showTables = false,
 }: {
   result: ExecutionView | null;
   isRunning: boolean;
@@ -139,6 +141,7 @@ export default function OutputPanel({
   alignment?: LineAlignment;
   styleLevels?: boolean;
   locateErrors?: boolean;
+  showTables?: boolean;
 }) {
   const statusLabels = {
     running: 'Running…',
@@ -154,6 +157,10 @@ export default function OutputPanel({
     const top = content.current?.getBoundingClientRect().top ?? null;
     setOrigin((current) => (current === top ? current : top));
   });
+  // Without table access, a table entry falls back to its text form.
+  const details = (result?.details ?? []).map((values) =>
+    !showTables && values?.some((value) => value.type === 'table') ? null : values,
+  );
   // A located error joins the row of the line it came from, like any other output of that line.
   const errorLine =
     locateErrors && result?.status === 'error' && result.error ? (result.errorLine ?? 0) : 0;
@@ -163,10 +170,10 @@ export default function OutputPanel({
         ? alignOutput(
             [...result.lines, result.error ?? ''],
             [...result.sourceLines, errorLine],
-            [...result.details, null],
+            [...details, null],
             [...result.levels, 'error'],
           )
-        : alignOutput(result.lines, result.sourceLines, result.details, result.levels)
+        : alignOutput(result.lines, result.sourceLines, details, result.levels)
       : null;
   const stackShown = locateErrors && (result?.errorFrames?.length ?? 0) > 1;
   /** @param level Entry or row level. @returns Extra class and spoken prefix for that level. */
@@ -293,7 +300,7 @@ export default function OutputPanel({
             <p className="output-placeholder">Start typing or press Run to see output.</p>
           )}
           {result?.lines.map((line, index) => {
-            const values = result.details[index];
+            const values = details[index];
             return values ? (
               <div
                 className={`output-line output-values${presentLevel(result.levels[index]).className}`}

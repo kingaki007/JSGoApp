@@ -9,6 +9,7 @@ import { createConsole, type ConsoleLevel } from '@code-editor/core/console';
 import { traceError } from '@code-editor/core/errors';
 import { captureExpressions } from '@code-editor/core/expressions';
 import { createInspector, type InspectedValue } from '@code-editor/core/inspect';
+import { createTableBuilder } from '@code-editor/core/table';
 
 /** Run request sent to the page, with the limit its loops enforce from inside. */
 export type FrameRequest = RunRequest & { timeoutMs: number };
@@ -130,14 +131,16 @@ export async function executeCode(
   const details: Array<InspectedValue[] | null> = [];
   const levels: ConsoleLevel[] = [];
   const inspector = createInspector(inspectValues);
+  const buildTable = createTableBuilder();
   let currentLine = 0;
   let size = 0;
   let truncated = false;
   /**
    * Captures one entry subject to line-count and text-size limits.
    * @param level Console level of the entry. @param values Console arguments or one result.
+   * @param kind Marks a `console.table` call, whose first argument may be shown as a table.
    */
-  const emit = (level: ConsoleLevel, values: unknown[]) => {
+  const emit = (level: ConsoleLevel, values: unknown[], kind?: 'table') => {
     if (truncated) return;
     if (lines.length >= 499 || size >= 90_000) {
       const notice = '[Output limit reached. Further logs omitted.]';
@@ -149,13 +152,14 @@ export async function executeCode(
       truncated = true;
       return;
     }
-    const line = values
-      .map(format)
-      .join(' ')
-      .slice(0, Math.min(10_000, 90_000 - size));
+    const table = kind === 'table' ? buildTable(values[0], values[1]) : null;
+    const line = (table ? table.text : values.map(format).join(' ')).slice(
+      0,
+      Math.min(10_000, 90_000 - size),
+    );
     size += line.length;
     lines.push(line);
-    const inspected = inspector(values);
+    const inspected = table ? [table.value] : inspector(values);
     sourceLines.push(currentLine);
     details.push(inspected);
     levels.push(level);

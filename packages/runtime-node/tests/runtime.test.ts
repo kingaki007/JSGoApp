@@ -125,6 +125,28 @@ describe('shared Node runner', () => {
     expect(handled.lines).toEqual(['handled']);
   });
 
+  it('sends console.table data as a table without the request asking for inspection', async () => {
+    const result = await new NodeRuntime().run(
+      request('console.table([{ id: 1, ok: true }, { id: 2, ok: false }]); console.table(7);'),
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.details?.[0]).toEqual([
+      {
+        type: 'table',
+        text: 'Table(2)',
+        table: {
+          columns: ['(index)', 'id', 'ok'],
+          rows: [
+            ['0', '1', 'true'],
+            ['1', '2', 'false'],
+          ],
+        },
+      },
+    ]);
+    expect(result.lines[1]).toBe('7');
+    expect(result.details?.[1]).toBeNull();
+  });
+
   it('does not inherit arbitrary host environment variables', async () => {
     vi.stubEnv('JSGOAPP_TEST_SECRET', 'host-only');
     try {

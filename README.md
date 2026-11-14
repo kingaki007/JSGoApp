@@ -133,6 +133,12 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   such as `throw "text"`, show their message without a line. Errors thrown in
   timers and promises rejected without `await` or `catch` fail the run too,
   instead of passing silently.
+- **console.table** (`consoleTable`): tabular data (an array of objects, a Map,
+  a Set, or a plain object) is drawn as a real table with a header row and a
+  row-index column. Non-tabular data, such as a string or number, is logged
+  normally. Tables keep 50 rows and 12 data columns; a cell is shortened past 80
+  characters, and a nested value in a cell is summarized rather than expanded.
+  With Match lines, a table opens the same way any expandable value does.
 
 RunJS capabilities not yet implemented: npm package installation, environment
 variables, a snippet library, opening and saving

@@ -1,6 +1,11 @@
 /** Renders an inspected value as text or as an expandable tree of its properties and items. */
 import { useState } from 'react';
-import { isComposite, summarize, type InspectedValue } from '@code-editor/core/inspect';
+import {
+  isComposite,
+  summarize,
+  type InspectedValue,
+  type TableData,
+} from '@code-editor/core/inspect';
 
 /**
  * Renders one value; composites start collapsed and load nothing until opened.
@@ -21,6 +26,7 @@ export default function ValueTree({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  if (value.type === 'table' && value.table) return <TableView table={value.table} />;
   const label = name === undefined ? null : <span className="value-key">{name}: </span>;
 
   if (!isComposite(value) || !value.entries?.length) {
@@ -57,6 +63,46 @@ export default function ValueTree({
           ) : null}
         </ul>
       )}
+    </span>
+  );
+}
+
+/**
+ * Renders `console.table` data as a real table; every cell is plain text.
+ * @param props.table Validated grid whose first column is the row index.
+ */
+export function TableView({ table }: { table: TableData }) {
+  return (
+    <span className="output-table-wrap">
+      <table className="output-table">
+        <thead>
+          <tr>
+            {table.columns.map((column, index) => (
+              <th key={index} scope="col">
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              {row.map((cell, cellIndex) =>
+                cellIndex === 0 ? (
+                  <th key={cellIndex} scope="row">
+                    {cell}
+                  </th>
+                ) : (
+                  <td key={cellIndex}>{cell}</td>
+                ),
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {table.omitted ? (
+        <span className="value-omitted">… {table.omitted} more rows not shown</span>
+      ) : null}
     </span>
   );
 }

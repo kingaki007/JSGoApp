@@ -19,8 +19,9 @@ required. This change provides feature gates, without adding billing or checkout
 | `webView`              | Web view of the Browser page                    | On   | On   | On  |
 | `consoleLevels`        | Styled console warnings and errors              | On   | On   | On  |
 | `errorLocations`       | Errors shown at their source line, with a stack | On   | On   | On  |
+| `consoleTable`         | console.table shown as a table                  | On   | On   | On  |
 
-The eight workbench features are implemented and open on every plan. To put one
+The nine workbench features are implemented and open on every plan. To put one
 behind the paywall, remove its name from `featurePolicy.plans.free` (and from
 `.plus` to make it Max-only). No other code changes are needed.
 
@@ -95,6 +96,9 @@ secure a paid service against a modified client.
 | `workspaceSettings` | Settings popover; preferences persist in the `jsgoapp.settings` local-storage entry         | Defaults apply; the Auto run checkbox still works for the session        |
 | `codeFormatting`    | Format button and Shift+Alt+F format the draft with Prettier                                | No Format button; Format Document has no formatter                       |
 | `multipleTabs`      | Create, rename, and close scratchpad tabs                                                   | Existing tabs remain selectable and editable; no tab management controls |
+
+Without `consoleTable`, console.table data is shown as its plain-text grid, the
+same as any other logged value.
 
 Without `errorLocations`, a failed run shows its error message at the end of the
 output, without a line or call stack, and the editor does not highlight a line.

@@ -207,6 +207,37 @@ describe('scratchpad execution', () => {
     watch.stop();
   });
 
+  it('sends console.table data as a table, with a text form, and logs non-tabular data normally', async () => {
+    const result = await executeCode(
+      'table',
+      'console.table([{ name: "Ada", age: 36 }, { name: "Linus", age: 54 }]); console.table("just text");',
+      () => {},
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.lines).toEqual([
+      '(index) | name | age' +
+        String.fromCharCode(10) +
+        '0 | Ada | 36' +
+        String.fromCharCode(10) +
+        '1 | Linus | 54',
+      'just text',
+    ]);
+    expect(result.details?.[0]).toEqual([
+      {
+        type: 'table',
+        text: 'Table(2)',
+        table: {
+          columns: ['(index)', 'name', 'age'],
+          rows: [
+            ['0', 'Ada', '36'],
+            ['1', 'Linus', '54'],
+          ],
+        },
+      },
+    ]);
+    expect(result.details?.[1]).toBeNull();
+  });
+
   it('keeps earlier output when execution throws', async () => {
     const result = await executeCode(
       'error',
