@@ -5,6 +5,15 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.16.0] - 2026-11-14
+
+- Highlight the line where the latest run failed in the editor, with a gutter marker and
+  the error message on hover. Part of `errorLocations`; web and desktop share it.
+- The highlight follows its line while the draft is edited, is replaced by the next run,
+  and is removed when the run succeeds or another tab is shown.
+- Error text in the hover is escaped so it cannot render as Markdown or HTML.
+- Add decoration coverage, bringing the suite to 152 tests.
+
 ## [0.15.0] - 2026-11-14
 
 - Show where a failed run's error originated (`errorLocations`, open on every plan). With

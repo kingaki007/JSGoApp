@@ -12,6 +12,7 @@ import type { editor, IDisposable } from 'monaco-editor';
 import { languages, type Environment, type Language, type FeatureAccess } from '@code-editor/core';
 import './setup';
 import { compileSource, type CompiledSource } from './compile';
+import { errorLineOptions, type ErrorMarker } from './errorLine';
 import { registerFormatting } from './formatting';
 import { configureNavigation } from './navigation';
 import {
@@ -61,6 +62,8 @@ export interface CodeEditorProps {
   onReady?(): void;
   /** Reports scrolling, resizing, and line-layout changes that move lines on screen. */
   onViewportChange?(): void;
+  /** Marks the line where the latest run failed; null or absent shows no marker. */
+  errorMarker?: ErrorMarker | null;
   /** Optional user preferences; token typography, no wrapping, and line numbers apply otherwise. */
   preferences?: EditorPreferences;
   loading?: ReactNode;
@@ -82,6 +85,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
     onChange,
     onReady,
     onViewportChange,
+    errorMarker,
     preferences,
     loading,
   },
@@ -112,6 +116,22 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
       navigation?.dispose();
     };
   }, [ready, features.definitionNavigation, features.autocomplete, features.hoverDocumentation]);
+
+  useEffect(() => {
+    const host = editorRef.current;
+    const monaco = monacoRef.current;
+    const model = host?.getModel();
+    if (!ready || !host || !monaco || !model || !errorMarker) return;
+    if (errorMarker.line > model.getLineCount()) return;
+    const decorations = host.createDecorationsCollection([
+      {
+        range: new monaco.Range(errorMarker.line, 1, errorMarker.line, 1),
+        options: errorLineOptions(errorMarker),
+      },
+    ]);
+    return () => decorations.clear();
+    // The run identifier makes a new failure on the same line replace a marker that edits moved.
+  }, [ready, path, errorMarker?.id, errorMarker?.line, errorMarker?.message]);
 
   useEffect(() => {
     if (!ready || !monacoRef.current || !features.codeFormatting) return;
