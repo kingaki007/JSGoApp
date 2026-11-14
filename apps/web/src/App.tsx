@@ -138,7 +138,13 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
   return (
     <div className="workspace">
       <header className="app-header">
-        <a className="brand" href="/" aria-label="JSGoApp home">
+        {/* The desktop app opens straight into the playground and has no separate home page to
+            navigate to, so the logo is inert there instead of leaving the workbench. */}
+        <a
+          className="brand"
+          href={window.desktop ? undefined : '/'}
+          aria-label={window.desktop ? 'JSGoApp' : 'JSGoApp home'}
+        >
           <span className="brand-mark" aria-hidden="true">
             JS
           </span>

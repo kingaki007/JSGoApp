@@ -244,9 +244,10 @@ sets the runtime module format. Desktop development builds these entries before
 launching. `pnpm build` builds all workspace entries in dependency order.
 
 Desktop opens `/playground` directly in development and from its built app
-origin. Home and playground links work within that window; other navigation
-remains blocked. The web app's root `/` is the landing page. When hosting is
-revisited, its static host must serve `index.html` for the `/playground` route.
+origin and has no separate home page to navigate to; the header logo is
+inert there instead of linking to `/`, and other navigation remains blocked.
+The web app's root `/` is the landing page. When hosting is revisited, its
+static host must serve `index.html` for the `/playground` route.
 
 To exercise the built UI locally:
 
