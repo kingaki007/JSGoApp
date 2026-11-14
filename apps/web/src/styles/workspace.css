@@ -641,6 +641,15 @@
   color: var(--color-text);
 }
 
+/* Editor marker for the line where the latest run failed; class names come from the editor package. */
+.editor-error-line {
+  background: color-mix(in srgb, var(--editor-error) 16%, transparent);
+}
+.editor-error-line-marker {
+  margin-left: var(--space-1);
+  border-left: var(--focus-width) solid var(--editor-error);
+}
+
 /* Stack the editor and results when side-by-side panes would be too narrow. */
 @media (max-width: 1000px) {
   .workspace {

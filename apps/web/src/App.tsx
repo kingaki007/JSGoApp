@@ -101,6 +101,13 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     if (ready && settings.autoRun && active.code.trim()) autoRun.runNow();
   }, [webMount]);
 
+  // Mark the failing line in the editor as well as in the results pane.
+  const failure = execution.result?.status === 'error' ? execution.result : null;
+  const errorMarker =
+    features.errorLocations && failure?.errorLine
+      ? { line: failure.errorLine, message: failure.error ?? '', id: failure.id }
+      : null;
+
   const sideBySide = useSideBySide();
   const matchLines = features.matchLines && settings.matchLines && sideBySide && ready;
   // Scrolling and layout changes move editor lines, so aligned results are re-rendered with them.
@@ -244,6 +251,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
             path={`file:///${active.id}.${languages[language].extension}`}
             value={active.code}
             preferences={settings}
+            errorMarker={errorMarker}
             onChange={(value) => drafts.updateCode(active.id, value)}
             onReady={() => setReady(true)}
             onViewportChange={matchLines ? onViewportChange : undefined}

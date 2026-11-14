@@ -97,7 +97,7 @@ secure a paid service against a modified client.
 | `multipleTabs`      | Create, rename, and close scratchpad tabs                                                   | Existing tabs remain selectable and editable; no tab management controls |
 
 Without `errorLocations`, a failed run shows its error message at the end of the
-output, without a line or call stack.
+output, without a line or call stack, and the editor does not highlight a line.
 
 Without `consoleLevels`, every console entry looks alike; warnings and errors are
 still shown, without colour or a spoken prefix.

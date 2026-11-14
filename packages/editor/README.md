@@ -11,7 +11,8 @@ the planned Electron renderer.
 - `CodeEditor`: controlled component accepting `value`, `language`, `path`,
   `theme`, `onChange`, optional `environment` (Browser by default), optional
   `onReady`, optional `preferences` (font size, word wrap, line numbers),
-  optional `onViewportChange`, and optional `loading` content.
+  optional `onViewportChange`, optional `errorMarker` (line, message, and run
+  identifier of the latest failure), and optional `loading` content.
 - `CodeEditorHandle`: the ref exposes `compile(source, language)`, returning
   `{ code, lineMap }` from a source snapshot. JavaScript passes through;
   TypeScript uses the editor's language worker, and `lineMap` gives the draft
@@ -33,9 +34,13 @@ package instead of accessing Monaco or this package's internal files.
 | `src/theme.ts`           | Semantic CSS token mapping and typography                         |
 | `src/compile.ts`         | Source snapshots, syntax errors, TypeScript emission, and cleanup |
 | `src/formatting.ts`      | Gated Prettier formatter for Format Document                      |
+| `src/errorLine.ts`       | Decoration that marks the line where a run failed                 |
 | `src/environment.ts`     | Environment-specific compiler libraries and declarations          |
 | `src/nodeDefinitions.ts` | Lazy Node and fetch declaration bundle                            |
 | `tests/compile.test.ts`  | Compiler boundary and snapshot lifecycle checks                   |
+
+The package ships no stylesheet. The host styles the error marker's classes,
+`editor-error-line` (whole line) and `editor-error-line-marker` (gutter strip).
 
 The host loads the JSGoApp CSS token definitions before mounting the editor
 and applies the resolved theme to the document. `theme.ts` reads `--editor-*`,

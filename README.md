@@ -127,8 +127,10 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   the list view it is prefixed with the line number. When the error came through
   function calls, a collapsible call stack lists each function and line. Lines
   refer to the draft, including for TypeScript and for Node.js code that uses
-  imports. Syntax errors are located too. Values thrown without a stack, such as
-  `throw "text"`, show their message without a line.
+  imports. Syntax errors are located too. The editor also highlights the failing
+  line and shows the message when it is hovered; the highlight follows the line
+  while you edit and is replaced by the next run. Values thrown without a stack,
+  such as `throw "text"`, show their message without a line.
 
 RunJS capabilities not yet implemented: npm package installation, environment
 variables, a snippet library, opening and saving
