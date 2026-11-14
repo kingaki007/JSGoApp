@@ -23,8 +23,9 @@ required. This change provides feature gates, without adding billing or checkout
 | `environmentVariables` | Environment variables for executed code         | On   | On   | On  |
 | `runShortcuts`         | Run and Stop keyboard shortcuts                 | On   | On   | On  |
 | `copyOutput`           | Copy an output entry to the clipboard           | On   | On   | On  |
+| `autoTabTitles`        | Name untitled tabs from their first code line   | On   | On   | On  |
 
-The twelve workbench features are implemented and open on every plan. To put one
+The thirteen workbench features are implemented and open on every plan. To put one
 behind the paywall, remove its name from `featurePolicy.plans.free` (and from
 `.plus` to make it Max-only). No other code changes are needed.
 
@@ -105,6 +106,9 @@ browser's own reload and hard-reload; only the Run and Stop buttons work.
 
 Without `copyOutput`, output entries have no copy action; values are still
 selectable as text, same as before this feature existed.
+
+Without `autoTabTitles`, every new tab keeps its `untitled-N` name until
+explicitly renamed, same as before this feature existed.
 
 Without `environmentVariables`, the Env vars control is hidden and `process.env`
 holds no custom values; built-in `process` fields such as `process.versions`

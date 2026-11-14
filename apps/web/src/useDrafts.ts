@@ -26,6 +26,23 @@ export function nextTabName(tabs: readonly ScratchTab[], language: Language): st
 }
 
 /**
+ * Computes the tab's displayed title: its first non-blank code line while untitled, or the
+ * name the user explicitly chose once they have renamed it.
+ * @param tab Tab to title.
+ */
+export function tabTitle(tab: ScratchTab): string {
+  if (!tab.autoTitled) return tab.name;
+  const firstLine = tab.code
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+  if (!firstLine) return tab.name;
+  return firstLine.length > maxTabNameLength
+    ? `${firstLine.slice(0, maxTabNameLength - 1)}…`
+    : firstLine;
+}
+
+/**
  * Restores tabs once and keeps edits responsive while batching storage writes.
  * @param defaults Example tabs used only when no valid saved snapshot can be restored.
  * @param defaultActiveId Example tab shown first on a new device.
@@ -127,6 +144,7 @@ export function useDrafts(defaults: ScratchTab[], defaultActiveId: string) {
         name: nextTabName(current.tabs, language),
         language,
         code: '',
+        autoTitled: true,
       };
       update({ ...current, activeId: tab.id, tabs: [...current.tabs, tab] });
     },
@@ -147,7 +165,13 @@ export function useDrafts(defaults: ScratchTab[], defaultActiveId: string) {
      */
     renameTab(id: string, name: string) {
       const trimmed = name.trim().slice(0, maxTabNameLength);
-      if (trimmed) updateTab(id, (tab) => (tab.name === trimmed ? tab : { ...tab, name: trimmed }));
+      // An explicit rename always takes over the title, even if it repeats what was auto-derived.
+      if (trimmed)
+        updateTab(id, (tab) =>
+          tab.name === trimmed && !tab.autoTitled
+            ? tab
+            : { ...tab, name: trimmed, autoTitled: false },
+        );
     },
     saveState,
     saveMessage:

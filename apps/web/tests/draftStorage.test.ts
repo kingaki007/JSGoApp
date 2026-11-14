@@ -1,7 +1,7 @@
 /** Verifies tab restoration, version 1 migration, schema validation, and recoverable storage failures. */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { draftStorageKey, loadDrafts, saveDrafts, type DraftSnapshot } from '../src/draftStorage';
-import { nextTabName } from '../src/useDrafts';
+import { nextTabName, tabTitle } from '../src/useDrafts';
 
 const snapshot: DraftSnapshot = {
   version: 2,
@@ -81,6 +81,7 @@ describe('local draft recovery', () => {
     { ...snapshot, tabs: [{ ...snapshot.tabs[1], language: 'python' }] },
     { ...snapshot, tabs: [{ ...snapshot.tabs[1], id: '../escape' }] },
     { ...snapshot, tabs: [{ ...snapshot.tabs[1], code: 42 }] },
+    { ...snapshot, tabs: [{ ...snapshot.tabs[1], autoTitled: 'yes' }] },
     { version: 1, language: 'javascript', drafts: { javascript: 42 } },
   ])('rejects unsupported or incomplete snapshot shapes', (invalid) => {
     values.set(draftStorageKey, JSON.stringify(invalid));
@@ -111,5 +112,46 @@ describe('local draft recovery', () => {
     expect(nextTabName([{ ...snapshot.tabs[0], name: 'untitled-1.js' }], 'javascript')).toBe(
       'untitled-2.js',
     );
+  });
+
+  it('round-trips the autoTitled flag', () => {
+    const tagged: DraftSnapshot = {
+      ...snapshot,
+      tabs: [snapshot.tabs[0], { ...snapshot.tabs[1], autoTitled: true }],
+    };
+    saveDrafts(tagged);
+    expect(loadDrafts().snapshot).toEqual(tagged);
+  });
+});
+
+describe('tab title derivation', () => {
+  const base = { id: 'a', name: 'untitled-1.ts', language: 'typescript' as const, code: '' };
+
+  it('shows the name when the tab was never auto-titled, regardless of its code', () => {
+    expect(tabTitle({ ...base, code: 'const x = 1;' })).toBe('untitled-1.ts');
+    expect(tabTitle({ ...base, autoTitled: false, code: 'const x = 1;' })).toBe('untitled-1.ts');
+  });
+
+  it('shows the first non-blank code line while auto-titled', () => {
+    expect(
+      tabTitle({
+        ...base,
+        autoTitled: true,
+        code: '\n  \nconst total = 1 + 2;\nconsole.log(total);',
+      }),
+    ).toBe('const total = 1 + 2;');
+  });
+
+  it('falls back to the name when auto-titled code is empty or only whitespace', () => {
+    expect(tabTitle({ ...base, autoTitled: true, code: '' })).toBe('untitled-1.ts');
+    expect(tabTitle({ ...base, autoTitled: true, code: '   \n\t\n' })).toBe('untitled-1.ts');
+  });
+
+  it('truncates a long first line with an ellipsis', () => {
+    const line = 'x'.repeat(50);
+    const title = tabTitle({ ...base, autoTitled: true, code: line });
+    expect(title.length).toBe(40);
+    expect(title.endsWith('…')).toBe(true);
+    expect(title.startsWith('x'.repeat(39))).toBe(true);
   });
 });

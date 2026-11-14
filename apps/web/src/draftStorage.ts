@@ -8,10 +8,12 @@ export const maxTabNameLength = 40;
 export interface ScratchTab {
   /** Stable identifier, also used in the editor model path. */
   id: string;
-  /** Display name chosen by the user. */
+  /** Fallback name, and the name once the tab has been explicitly renamed. */
   name: string;
   language: Language;
   code: string;
+  /** Whether the displayed title still tracks the first line of code instead of `name`. */
+  autoTitled?: boolean;
 }
 
 export interface DraftSnapshot {
@@ -47,7 +49,8 @@ function isSnapshot(value: unknown): value is DraftSnapshot {
       !tab.name ||
       tab.name.length > maxTabNameLength ||
       !isLanguage(tab.language) ||
-      typeof tab.code !== 'string'
+      typeof tab.code !== 'string' ||
+      (tab.autoTitled !== undefined && typeof tab.autoTitled !== 'boolean')
     )
       return false;
     ids.add(tab.id);

@@ -156,6 +156,12 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   each output entry, in both the list and Match-lines views, and copies that
   entry's exact text (its plain-text form, even for an expandable value or a
   table) to the clipboard. A brief confirmation replaces the icon.
+- **Auto tab titles** (`autoTabTitles`): a new tab's name tracks the first
+  non-blank line of its code, live, until it is explicitly renamed (double-click
+  a tab name), which locks that name permanently regardless of further edits.
+  An empty draft keeps its fallback `untitled-N` name. Existing tabs saved
+  before this feature, and the two example scratchpads, keep their names
+  unaffected.
 
 RunJS capabilities not yet implemented: npm package installation, environment
 variables, a snippet library, opening and saving

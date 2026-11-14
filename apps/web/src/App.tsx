@@ -19,7 +19,7 @@ import TabList from './TabList';
 import type { LineAlignment } from './OutputPanel';
 import type { ScratchTab } from './draftStorage';
 import { useExecution } from './useExecution';
-import { useDrafts } from './useDrafts';
+import { useDrafts, tabTitle } from './useDrafts';
 import { useAutoRun } from './useAutoRun';
 import { useRunShortcuts } from './useRunShortcuts';
 import { useSettings } from './settings';
@@ -67,6 +67,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
   const drafts = useDrafts(initialTabs, 'typescript');
   const { active } = drafts;
   const language: Language = active.language;
+  const activeTitle = features.autoTabTitles ? tabTitle(active) : active.name;
   const { settings, update: updateSettings } = useSettings(features.workspaceSettings);
   const envVars = useEnvVars(features.environmentVariables);
   const [ready, setReady] = useState(false);
@@ -182,6 +183,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
           activeId={active.id}
           editable={features.multipleTabs}
           canAdd={drafts.canAddTab}
+          titleFromCode={features.autoTabTitles}
           onSelect={(id) => {
             if (id !== active.id) {
               autoRun.stop();
@@ -194,9 +196,9 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
           }}
           onClose={(id) => {
             const tab = drafts.tabs.find((candidate) => candidate.id === id);
+            const title = tab && (features.autoTabTitles ? tabTitle(tab) : tab.name);
             // Closing discards the tab's code, so non-empty tabs need an explicit confirmation.
-            if (tab?.code.trim() && !window.confirm(`Close ${tab.name} and discard its code?`))
-              return;
+            if (tab?.code.trim() && !window.confirm(`Close ${title} and discard its code?`)) return;
             if (id === active.id) autoRun.stop();
             drafts.closeTab(id);
           }}
@@ -215,7 +217,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
               <span className={`language-badge ${language}`} aria-hidden="true">
                 {language === 'typescript' ? 'TS' : 'JS'}
               </span>{' '}
-              {active.name}
+              {activeTitle}
             </h1>
           </div>
           <div className="run-actions">
@@ -262,7 +264,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
           </div>
         </div>
         <div className="editor-breadcrumb">
-          Scratchpads <span aria-hidden="true">/</span> {active.name}
+          Scratchpads <span aria-hidden="true">/</span> {activeTitle}
           <label className="auto-run-toggle" title="Run 2 seconds after typing stops">
             <input
               type="checkbox"
