@@ -5,6 +5,14 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.26.1] - 2026-11-15
+
+- Fix Browser console output failing on `console.log(window)` by formatting safe
+  inspection snapshots without invoking custom getters or `toJSON` hooks.
+- Show `Window` properties and expandable DOM markup for `document` and elements;
+  keep readable properties when a sibling is inaccessible. Add regression tests
+  and a real Chromium sandbox console check to the desktop smoke suite.
+
 ## [0.26.0] - 2026-11-15
 
 - Replace the System/Light/Dark switch with RunJS's 16 named editor themes

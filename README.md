@@ -58,6 +58,12 @@ order, interleaved with explicit console output. Undefined results are omitted.
 Declarations and expressions inside functions/loops are not automatically printed.
 Use `await` to inspect an asynchronous result.
 
+Browser console output inspects values without invoking `toJSON` hooks or custom
+getters. `window` appears as an expandable `Window`; `document` and DOM elements
+appear as expandable markup trees. Inaccessible references display as
+`[Uninspectable]` so logging does not stop the snippet. These are bounded snapshots
+at log time, rather than the browser DevTools' live object handles.
+
 Once the editor is ready, non-empty code runs after two seconds without edits.
 Every edit cancels an in-flight run and replaces the pending timer. Changing
 language or environment schedules the selected draft after the same delay.

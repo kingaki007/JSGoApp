@@ -176,6 +176,21 @@ the trees inside the snippet process and validates them again in each host befor
 they reach the UI. A run may send about 400,000 characters of trees; after that,
 entries carry text only.
 
+Browser text formatting uses bounded inspection rather than JSON serialization of
+runtime objects. It never invokes custom getters or `toJSON` hooks. `Window`
+keeps its identity and own properties, with selected native browser accessors
+read for useful context. Inaccessible children display as `[Uninspectable]`
+without discarding their readable siblings. Document and DOM node snapshots use
+the `dom` type, markup labels, and bounded child-node trees; the results pane
+expands those children without object-property indices. Text-only output retains
+the same Window/DOM labels when inspection is disabled.
+
+These are snapshots at log time, subject to the existing depth, node, and entry
+limits; they do not provide DevTools' live handles, getter-evaluation buttons, or
+complete prototype traversal. The page's sandbox permissions remain unchanged.
+The desktop smoke suite logs real browser values in an opaque-origin Chromium
+frame to verify this path, including a cross-origin parent reference.
+
 The Node snippet process now stays alive until its host ends it. Previously it
 could exit as soon as the snippet finished, before queued output was delivered,
 which truncated large outputs.
