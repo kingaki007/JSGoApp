@@ -16,6 +16,7 @@ export const featureCatalog = {
   consoleTable: { label: 'console.table shown as a table', enabled: true },
   environmentVariables: { label: 'Environment variables for executed code', enabled: true },
   runShortcuts: { label: 'Run and Stop keyboard shortcuts', enabled: true },
+  copyOutput: { label: 'Copy an output entry to the clipboard', enabled: true },
 };
 export type Feature = keyof typeof featureCatalog;
 export type FeatureAccess = Readonly<Record<Feature, boolean>>;
@@ -49,6 +50,7 @@ export const featurePolicy: FeaturePolicy = {
       'consoleTable',
       'environmentVariables',
       'runShortcuts',
+      'copyOutput',
     ],
     plus: [
       'autocomplete',
@@ -64,6 +66,7 @@ export const featurePolicy: FeaturePolicy = {
       'consoleTable',
       'environmentVariables',
       'runShortcuts',
+      'copyOutput',
     ],
     max: [
       'definitionNavigation',
@@ -80,6 +83,7 @@ export const featurePolicy: FeaturePolicy = {
       'consoleTable',
       'environmentVariables',
       'runShortcuts',
+      'copyOutput',
     ],
   },
 };

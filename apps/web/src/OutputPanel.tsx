@@ -4,6 +4,7 @@ import type { ConsoleLevel, InspectedValue } from '@code-editor/core';
 import { highestLevel } from '@code-editor/core/console';
 import { summarize } from '@code-editor/core/inspect';
 import type { ExecutionView } from './useExecution';
+import CopyButton from './CopyButton';
 import { ValueList } from './ValueTree';
 
 export interface LineAlignment {
@@ -17,7 +18,14 @@ export interface LineAlignment {
 
 export interface AlignedOutput {
   /** One entry per draft line with output, in line order; values from one line are joined. */
-  rows: Array<{ line: number; text: string; level: ConsoleLevel; values?: InspectedValue[] }>;
+  rows: Array<{
+    line: number;
+    text: string;
+    /** Original per-entry text joined by newlines; what Copy writes, even when `text` is a preview. */
+    rawText: string;
+    level: ConsoleLevel;
+    values?: InspectedValue[];
+  }>;
   /** Output whose source line is unknown, shown below the aligned rows. */
   unplaced: string[];
 }
@@ -65,6 +73,7 @@ export function alignOutput(
         text: row.inspectable
           ? row.values.map((value) => summarize(value)).join(' ')
           : row.texts.join('  '),
+        rawText: row.texts.join('\n'),
         ...(row.inspectable ? { values: row.values } : {}),
       })),
     unplaced,
@@ -125,6 +134,7 @@ function ErrorDetails({
  * @param props.styleLevels Whether warnings, errors, info, and debug entries are styled differently.
  * @param props.locateErrors Whether errors show their source line and call stack.
  * @param props.showTables Whether `console.table` data is drawn as a table; text is shown otherwise.
+ * @param props.copyOutput Whether each entry offers a one-click copy to the clipboard.
  */
 export default function OutputPanel({
   result,
@@ -134,6 +144,7 @@ export default function OutputPanel({
   styleLevels = false,
   locateErrors = false,
   showTables = false,
+  copyOutput = false,
 }: {
   result: ExecutionView | null;
   isRunning: boolean;
@@ -142,6 +153,7 @@ export default function OutputPanel({
   styleLevels?: boolean;
   locateErrors?: boolean;
   showTables?: boolean;
+  copyOutput?: boolean;
 }) {
   const statusLabels = {
     running: 'Running…',
@@ -240,6 +252,9 @@ export default function OutputPanel({
                         ▾
                       </span>
                     </button>
+                    {copyOutput && (
+                      <CopyButton text={row.rawText} label={`result of line ${row.line}`} />
+                    )}
                     <ValueList values={row.values} defaultOpen />
                   </div>
                 );
@@ -273,6 +288,9 @@ export default function OutputPanel({
                   ) : (
                     row.text
                   )}
+                  {copyOutput && (
+                    <CopyButton text={row.rawText} label={`result of line ${row.line}`} />
+                  )}
                 </pre>
               );
             })}
@@ -281,6 +299,7 @@ export default function OutputPanel({
               {aligned.unplaced.map((line, index) => (
                 <pre className="output-line" key={index}>
                   {line || ' '}
+                  {copyOutput && line && <CopyButton text={line} label="this entry" />}
                 </pre>
               ))}
               {result?.error && (!errorLine || stackShown) && (
@@ -312,6 +331,7 @@ export default function OutputPanel({
                   </span>
                 )}
                 <ValueList values={values} />
+                {copyOutput && <CopyButton text={line} label="this entry" />}
               </div>
             ) : (
               <pre
@@ -324,6 +344,7 @@ export default function OutputPanel({
                   </span>
                 )}
                 {line || ' '}
+                {copyOutput && line && <CopyButton text={line} label="this entry" />}
               </pre>
             );
           })}

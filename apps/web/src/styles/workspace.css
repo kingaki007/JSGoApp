@@ -716,6 +716,48 @@
   color: var(--color-text);
 }
 
+/* Copy button: hidden until the entry is hovered or focused, so plain output stays uncluttered. */
+.copy-button {
+  flex-shrink: 0;
+  margin-left: var(--space-2);
+  padding: var(--space-0) var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+}
+.output-line:hover .copy-button,
+.output-row:hover .copy-button,
+.output-row-open .copy-button,
+.copy-button:focus-visible,
+.copy-button:hover {
+  opacity: 1;
+}
+.copy-button:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+.output-row .copy-button {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--editor-background);
+}
+.output-line.output-values .copy-button,
+.output-line .copy-button {
+  float: right;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .copy-button {
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+}
+
 /* Editor marker for the line where the latest run failed; class names come from the editor package. */
 .editor-error-line {
   background: color-mix(in srgb, var(--editor-error) 16%, transparent);

@@ -5,6 +5,16 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.20.0] - 2026-11-14
+
+- Add a copy action to each output entry (`copyOutput`, open on every plan). Shown on
+  hover or focus in both the list and Match-lines views, it copies the entry's exact
+  text, even for an expandable value or a table, with a brief confirmation.
+- Add a `rawText` field to each aligned row, holding its original per-entry text
+  (newline-joined) separately from its summarized preview, so Copy never writes a
+  truncated or merged preview.
+- Add CopyButton, clipboard, and output-pane coverage, bringing the suite to 201 tests.
+
 ## [0.19.0] - 2026-11-14
 
 - Add Ctrl+R (Run) and Ctrl+Shift+R (Stop) keyboard shortcuts (`runShortcuts`, open on

@@ -320,6 +320,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
         styleLevels={features.consoleLevels}
         locateErrors={features.errorLocations}
         showTables={features.consoleTable}
+        copyOutput={features.copyOutput}
         onWebMount={setWebMount}
       />
 
