@@ -24,8 +24,19 @@ const hostGraceMs = 500;
 export class BrowserRuntime implements RuntimeAdapter {
   private cancel?: () => void;
   private mount: HTMLElement | null = null;
-  /** Page kept after a finished run while the Web view shows it. */
+  /** Page retained for the Web view or on-demand inspection until the run is released. */
   private page?: FrameHost;
+  private inspectionHost?: FrameHost;
+  private inspectionRun?: string;
+  private nextInspection = 0;
+  private inspections = new Map<
+    string,
+    {
+      resolve(value: InspectedValue): void;
+      reject(error: Error): void;
+      timer: ReturnType<typeof setTimeout>;
+    }
+  >();
   private readonly createHost: (mount: HTMLElement | null) => Promise<FrameHost>;
   private readonly timeoutMs: number;
 
@@ -73,7 +84,7 @@ export class BrowserRuntime implements RuntimeAdapter {
       const seconds = Math.round(this.timeoutMs / 1000);
       /**
        * @param error Optional failure reported to the user.
-       * @param keepPage Whether the page stays for the Web view; runs ended by the host never keep it.
+       * @param keepPage Whether the page stays for rendering or inspection; host-ended runs never keep it.
        * @param location Where the snippet's own error originated, when the page could tell.
        */
       const finish = (
@@ -84,8 +95,12 @@ export class BrowserRuntime implements RuntimeAdapter {
         if (finished) return;
         finished = true;
         clearTimeout(timer);
-        if (keepPage && host && mount && this.mount === mount) this.page = host;
-        else host?.dispose();
+        if (keepPage && host && this.mount === mount && (mount || request.inspect))
+          this.page = host;
+        else {
+          host?.dispose();
+          this.releaseInspection();
+        }
         if (this.cancel === cancel) this.cancel = undefined;
         resolve({
           id: request.id,
@@ -113,9 +128,36 @@ export class BrowserRuntime implements RuntimeAdapter {
             return;
           }
           host = created;
+          if (request.inspect) {
+            this.inspectionHost = created;
+            this.inspectionRun = request.id;
+          }
           created.onMessage((message) => {
-            if (finished || !message || typeof message !== 'object') return;
+            if (!message || typeof message !== 'object') return;
             const data = message as Record<string, unknown>;
+            if (
+              data.type === 'inspection' &&
+              this.inspectionHost === created &&
+              data.id === request.id &&
+              typeof data.requestId === 'string'
+            ) {
+              const pending = this.inspections.get(data.requestId);
+              if (!pending) return;
+              clearTimeout(pending.timer);
+              this.inspections.delete(data.requestId);
+              const values = readInspectedValues([data.value]);
+              if (values?.[0]) pending.resolve(values[0]);
+              else
+                pending.reject(
+                  new Error(
+                    typeof data.error === 'string'
+                      ? data.error.slice(0, 200)
+                      : 'Invalid inspection response.',
+                  ),
+                );
+              return;
+            }
+            if (finished) return;
             if (data.type === 'ready') {
               created.post({ ...request, timeoutMs: this.timeoutMs });
             } else if (data.type === 'output' && data.id === request.id) {
@@ -156,5 +198,37 @@ export class BrowserRuntime implements RuntimeAdapter {
     this.cancel?.();
     this.page?.dispose();
     this.page = undefined;
+    this.releaseInspection();
+  }
+
+  /** Rejects pending expansion requests and invalidates handles when their page is disposed. */
+  private releaseInspection() {
+    this.inspectionHost = undefined;
+    this.inspectionRun = undefined;
+    for (const pending of this.inspections.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(
+        new Error('This run is no longer available. Run the code again to inspect it.'),
+      );
+    }
+    this.inspections.clear();
+  }
+
+  /** @param run Run owning the handle. @param reference Object or property-range handle to expand. */
+  inspect(run: string, reference: string): Promise<InspectedValue> {
+    const host = this.inspectionHost;
+    if (!host || this.inspectionRun !== run)
+      return Promise.reject(
+        new Error('This run is no longer available. Run the code again to inspect it.'),
+      );
+    const requestId = String(++this.nextInspection);
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.inspections.delete(requestId);
+        reject(new Error('Inspection timed out. Try expanding the value again.'));
+      }, 3000);
+      this.inspections.set(requestId, { resolve, reject, timer });
+      host.post({ type: 'inspect', id: run, requestId, reference });
+    });
   }
 }

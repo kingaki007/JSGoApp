@@ -428,7 +428,7 @@
 .output-content.output-aligned {
   position: relative;
   overflow: auto;
-  padding: var(--space-0);
+  padding: var(--space-0) var(--space-0) var(--space-4);
 }
 .output-aligned-rows {
   display: flex;
@@ -507,13 +507,7 @@
   color: var(--color-text-muted);
 }
 .output-row-open {
-  max-height: 60vh;
-  padding: var(--space-0) var(--space-2) var(--space-2) var(--space-0);
-  overflow: auto;
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-control);
+  overflow: visible;
   line-height: var(--line-height-body);
   white-space: pre-wrap;
   overflow-wrap: anywhere;

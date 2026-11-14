@@ -1,7 +1,7 @@
 /** Checks browser-value output in Chromium with the same opaque-origin sandbox as the app. */
 import { BrowserWindow } from 'electron';
 import path from 'node:path';
-import type { RunResult } from '@code-editor/core';
+import type { RunResult, InspectedValue } from '@code-editor/core';
 
 /** Runs window and DOM logging against the real bundled frame runner. */
 export async function checkBrowserConsole(): Promise<void> {
@@ -52,8 +52,25 @@ function runFrame(html: string): Promise<RunResult> {
     frame.setAttribute('sandbox', 'allow-scripts');
     frame.srcdoc = html;
     const timer = setTimeout(() => reject(new Error('Browser console smoke timed out')), 15000);
+    const pending = new Map<string, (value: InspectedValue) => void>();
+    let nextRequest = 0;
+    /** @param reference Handle returned by the real Browser sandbox. */
+    const expand = (reference: string) =>
+      new Promise<InspectedValue>((resolve) => {
+        const requestId = String(++nextRequest);
+        pending.set(requestId, resolve);
+        frame.contentWindow?.postMessage(
+          { type: 'inspect', id: 'browser-console', requestId, reference },
+          '*',
+        );
+      });
     window.addEventListener('message', (event) => {
       if (event.source !== frame.contentWindow) return;
+      if (event.data.type === 'inspection') {
+        pending.get(event.data.requestId)?.(event.data.value);
+        pending.delete(event.data.requestId);
+        return;
+      }
       if (event.data.type === 'ready')
         frame.contentWindow?.postMessage(
           {
@@ -71,10 +88,19 @@ function runFrame(html: string): Promise<RunResult> {
           '*',
         );
       if (event.data.type === 'complete') {
-        clearTimeout(timer);
-        frame.remove();
         const result = event.data.result as RunResult;
-        resolve(result);
+        void Promise.all(
+          [0, 1, 2].map(async (index) => {
+            const preview = result.details?.[index]?.[0];
+            if (!preview?.reference || preview.entries)
+              throw new Error('Browser preview was eagerly loaded');
+            result.details![index] = [await expand(preview.reference)];
+          }),
+        ).then(() => {
+          clearTimeout(timer);
+          frame.remove();
+          resolve(result);
+        }, reject);
       }
     });
     document.body.append(frame);

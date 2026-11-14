@@ -5,6 +5,16 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.27.0] - 2026-11-15
+
+- Let multiple Match lines result rows stay expanded independently. Show expanded
+  objects and tables inline without bordered boxes or separate row scrollbars.
+- Add on-demand Browser object inspection with run-scoped handles, expandable
+  property ranges, prototype navigation, and cleanup on run replacement or Clear/Stop.
+  Only requested branches are read; Node and console.table retain bounded snapshots.
+- Cap aligned-result gaps at 32px and add bottom padding so the final table border
+  remains visible.
+
 ## [0.26.2] - 2026-11-15
 
 - Decouple results scrolling from the editor while retaining Match lines spacing.

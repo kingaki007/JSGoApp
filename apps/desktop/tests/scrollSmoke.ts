@@ -8,6 +8,7 @@ export async function checkIndependentScrolling(host: BrowserWindow, url: string
     version: 2, activeId: 'scroll-test', tabs: [{ id: 'scroll-test', name: 'scroll.js',
     language: 'javascript', code: Array.from({ length: 120 }, (_, i) => i < 2
       ? 'console.table([{ name: "first" }, { name: "second" }, { name: "third" }]);'
+      : i === 2 ? 'console.log(Object.fromEntries(Array.from({ length: 238 }, (_, j) => ["field" + j, j])));'
       : 'console.log(' + i + ');').join('\\n') }]
   }));`);
   await host.loadURL(url);
@@ -79,4 +80,43 @@ export async function checkIndependentScrolling(host: BrowserWindow, url: string
   })`);
   if (!tablesDoNotOverlap)
     throw new Error('Expanded table covers later results or fails to collapse');
+  const inlineExpansion = await host.webContents.executeJavaScript(`new Promise(resolve => {
+    document.querySelector('[aria-label="Expand result of line 1"]').click();
+    document.querySelector('[aria-label="Expand result of line 2"]').click();
+    setTimeout(() => {
+      const rows = [...document.querySelectorAll('.output-row-open')];
+      const valid = rows.length === 2 && rows.every(row => {
+        const style = getComputedStyle(row);
+        return row.querySelector('table') && style.borderTopWidth === '0px' &&
+          style.boxShadow === 'none' && style.maxHeight === 'none' && style.overflowY === 'visible';
+      }) && rows[1].getBoundingClientRect().top >= rows[0].getBoundingClientRect().bottom;
+      document.querySelector('[aria-label="Collapse result of line 1"]').click();
+      setTimeout(() => resolve(valid && document.querySelectorAll('.output-row-open').length === 1 &&
+        Boolean(document.querySelector('[aria-label="Collapse result of line 2"]'))), 100);
+    }, 100);
+  })`);
+  if (!inlineExpansion) throw new Error('Result rows are not independently expanded inline');
+  const lazyProperties = await host.webContents.executeJavaScript(`new Promise(resolve => {
+    const output = document.querySelector('.output-aligned');
+    if (Number.parseFloat(getComputedStyle(output).paddingBottom) < 8) return resolve(false);
+    document.querySelector('[aria-label="Expand result of line 3"]').click();
+    const deadline = Date.now() + 5000;
+    function findRange() {
+      const group = [...document.querySelectorAll('.value-toggle')].find(button => button.textContent.includes('Properties 200'));
+      if (!group) {
+        if (Date.now() > deadline) return resolve(false);
+        return setTimeout(findRange, 50);
+      }
+      if (output.textContent.includes('field237')) return resolve(false);
+      group.click();
+      function findLastProperty() {
+        if (output.textContent.includes('field237')) return resolve(!output.textContent.includes('more not shown'));
+        if (Date.now() > deadline) return resolve(false);
+        setTimeout(findLastProperty, 50);
+      }
+      findLastProperty();
+    }
+    findRange();
+  })`);
+  if (!lazyProperties) throw new Error('Browser property ranges were not requested on expansion');
 }

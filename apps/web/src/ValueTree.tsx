@@ -1,5 +1,5 @@
 /** Renders an inspected value as text or as an expandable tree of its properties and items. */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   isComposite,
   summarize,
@@ -7,29 +7,60 @@ import {
   type TableData,
 } from '@code-editor/core/inspect';
 
+export type LoadInspectedValue = (reference: string) => Promise<InspectedValue>;
+
 /**
  * Renders one value; composites start collapsed and load nothing until opened.
  * @param props.value Inspected value from a runtime, already validated.
  * @param props.name Property name or index when the value sits inside another value.
  * @param props.nested Whether the value is inside another value, where strings are quoted.
  * @param props.defaultOpen Whether a composite starts expanded, for a row the user just opened.
+ * @param props.loadValue Requests children of a run-scoped Browser reference when opened.
  */
 export default function ValueTree({
   value,
   name,
   nested = false,
   defaultOpen = false,
+  loadValue,
 }: {
   value: InspectedValue;
   name?: string;
   nested?: boolean;
   defaultOpen?: boolean;
+  loadValue?: LoadInspectedValue;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [loaded, setLoaded] = useState<{ reference: string; value: InspectedValue }>();
+  const [error, setError] = useState<string>();
+  const [attempt, setAttempt] = useState(0);
+  const reference = value.reference;
+  const node = reference && loaded?.reference === reference ? loaded.value : value;
+  useEffect(() => {
+    if (!open || !reference || loaded?.reference === reference) return;
+    let current = true;
+    setError(undefined);
+    if (!loadValue) {
+      setError('This run is no longer available.');
+      return;
+    }
+    void loadValue(reference).then(
+      (value) => {
+        if (current) setLoaded({ reference, value });
+      },
+      (reason) => {
+        if (current)
+          setError(reason instanceof Error ? reason.message : 'Could not inspect this value.');
+      },
+    );
+    return () => {
+      current = false;
+    };
+  }, [open, reference, loadValue, loaded?.reference, attempt]);
   if (value.type === 'table' && value.table) return <TableView table={value.table} />;
   const label = name === undefined ? null : <span className="value-key">{name}: </span>;
 
-  if (!isComposite(value) || !value.entries?.length) {
+  if (!isComposite(value) || (!reference && !value.entries?.length)) {
     return (
       <span className="value-leaf">
         {label}
@@ -49,22 +80,39 @@ export default function ValueTree({
           {open ? '▾' : '▸'}
         </span>
         {label}
-        <span className={`value value-${value.type}`}>{open ? value.text : summarize(value)}</span>
+        <span className={`value value-${value.type}`}>{open ? node.text : summarize(node)}</span>
       </button>
       {open && (
         <ul className="value-children">
-          {value.entries.map((entry, index) => (
+          {node.entries?.map((entry, index) => (
             <li key={index}>
               <ValueTree
                 value={entry.value}
-                name={value.type === 'dom' ? undefined : entry.key}
+                name={
+                  value.type === 'dom' || entry.key === entry.value.text ? undefined : entry.key
+                }
                 nested
+                loadValue={loadValue}
               />
             </li>
           ))}
-          {value.omitted ? (
-            <li className="value-omitted">… {value.omitted} more not shown</li>
+          {reference && loaded?.reference !== reference && !error ? (
+            <li role="status">Loading properties…</li>
           ) : null}
+          {error ? (
+            <li role="status">
+              {error}{' '}
+              <button
+                type="button"
+                className="value-toggle"
+                onClick={() => setAttempt((value) => value + 1)}
+              >
+                Retry
+              </button>
+            </li>
+          ) : null}
+          {node.entries?.length === 0 ? <li className="value-omitted">No properties</li> : null}
+          {node.omitted ? <li className="value-omitted">… {node.omitted} more not shown</li> : null}
         </ul>
       )}
     </span>
@@ -115,20 +163,23 @@ export function TableView({ table }: { table: TableData }) {
  * Renders the arguments of one output entry, separated like console arguments.
  * @param props.values Inspected console arguments or one expression result.
  * @param props.defaultOpen Whether composites start expanded.
+ * @param props.loadValue Optional Browser branch loader shared by these arguments.
  */
 export function ValueList({
   values,
   defaultOpen = false,
+  loadValue,
 }: {
   values: readonly InspectedValue[];
   defaultOpen?: boolean;
+  loadValue?: LoadInspectedValue;
 }) {
   return (
     <>
       {values.map((value, index) => (
         <span key={index}>
           {index > 0 && ' '}
-          <ValueTree value={value} defaultOpen={defaultOpen} />
+          <ValueTree value={value} defaultOpen={defaultOpen} loadValue={loadValue} />
         </span>
       ))}
     </>

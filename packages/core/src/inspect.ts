@@ -30,6 +30,8 @@ export interface InspectedValue {
   type: InspectedType;
   /** Leaf text, or a composite's label such as `Array(3)`, `Map(2)`, or a class name. */
   text: string;
+  /** Run-scoped handle whose children are requested only when the user expands it. */
+  reference?: string;
   /** Children of a composite value; absent for leaves and for composites cut off by a limit. */
   entries?: InspectedEntry[];
   /** Number of children left out because of the entry, depth, or node limits. */
@@ -122,7 +124,9 @@ export function createInspector(enabled: boolean, runBudget = 400_000) {
 
 /** @param value Inspected value. @returns Whether it can be expanded or was cut off by a limit. */
 export function isComposite(value: InspectedValue): boolean {
-  return value.entries !== undefined || value.omitted !== undefined;
+  return (
+    value.reference !== undefined || value.entries !== undefined || value.omitted !== undefined
+  );
 }
 
 /**
@@ -211,6 +215,9 @@ function readInspected(
     type: node.type as InspectedType,
     text: node.text.slice(0, inspectLimits.text),
   };
+  if (typeof node.reference === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(node.reference)) {
+    value.reference = node.reference;
+  }
   if (node.type === 'table') {
     const table = readTable(node.table);
     if (!table) return null;

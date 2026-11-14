@@ -34,12 +34,14 @@ Page -> posts output messages, then completion -> App removes the page
   (`apps/web/src/frame.ts`) is therefore bundled into one script by the
   `jsgoapp-frame-runner` plugin in `apps/web/vite.config.ts` and placed inline in
   the page. It loads on the first Browser run.
-- Off screen, the page is removed when the run completes, fails, times out, or
-  is stopped, which also ends its timers, listeners, and animation loops.
+- Off screen, an inspected run keeps its page after completion so object handles
+  remain available. Timers and listeners remain alive until the next run, Clear,
+  Stop, or a tab/language/environment/view change. Without inspection the hidden
+  page is removed at completion. Host timeouts and Stop always dispose it.
 - Shown in the Web view, the page is kept after its top-level code finishes,
   even when that code threw, so what it rendered stays visible and its event
   handlers and animation loops keep working. It is removed by the next run,
-  Stop, a change of tab, language, or environment, or leaving the Web view. A
+  Clear, Stop, a change of tab, language, or environment, or leaving the Web view. A
   run ended by the host (time limit or Stop) never keeps its page. Console output
   produced after the top-level code finished is not shown.
 - A page cannot move between containers without reloading. Entering or leaving
@@ -168,7 +170,7 @@ is sent as a `table`-typed value alongside the usual plain-text grid, built by
 Non-tabular data (anything that is not an array, Map, Set, or plain object)
 falls through to an ordinary logged value.
 
-With `inspect: true` in the request, an output message whose arguments include an
+For Node, with `inspect: true` in the request, an output message whose arguments include an
 object or collection also carries `values`: one bounded, JSON-serializable tree
 per console argument (`type`, `text`, optional `entries` and `omitted`). `line`
 is always present as the plain-text form. `packages/core/src/inspect.ts` builds
@@ -176,18 +178,25 @@ the trees inside the snippet process and validates them again in each host befor
 they reach the UI. A run may send about 400,000 characters of trees; after that,
 entries carry text only.
 
-Browser text formatting uses bounded inspection rather than JSON serialization of
-runtime objects. It never invokes custom getters or `toJSON` hooks. `Window`
-keeps its identity and own properties, with selected native browser accessors
-read for useful context. Inaccessible children display as `[Uninspectable]`
-without discarding their readable siblings. Document and DOM node snapshots use
-the `dom` type, markup labels, and bounded child-node trees; the results pane
-expands those children without object-property indices. Text-only output retains
-the same Window/DOM labels when inspection is disabled.
+Browser inspected output uses `apps/web/src/liveInspector.ts`: labels and opaque
+`reference` handles initially, with no recursive property traversal. Expanding a
+branch sends `{ type: 'inspect', id, requestId, reference }` to the same sandbox;
+it returns a validated `inspection` response with at most 100 immediate children.
+Larger inventories expose hierarchical `Properties start … end` handles, rather
+than dropping entries. Range indices describe positions in the inventory, which
+can include non-enumerable keys, symbols, and `[[Prototype]]`. Expanding a range
+reads only its property values; children remain handles until opened themselves.
+Cycles reuse object handles without recursively serializing them. Maps, Sets,
+Window, and DOM child trees follow the same request-driven path.
 
-These are snapshots at log time, subject to the existing depth, node, and entry
-limits; they do not provide DevTools' live handles, getter-evaluation buttons, or
-complete prototype traversal. The page's sandbox permissions remain unchanged.
+Properties reflect their values when requested, then the view caches that branch.
+Key inventories are captured on first expansion; rerun to refresh a mutated shape.
+Custom getters are labelled without invoking them; native Window accessors can be
+read when requested. Cross-origin restrictions remain enforced. Stop, Clear,
+replacement, or page/view changes invalidate handles and reject pending requests.
+Requests time out after three seconds and offer retry. Node output, text-only
+Browser output, and `console.table` retain bounded snapshots. Preview string lengths
+remain bounded. The page's sandbox permissions remain unchanged.
 The desktop smoke suite logs real browser values in an opaque-origin Chromium
 frame to verify this path, including a cross-origin parent reference.
 

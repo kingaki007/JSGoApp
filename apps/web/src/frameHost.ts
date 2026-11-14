@@ -1,9 +1,9 @@
 /** Creates the sandboxed page that gives Browser snippets a real document and window. */
-import type { FrameRequest } from './execution';
+import type { FrameCommand } from './execution';
 
 export interface FrameHost {
   /** @param request Run request delivered to the page once it reports readiness. */
-  post(request: FrameRequest): void;
+  post(request: FrameCommand): void;
   /** @param listener Receives untrusted messages posted by this page only. */
   onMessage(listener: (message: unknown) => void): void;
   /** Removes the page, which also stops its timers, listeners, and pending work. */
