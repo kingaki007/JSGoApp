@@ -17,7 +17,8 @@ export type InspectedType =
   | 'map'
   | 'set'
   | 'object'
-  | 'circular';
+  | 'circular'
+  | 'table';
 
 export interface InspectedEntry {
   key: string;
@@ -31,6 +32,17 @@ export interface InspectedValue {
   /** Children of a composite value; absent for leaves and for composites cut off by a limit. */
   entries?: InspectedEntry[];
   /** Number of children left out because of the entry, depth, or node limits. */
+  omitted?: number;
+  /** Grid of a `console.table` call; present only on values of type `table`. */
+  table?: TableData;
+}
+
+export interface TableData {
+  /** Column headers; the first is the row index. */
+  columns: string[];
+  /** One list of cell texts per row, as long as `columns`. */
+  rows: string[][];
+  /** Rows left out because of the row limit. */
   omitted?: number;
 }
 
@@ -65,6 +77,7 @@ const typeNames: readonly InspectedType[] = [
   'set',
   'object',
   'circular',
+  'table',
 ];
 
 /**
@@ -157,6 +170,28 @@ export function readInspectedValues(input: unknown): InspectedValue[] | null {
 }
 
 /**
+ * Validates an untrusted table: bounded size, text cells only, and rows as wide as the header.
+ * @param input Untrusted `table` field of a value.
+ */
+function readTable(input: unknown): TableData | null {
+  const table = input as { columns?: unknown; rows?: unknown; omitted?: unknown } | null;
+  if (!table || typeof table !== 'object') return null;
+  const { columns, rows } = table;
+  /** @param cells Candidate row. @returns Whether it is a list of short strings. */
+  const isRow = (cells: unknown): cells is string[] =>
+    Array.isArray(cells) && cells.every((cell) => typeof cell === 'string' && cell.length <= 200);
+  if (!isRow(columns) || columns.length === 0 || columns.length > 20) return null;
+  if (!Array.isArray(rows) || rows.length > 100) return null;
+  if (!rows.every((row) => isRow(row) && row.length === columns.length)) return null;
+  const omitted = table.omitted;
+  return {
+    columns: [...columns],
+    rows: rows.map((row: string[]) => [...row]),
+    ...(typeof omitted === 'number' && Number.isInteger(omitted) && omitted > 0 ? { omitted } : {}),
+  };
+}
+
+/**
  * Copies one untrusted node, keeping only known fields within the size limits.
  * @param input Untrusted node. @param budget Remaining nodes. @param depth Current nesting level.
  */
@@ -173,6 +208,11 @@ function readInspected(
     type: node.type as InspectedType,
     text: node.text.slice(0, inspectLimits.text),
   };
+  if (node.type === 'table') {
+    const table = readTable(node.table);
+    if (!table) return null;
+    value.table = table;
+  }
   if (typeof node.omitted === 'number' && Number.isInteger(node.omitted) && node.omitted > 0)
     value.omitted = node.omitted;
   if (node.entries !== undefined) {

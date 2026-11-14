@@ -293,6 +293,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
         webAvailable={webAvailable}
         styleLevels={features.consoleLevels}
         locateErrors={features.errorLocations}
+        showTables={features.consoleTable}
         onWebMount={setWebMount}
       />
 

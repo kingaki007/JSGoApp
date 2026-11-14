@@ -13,6 +13,7 @@ export const featureCatalog = {
   webView: { label: 'Web view of the Browser page', enabled: true },
   consoleLevels: { label: 'Styled console warnings and errors', enabled: true },
   errorLocations: { label: 'Errors shown at their source line with a stack', enabled: true },
+  consoleTable: { label: 'console.table shown as a table', enabled: true },
 };
 export type Feature = keyof typeof featureCatalog;
 export type FeatureAccess = Readonly<Record<Feature, boolean>>;
@@ -43,6 +44,7 @@ export const featurePolicy: FeaturePolicy = {
       'webView',
       'consoleLevels',
       'errorLocations',
+      'consoleTable',
     ],
     plus: [
       'autocomplete',
@@ -55,6 +57,7 @@ export const featurePolicy: FeaturePolicy = {
       'webView',
       'consoleLevels',
       'errorLocations',
+      'consoleTable',
     ],
     max: [
       'definitionNavigation',
@@ -68,6 +71,7 @@ export const featurePolicy: FeaturePolicy = {
       'webView',
       'consoleLevels',
       'errorLocations',
+      'consoleTable',
     ],
   },
 };

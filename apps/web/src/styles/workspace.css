@@ -650,6 +650,34 @@
   border-left: var(--focus-width) solid var(--editor-error);
 }
 
+/* console.table: a compact grid that scrolls sideways when it is wider than the pane. */
+.output-table-wrap {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.output-table {
+  border-collapse: collapse;
+  font-family: var(--font-family-code);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-body);
+  white-space: pre;
+}
+.output-table th,
+.output-table td {
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  text-align: left;
+}
+.output-table thead th {
+  background: var(--color-surface);
+  font-weight: var(--font-weight-semibold);
+}
+.output-table tbody th {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
 /* Stack the editor and results when side-by-side panes would be too narrow. */
 @media (max-width: 1000px) {
   .workspace {

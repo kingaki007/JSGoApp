@@ -35,6 +35,8 @@ interface ResultsPaneProps {
   onViewChange?(view: ResultView): void;
   /** Whether the Web view can be offered; the switch is hidden otherwise. */
   webAvailable?: boolean;
+  /** Whether `console.table` data is drawn as a table. */
+  showTables?: boolean;
   /** Whether errors show their source line and call stack. */
   locateErrors?: boolean;
   /** Whether console levels are styled; plans without the feature show every entry alike. */
@@ -59,6 +61,7 @@ export default function ResultsPane({
   webAvailable = false,
   styleLevels = false,
   locateErrors = false,
+  showTables = false,
   onWebMount,
 }: ResultsPaneProps) {
   const groupId = useId();
@@ -106,6 +109,7 @@ export default function ResultsPane({
               alignment={shown === 'console' ? alignment : undefined}
               styleLevels={styleLevels}
               locateErrors={locateErrors}
+              showTables={showTables}
             />
           </div>
         )}

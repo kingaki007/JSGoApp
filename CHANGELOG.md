@@ -5,6 +5,18 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.17.0] - 2026-11-14
+
+- Draw `console.table` data as a real table (`consoleTable`, open on every plan): array,
+  Map, Set, and plain-object data get a header row and a row-index column. Non-tabular
+  data is logged normally.
+- Build the table in a shared module used by the Browser page and the Node runner. Getters
+  in cells are named, not invoked. Tables keep 50 rows and 12 data columns; long cells are
+  shortened, and nested values are summarized.
+- With Match lines, a table opens the same way any expandable value does, and finishes
+  item 15 from the RunJS comparison.
+- Add table-building, transport, and rendering coverage, bringing the suite to 171 tests.
+
 ## [0.16.1] - 2026-11-14
 
 - Fail a Browser run when its code throws in a timer or event handler, or rejects a promise

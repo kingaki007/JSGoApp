@@ -169,6 +169,56 @@ describe('console levels', () => {
   });
 });
 
+describe('console tables', () => {
+  const table = {
+    type: 'table' as const,
+    text: 'Table(2)',
+    table: {
+      columns: ['(index)', 'name'],
+      rows: [
+        ['0', '<b>Ada</b>'],
+        ['1', 'Linus'],
+      ],
+      omitted: 4,
+    },
+  };
+  const result: ExecutionView = {
+    id: 'run',
+    documentId: 'tab',
+    language: 'javascript',
+    lines: ['(index) | name'],
+    sourceLines: [1],
+    details: [[table]],
+    levels: ['log'],
+    status: 'complete',
+  };
+
+  it('draws a table with header and row-index cells, and escapes cell text', () => {
+    const markup = renderToStaticMarkup(
+      <OutputPanel result={result} isRunning={false} onClear={() => {}} showTables />,
+    );
+    expect(markup).toContain('<table class="output-table">');
+    expect(markup).toContain('<th scope="col">name</th>');
+    expect(markup).toContain('<th scope="row">0</th>');
+    expect(markup).toContain('<td>&lt;b&gt;Ada&lt;/b&gt;</td>');
+    expect(markup).toContain('4 more rows not shown');
+  });
+
+  it('falls back to the text form when the feature is off', () => {
+    const markup = renderToStaticMarkup(
+      <OutputPanel result={result} isRunning={false} onClear={() => {}} />,
+    );
+    expect(markup).not.toContain('<table');
+    expect(markup).toContain('<pre class="output-line">(index) | name</pre>');
+  });
+
+  it('labels an aligned row as a table that can be opened', () => {
+    expect(
+      alignOutput(result.lines, result.sourceLines, result.details, result.levels).rows,
+    ).toEqual([{ line: 1, text: 'Table(2)', level: 'log', values: [table] }]);
+  });
+});
+
 describe('located errors', () => {
   const failed: ExecutionView = {
     id: 'run',
