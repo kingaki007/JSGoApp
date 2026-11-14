@@ -18,6 +18,7 @@ export const featureCatalog = {
   runShortcuts: { label: 'Run and Stop keyboard shortcuts', enabled: true },
   copyOutput: { label: 'Copy an output entry to the clipboard', enabled: true },
   autoTabTitles: { label: 'Name untitled tabs from their first code line', enabled: true },
+  clearEditor: { label: 'Clear the active tab’s code', enabled: true },
 };
 export type Feature = keyof typeof featureCatalog;
 export type FeatureAccess = Readonly<Record<Feature, boolean>>;
@@ -53,6 +54,7 @@ export const featurePolicy: FeaturePolicy = {
       'runShortcuts',
       'copyOutput',
       'autoTabTitles',
+      'clearEditor',
     ],
     plus: [
       'autocomplete',
@@ -70,6 +72,7 @@ export const featurePolicy: FeaturePolicy = {
       'runShortcuts',
       'copyOutput',
       'autoTabTitles',
+      'clearEditor',
     ],
     max: [
       'definitionNavigation',
@@ -88,6 +91,7 @@ export const featurePolicy: FeaturePolicy = {
       'runShortcuts',
       'copyOutput',
       'autoTabTitles',
+      'clearEditor',
     ],
   },
 };
