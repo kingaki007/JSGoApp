@@ -1,8 +1,14 @@
 /** Exercises theme changes in an isolated, hidden Electron renderer using the production app origin. */
 import { BrowserWindow, type protocol } from 'electron';
 
+// One dark and one light theme from packages/editor/src/themes.ts, used to exercise both
+// app-chrome appearances without hardcoding the full 16-theme catalog in this test.
+const darkTheme = 'Monokai';
+const lightTheme = 'Visual Studio';
+
 /**
- * Checks theme changes and persisted Light startup without using the owner's saved drafts or theme.
+ * Checks theme changes and persisted startup appearance without using the owner's saved drafts
+ * or theme.
  * @param url Built playground URL served by the desktop protocol handler.
  * @param preload Absolute path to the built sandboxed desktop bridge.
  * @param handleAppRequest Desktop asset handler registered on the isolated test session.
@@ -28,15 +34,38 @@ export async function checkRendererThemes(
     if (event.level === 'error') errors.push(event.message);
   });
 
-  /** @param theme Expected selected appearance after React and Monaco finish their updates. */
-  async function verify(theme: string) {
+  /** @param label Theme gallery option to open the popover and select by its visible label. */
+  async function selectTheme(label: string) {
+    await window.webContents.executeJavaScript(`
+      new Promise((resolve) => {
+        const deadline = Date.now() + 12000;
+        function openAndClick() {
+          const trigger = document.querySelector('button[aria-label^="Theme:"]');
+          if (!trigger) {
+            if (Date.now() > deadline) return resolve(false);
+            return setTimeout(openAndClick, 50);
+          }
+          trigger.click();
+          setTimeout(() => {
+            const option = [...document.querySelectorAll('[role="option"]')]
+              .find((candidate) => candidate.textContent?.includes(${JSON.stringify(label)}));
+            if (option) option.click();
+            resolve(Boolean(option));
+          }, 50);
+        }
+        openAndClick();
+      })
+    `);
+  }
+
+  /** @param appChrome Expected 'light' or 'dark' chrome after React and Monaco finish updating. */
+  async function verify(appChrome: 'light' | 'dark') {
     const result = await window.webContents.executeJavaScript(`
       new Promise((resolve) => {
         const deadline = Date.now() + 12000;
         function check() {
-          const input = document.querySelector('input[value="${theme}"]');
           const editor = document.querySelector('.monaco-editor .view-lines');
-          if (input?.checked && editor && document.documentElement.dataset.theme === '${theme}') {
+          if (editor && document.documentElement.dataset.theme === '${appChrome}') {
             setTimeout(() => resolve(Boolean(document.querySelector('main') && document.querySelector('.monaco-editor'))), 300);
           } else if (Date.now() > deadline) resolve(false);
           else setTimeout(check, 50);
@@ -45,30 +74,32 @@ export async function checkRendererThemes(
       })
     `);
     if (!result)
-      throw new Error(`Desktop theme ${theme} left the editor unavailable: ${errors.join('\n')}`);
+      throw new Error(
+        `Desktop theme ${appChrome} left the editor unavailable: ${errors.join('\n')}`,
+      );
   }
 
   try {
     await window.loadURL(url);
     await window.webContents.executeJavaScript(`new Promise(resolve => {
       const timer = setInterval(() => {
-        const input = document.querySelector('input[value="dark"]');
-        if (input && document.querySelector('.monaco-editor')) { clearInterval(timer); input.click(); resolve(true); }
+        if (document.querySelector('.monaco-editor')) { clearInterval(timer); resolve(true); }
       }, 50);
       setTimeout(() => { clearInterval(timer); resolve(false); }, 12000);
     })`);
+    await selectTheme(darkTheme);
     await verify('dark');
-    for (const theme of ['light', 'dark', 'light']) {
-      await window.webContents.executeJavaScript(
-        `document.querySelector('input[value="${theme}"]').click()`,
-      );
-      await verify(theme);
+    for (const [label, appChrome] of [
+      [lightTheme, 'light'],
+      [darkTheme, 'dark'],
+      [lightTheme, 'light'],
+    ] as const) {
+      await selectTheme(label);
+      await verify(appChrome);
     }
     await window.loadURL(url);
     await verify('light');
-    await window.webContents.executeJavaScript(
-      `document.querySelector('input[value="dark"]').click()`,
-    );
+    await selectTheme(darkTheme);
     await verify('dark');
   } finally {
     window.destroy();

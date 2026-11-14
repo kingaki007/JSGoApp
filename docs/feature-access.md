@@ -27,17 +27,22 @@ required. This change provides feature gates, without adding billing or checkout
 | `clearEditor`          | Clear the active tab's code                     | On   | On   | On  |
 | `reopenClosedTab`      | Reopen the most recently closed tab             | On   | On   | On  |
 | `tabShortcuts`         | New Tab and Close Tab keyboard shortcuts        | On   | On   | On  |
+| `premiumThemes`        | The 4 premium editor themes                     | On   | On   | On  |
 | `openFile`             | Open a file from disk                           | Off  | On   | On  |
 | `saveFile`             | Save the active tab to disk                     | Off  | On   | On  |
 | `saveFileAs`           | Save the active tab to a new file               | Off  | On   | On  |
 
-The sixteen workbench features are implemented and open on every plan. To put one
-behind the paywall, remove its name from `featurePolicy.plans.free` (and from
+The seventeen workbench features are implemented and open on every plan. To put
+one behind the paywall, remove its name from `featurePolicy.plans.free` (and from
 `.plus` to make it Max-only). No other code changes are needed.
 
 `openFile`, `saveFile`, and `saveFileAs` are reserved flags only: they are already
 paywalled off Free to match RunJS's own Open/Save/Save As (also paid there), but no
 Open/Save/Save As UI exists yet. They do nothing until that capability is built.
+
+`premiumThemes` gates the 4 themes RunJS itself paywalls (Ayu, One Dark, Shades
+of Purple, SynthWave '84); it is open on every plan today, same as `openFile` and
+friends, so removing it from `.free` is a one-line change whenever that's wanted.
 
 ## Changing access
 

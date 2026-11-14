@@ -372,16 +372,6 @@
   .landing {
     padding-inline: var(--space-5);
   }
-  .landing-header > .theme-switch {
-    width: var(--size-theme-switch-compact);
-  }
-  .landing-header .theme-option-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
   .landing-nav {
     order: 3;
     width: 100%;

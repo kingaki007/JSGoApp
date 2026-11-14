@@ -12,13 +12,15 @@ owns the explorer/editor/results composition and result-view controls. The
 panes are side by side above 1000px; smaller layouts stack results below the
 editor and then collapse the explorer into a compact language strip below 700px.
 
-| File                             | Responsibility                                                   |
-| -------------------------------- | ---------------------------------------------------------------- |
-| `apps/web/src/styles/tokens.css` | Theme-independent spacing, typography, radii, sizing, and motion |
-| `apps/web/src/styles/themes.css` | Semantic colors for the app shell, status indicators, and editor |
-| `apps/web/src/style.css`         | Base styles, component rules, and responsive layout              |
-| `apps/web/src/theme.ts`          | System preference detection and theme persistence                |
-| `packages/editor/src/theme.ts`   | Shared editor theme and typography mapping                       |
+| File                              | Responsibility                                                     |
+| --------------------------------- | ------------------------------------------------------------------ |
+| `apps/web/src/styles/tokens.css`  | Theme-independent spacing, typography, radii, sizing, and motion   |
+| `apps/web/src/styles/themes.css`  | Per-theme colors plus `color-mix()` shell tokens derived from them |
+| `apps/web/src/styles/popover.css` | Shared trigger/menu popover styling (env-picker, theme gallery)    |
+| `apps/web/src/style.css`          | Base styles, component rules, and responsive layout                |
+| `apps/web/src/theme.ts`           | Named theme selection, persistence, and shell color application    |
+| `packages/editor/src/themes.ts`   | The 16 named Monaco themes and their activation                    |
+| `packages/editor/src/theme.ts`    | Editor typography mapping                                          |
 
 ## Tokens
 
@@ -32,38 +34,45 @@ editor and then collapse the explorer into a compact language strip below 700px.
 
 The current spacing scale uses multiples of 4px at the default root size.
 Font sizes use rem. Monaco font settings are resolved from these tokens when
-the editor mounts. Monaco theme colors are read from CSS whenever the theme
-changes, so its color values do not need a second copy in TypeScript.
+the editor mounts.
 
 ## Themes
 
-The segmented theme switch supports System, Light, and Dark, with matching icons
-and an animated selection indicator. Native radio inputs provide Tab and arrow-key
-navigation. Compact screens show icons with accessible labels; reduced-motion
-preferences disable animation. System follows the operating
-system and reacts when its preference changes. An explicit choice overrides it.
-The preference is saved under `jsgoapp.theme` in local storage. If storage is
-blocked, theme switching still works for the session. Code drafts are not saved.
+The header's Theme gallery lists the 16 named themes in `packages/editor/src/themes.ts`
+(RunJS's own theme names, each with its own editor colors). Selecting one sets
+Monaco's colors and, through `apps/web/src/theme.ts`, writes `--color-background`,
+`--color-text`, and the matching `--editor-*`/`--syntax-*` custom properties
+straight onto `document.documentElement`. `themes.css` derives the rest of the
+shell's surfaces (`--color-surface`, `--color-border`, `--color-text-muted`, …)
+from just those two colors with `color-mix()`, so every theme recolors the
+whole app, not only the editor, without needing its own full token set.
 
-The resolved theme is applied to `document.documentElement.dataset.theme`.
-Both shell and Monaco switch together. Additional themes should supply every
-semantic token and declare the appropriate CSS color scheme.
+Brand-identity colors (`--color-accent`, `--color-focus`, `--color-success-*`,
+the language badges, switch colors) stay fixed per `appChrome` ('light' or
+'dark', one of `NamedTheme`'s own fields) rather than following each theme,
+so JSGoApp's own accent stays recognizable across all 16. `theme.ts` still sets
+`document.documentElement.dataset.theme` to `appChrome` for this.
+
+The choice is saved under `jsgoapp.theme` in local storage, as the theme's
+`id`. If storage is blocked, theme switching still works for the session. Code
+drafts are not saved. Adding a theme means adding an entry to `themeCatalog`
+with its own `base`, `appChrome`, `rules`, and `colors`; no other file changes.
 
 ## Components and responsiveness
 
-Current components are the brand, language navigation, theme selector,
-editor surface, notice, and status bar. Extract reusable React components
-when another screen needs them; avoid building an unused component catalog.
+Current components are the brand, language navigation, theme gallery, editor
+surface, notice, and status bar. Extract reusable React components when
+another screen needs them; avoid building an unused component catalog.
 
 The compact layout starts at 700px. Native CSS media-query conditions cannot
 use CSS custom properties, so this breakpoint is documented here and appears
 as a literal in the stylesheet. Intrinsic layout values such as `0`, `auto`,
 `100%`, and `1fr` remain local to their layout rules.
 
-Check both themes, keyboard focus, and a compact viewport when changing UI.
-Changing a theme must preserve the active language, draft, selection, and undo
-history. Custom Monaco themes inherit unspecified widget and syntax colors
-from Monaco's matching light or dark base.
+Check a light and a dark theme, keyboard focus, and a compact viewport when
+changing UI. Changing a theme must preserve the active language, draft,
+selection, and undo history. Named themes inherit unspecified Monaco widget
+colors from their `base` ('vs' or 'vs-dark').
 
 ## Formatting
 
