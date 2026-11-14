@@ -11,12 +11,16 @@ interface TabListProps {
   editable: boolean;
   /** False once the tab limit is reached. */
   canAdd: boolean;
+  /** Whether a closed tab is available to restore, within the plan's tab limit. */
+  canReopen: boolean;
   /** Whether an untitled tab's displayed name tracks its first code line. */
   titleFromCode: boolean;
   /** @param id Tab to show in the editor. */
   onSelect(id: string): void;
   /** @param language Language of the tab to create. */
   onAdd(language: Language): void;
+  /** Restores the most recently closed tab. */
+  onReopen(): void;
   /** @param id Tab to remove along with its code. */
   onClose(id: string): void;
   /** @param id Tab to rename. @param name Requested display name. */
@@ -32,9 +36,11 @@ export default function TabList({
   activeId,
   editable,
   canAdd,
+  canReopen,
   titleFromCode,
   onSelect,
   onAdd,
+  onReopen,
   onClose,
   onRename,
 }: TabListProps) {
@@ -65,6 +71,16 @@ export default function TabList({
                 +{language === 'typescript' ? 'TS' : 'JS'}
               </button>
             ))}
+            <button
+              type="button"
+              className="tab-action"
+              disabled={!canReopen}
+              title="Reopen closed tab (Ctrl+Shift+T)"
+              aria-label="Reopen closed tab"
+              onClick={onReopen}
+            >
+              ↺
+            </button>
           </span>
         )}
       </div>

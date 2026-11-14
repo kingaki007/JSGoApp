@@ -5,6 +5,16 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.24.0] - 2026-11-15
+
+- Add a Reopen closed tab button (↺) and Ctrl+Shift+T shortcut (`reopenClosedTab`,
+  open on every plan). Restores the most recently closed tab with its original
+  code, name, and id; up to 10 closed tabs are kept in memory for the session,
+  never persisted to disk.
+- Add `openFile`, `saveFile`, and `saveFileAs` feature flags, reserved for when
+  file-system Open/Save/Save As is built. Paywalled off Free, matching RunJS's
+  own paid Open/Save/Save As; no UI exists yet, so they currently do nothing.
+
 ## [0.23.0] - 2026-11-15
 
 - Add a Clear button and Ctrl+Shift+K shortcut (`clearEditor`, open on every plan)

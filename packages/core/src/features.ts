@@ -19,6 +19,11 @@ export const featureCatalog = {
   copyOutput: { label: 'Copy an output entry to the clipboard', enabled: true },
   autoTabTitles: { label: 'Name untitled tabs from their first code line', enabled: true },
   clearEditor: { label: 'Clear the active tab’s code', enabled: true },
+  reopenClosedTab: { label: 'Reopen the most recently closed tab', enabled: true },
+  // Reserved for when file-system Open/Save/Save As is built; paywalled like RunJS's own.
+  openFile: { label: 'Open a file from disk', enabled: true },
+  saveFile: { label: 'Save the active tab to disk', enabled: true },
+  saveFileAs: { label: 'Save the active tab to a new file', enabled: true },
 };
 export type Feature = keyof typeof featureCatalog;
 export type FeatureAccess = Readonly<Record<Feature, boolean>>;
@@ -55,6 +60,7 @@ export const featurePolicy: FeaturePolicy = {
       'copyOutput',
       'autoTabTitles',
       'clearEditor',
+      'reopenClosedTab',
     ],
     plus: [
       'autocomplete',
@@ -73,6 +79,10 @@ export const featurePolicy: FeaturePolicy = {
       'copyOutput',
       'autoTabTitles',
       'clearEditor',
+      'reopenClosedTab',
+      'openFile',
+      'saveFile',
+      'saveFileAs',
     ],
     max: [
       'definitionNavigation',
@@ -92,6 +102,10 @@ export const featurePolicy: FeaturePolicy = {
       'copyOutput',
       'autoTabTitles',
       'clearEditor',
+      'reopenClosedTab',
+      'openFile',
+      'saveFile',
+      'saveFileAs',
     ],
   },
 };

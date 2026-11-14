@@ -12,6 +12,9 @@ import {
 
 type SaveState = 'idle' | 'pending' | 'saved' | 'error';
 
+// How many recently closed tabs can be reopened, oldest closed dropped first beyond this.
+const maxClosedHistory = 10;
+
 /**
  * Picks the first unused `untitled-N` name for a new tab.
  * @param tabs Existing tabs whose names must not be repeated.
@@ -58,6 +61,8 @@ export function useDrafts(defaults: ScratchTab[], defaultActiveId: string) {
     initial.error ? 'error' : initial.snapshot ? 'saved' : 'idle',
   );
   const [error, setError] = useState(initial.error);
+  // Closed tabs kept for this session only, most recently closed last; never persisted.
+  const [closed, setClosed] = useState<ScratchTab[]>([]);
 
   /** Writes the latest dirty snapshot; refs also cover edits made just before pagehide. */
   const persist = useCallback(() => {
@@ -153,10 +158,22 @@ export function useDrafts(defaults: ScratchTab[], defaultActiveId: string) {
       const current = latest.current;
       const index = current.tabs.findIndex((tab) => tab.id === id);
       if (index < 0 || current.tabs.length === 1) return;
+      const removed = current.tabs[index];
       const tabs = current.tabs.filter((tab) => tab.id !== id);
       const activeId =
         current.activeId === id ? tabs[Math.min(index, tabs.length - 1)].id : current.activeId;
       update({ ...current, activeId, tabs });
+      setClosed((stack) => [...stack, removed].slice(-maxClosedHistory));
+    },
+    canReopenClosedTab: closed.length > 0 && snapshot.tabs.length < maxTabs,
+    /** Restores the most recently closed tab with its original code, name, and id. */
+    reopenClosedTab() {
+      if (closed.length === 0) return;
+      const current = latest.current;
+      if (current.tabs.length >= maxTabs) return;
+      const tab = closed[closed.length - 1];
+      setClosed((stack) => stack.slice(0, -1));
+      update({ ...current, activeId: tab.id, tabs: [...current.tabs, tab] });
     },
     /**
      * Changes a tab's display name; its language and code are unaffected.

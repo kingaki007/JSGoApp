@@ -74,3 +74,36 @@ describe('useDrafts tab titles', () => {
     expect(controls.tabs.find((tab) => tab.id === id)?.autoTitled).toBe(true);
   });
 });
+
+describe('useDrafts reopening closed tabs', () => {
+  it('restores the most recently closed tab with its original code and id', () => {
+    act(() => controls.addTab('typescript'));
+    const id = controls.active.id;
+    act(() => controls.updateCode(id, 'const kept = true;'));
+    expect(controls.canReopenClosedTab).toBe(false);
+    act(() => controls.closeTab(id));
+    expect(controls.tabs.some((tab) => tab.id === id)).toBe(false);
+    expect(controls.canReopenClosedTab).toBe(true);
+    act(() => controls.reopenClosedTab());
+    const restored = controls.tabs.find((tab) => tab.id === id);
+    expect(restored?.code).toBe('const kept = true;');
+    expect(controls.active.id).toBe(id);
+    expect(controls.canReopenClosedTab).toBe(false);
+  });
+
+  it('reopens closed tabs most-recent first, and does nothing once the stack is empty', () => {
+    act(() => controls.addTab('javascript'));
+    const first = controls.active.id;
+    act(() => controls.addTab('javascript'));
+    const second = controls.active.id;
+    act(() => controls.closeTab(first));
+    act(() => controls.closeTab(second));
+    act(() => controls.reopenClosedTab());
+    expect(controls.active.id).toBe(second);
+    act(() => controls.reopenClosedTab());
+    expect(controls.active.id).toBe(first);
+    const tabsBefore = controls.tabs;
+    act(() => controls.reopenClosedTab());
+    expect(controls.tabs).toBe(tabsBefore);
+  });
+});
