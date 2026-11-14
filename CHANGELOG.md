@@ -5,6 +5,13 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.25.1] - 2026-11-15
+
+- Refactor: split App.tsx (405 lines) into smaller pieces with no behavior change —
+  `AppHeader.tsx` and `EditorToolbar.tsx` for the header and editor toolbar markup,
+  and `useWorkbenchShortcuts.ts` / `useLineAlignment.ts` for the tab-action and
+  line-alignment logic. App.tsx is now 265 lines, focused on composition.
+
 ## [0.25.0] - 2026-11-15
 
 - Add Ctrl+T and Ctrl+W keyboard shortcuts (`tabShortcuts`, open on every plan).
