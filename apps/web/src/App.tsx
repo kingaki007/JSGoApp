@@ -197,8 +197,14 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
           onClose={(id) => {
             const tab = drafts.tabs.find((candidate) => candidate.id === id);
             const title = tab && (features.autoTabTitles ? tabTitle(tab) : tab.name);
-            // Closing discards the tab's code, so non-empty tabs need an explicit confirmation.
-            if (tab?.code.trim() && !window.confirm(`Close ${title} and discard its code?`)) return;
+            // Closing discards the tab's code, so non-empty tabs need an explicit confirmation
+            // unless the user has turned that off in Settings.
+            if (
+              settings.confirmClose &&
+              tab?.code.trim() &&
+              !window.confirm(`Close ${title} and discard its code?`)
+            )
+              return;
             if (id === active.id) autoRun.stop();
             drafts.closeTab(id);
           }}

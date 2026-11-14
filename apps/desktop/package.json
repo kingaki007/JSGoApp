@@ -1,6 +1,6 @@
 {
   "name": "@code-editor/desktop",
-  "version": "0.21.2",
+  "version": "0.22.0",
   "private": true,
   "type": "commonjs",
   "main": "dist/main.js",
