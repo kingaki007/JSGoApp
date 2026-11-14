@@ -152,6 +152,10 @@ on every plan; see [subscription feature configuration](docs/feature-access.md).
   active draft and Ctrl+Shift+R (Cmd+Shift+R) stops it, overriding the
   browser's own reload and hard-reload keys while the app has focus. The
   Run and Stop buttons show the shortcut in their tooltip.
+- **Copy output** (`copyOutput`): a copy action appears on hover or focus for
+  each output entry, in both the list and Match-lines views, and copies that
+  entry's exact text (its plain-text form, even for an expandable value or a
+  table) to the clipboard. A brief confirmation replaces the icon.
 
 RunJS capabilities not yet implemented: npm package installation, environment
 variables, a snippet library, opening and saving

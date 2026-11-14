@@ -37,6 +37,8 @@ interface ResultsPaneProps {
   webAvailable?: boolean;
   /** Whether `console.table` data is drawn as a table. */
   showTables?: boolean;
+  /** Whether each output entry offers a one-click copy to the clipboard. */
+  copyOutput?: boolean;
   /** Whether errors show their source line and call stack. */
   locateErrors?: boolean;
   /** Whether console levels are styled; plans without the feature show every entry alike. */
@@ -62,6 +64,7 @@ export default function ResultsPane({
   styleLevels = false,
   locateErrors = false,
   showTables = false,
+  copyOutput = false,
   onWebMount,
 }: ResultsPaneProps) {
   const groupId = useId();
@@ -110,6 +113,7 @@ export default function ResultsPane({
               styleLevels={styleLevels}
               locateErrors={locateErrors}
               showTables={showTables}
+              copyOutput={copyOutput}
             />
           </div>
         )}

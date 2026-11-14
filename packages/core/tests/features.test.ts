@@ -83,6 +83,7 @@ describe('subscription feature policy', () => {
       'consoleTable',
       'environmentVariables',
       'runShortcuts',
+      'copyOutput',
     ] as const;
     for (const tier of ['free', 'plus', 'max'] as const)
       for (const feature of workbench)

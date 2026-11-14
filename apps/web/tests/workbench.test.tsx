@@ -55,9 +55,9 @@ describe('line-aligned results', () => {
   it('groups output by source line, in line order, and keeps unknown origins separate', () => {
     expect(alignOutput(['b', 'a1', 'limit', 'a2', 'multi\n  line'], [3, 1, 0, 1, 2])).toEqual({
       rows: [
-        { line: 1, text: 'a1  a2', level: 'log' },
-        { line: 2, text: 'multi line', level: 'log' },
-        { line: 3, text: 'b', level: 'log' },
+        { line: 1, text: 'a1  a2', rawText: 'a1\na2', level: 'log' },
+        { line: 2, text: 'multi line', rawText: 'multi line', level: 'log' },
+        { line: 3, text: 'b', rawText: 'b', level: 'log' },
       ],
       unplaced: ['limit'],
     });
@@ -115,10 +115,11 @@ describe('line-aligned results', () => {
       {
         line: 2,
         text: 'label {}',
+        rawText: 'label\n{}',
         level: 'log',
         values: [{ type: 'string', text: 'label' }, object],
       },
-      { line: 5, text: 'plain', level: 'log' },
+      { line: 5, text: 'plain', rawText: 'plain', level: 'log' },
     ]);
   });
 });
@@ -215,7 +216,15 @@ describe('console tables', () => {
   it('labels an aligned row as a table that can be opened', () => {
     expect(
       alignOutput(result.lines, result.sourceLines, result.details, result.levels).rows,
-    ).toEqual([{ line: 1, text: 'Table(2)', level: 'log', values: [table] }]);
+    ).toEqual([
+      {
+        line: 1,
+        text: 'Table(2)',
+        rawText: '(index) | name',
+        level: 'log',
+        values: [table],
+      },
+    ]);
   });
 });
 

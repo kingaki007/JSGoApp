@@ -22,8 +22,9 @@ required. This change provides feature gates, without adding billing or checkout
 | `consoleTable`         | console.table shown as a table                  | On   | On   | On  |
 | `environmentVariables` | Environment variables for executed code         | On   | On   | On  |
 | `runShortcuts`         | Run and Stop keyboard shortcuts                 | On   | On   | On  |
+| `copyOutput`           | Copy an output entry to the clipboard           | On   | On   | On  |
 
-The eleven workbench features are implemented and open on every plan. To put one
+The twelve workbench features are implemented and open on every plan. To put one
 behind the paywall, remove its name from `featurePolicy.plans.free` (and from
 `.plus` to make it Max-only). No other code changes are needed.
 
@@ -101,6 +102,9 @@ secure a paid service against a modified client.
 
 Without `runShortcuts`, Ctrl+R and Ctrl+Shift+R (Cmd on macOS) behave as the
 browser's own reload and hard-reload; only the Run and Stop buttons work.
+
+Without `copyOutput`, output entries have no copy action; values are still
+selectable as text, same as before this feature existed.
 
 Without `environmentVariables`, the Env vars control is hidden and `process.env`
 holds no custom values; built-in `process` fields such as `process.versions`
