@@ -5,6 +5,12 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.20.1] - 2026-11-14
+
+- Fix the header logo navigating to the landing page when clicked in the desktop app,
+  which had no way back into the workbench. The logo is now inert there; the web app
+  is unaffected.
+
 ## [0.20.0] - 2026-11-14
 
 - Add a copy action to each output entry (`copyOutput`, open on every plan). Shown on
