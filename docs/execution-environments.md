@@ -133,6 +133,17 @@ lines of the executed code; the UI translates them to draft lines the same way
 it does for output. TypeScript syntax errors found by the editor carry their
 draft line directly.
 
+A run also fails when its code causes an error outside the top-level statements:
+an error thrown in a timer or event handler, or a promise that rejects without
+being awaited or caught. The Browser page listens for the window's `error` and
+`unhandledrejection` events while the run is active; the Node runner uses the
+process's `uncaughtException` and `unhandledRejection` events. Engines report a
+rejection caused by the last statements only after the code has returned, so
+both runtimes wait briefly (25 ms in the page, one turn of the event loop in
+Node) before reporting success. Failures that happen after the run has been
+reported, for example in a click handler of a page kept in the Web view, are not
+shown.
+
 With `inspect: true` in the request, an output message whose arguments include an
 object or collection also carries `values`: one bounded, JSON-serializable tree
 per console argument (`type`, `text`, optional `entries` and `omitted`). `line`

@@ -145,6 +145,9 @@ async function execute(request: RunRequest) {
         request.showUndefined === true,
       ),
     );
+    // A rejection caused by the last statements is only reported after the code returns, so wait
+    // one turn of the event loop before reporting success.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     finish();
   } catch (error) {
     finish(error);

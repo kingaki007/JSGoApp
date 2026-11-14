@@ -1,5 +1,5 @@
 /** Runs inside the sandboxed execution page: accepts one run request and posts its output to the app. */
-import { executeCode, type FrameMessage, type FrameRequest } from './execution';
+import { executeCode, watchFailures, type FrameMessage, type FrameRequest } from './execution';
 
 /** @param message Output, completion, or readiness notice for the app that owns this page. */
 function post(message: FrameMessage) {
@@ -41,9 +41,12 @@ window.addEventListener('message', (event: MessageEvent<Partial<FrameRequest> | 
         code,
         (line, sourceLine, values, level) =>
           post({ type: 'output', id, line, sourceLine, values, level }),
-        request.showUndefined === true,
-        request.inspect === true,
-        typeof request.timeoutMs === 'number' ? request.timeoutMs : undefined,
+        {
+          showUndefined: request.showUndefined === true,
+          inspect: request.inspect === true,
+          timeoutMs: typeof request.timeoutMs === 'number' ? request.timeoutMs : undefined,
+          failures: watchFailures(window),
+        },
       ),
     )
     .then((result) => post({ type: 'complete', result }));

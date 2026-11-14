@@ -100,6 +100,31 @@ describe('shared Node runner', () => {
     expect(text.errorLine).toBeUndefined();
   });
 
+  it('fails the run for unhandled rejections and timer errors, including ones raised by the last line', async () => {
+    const trailing = await new NodeRuntime().run(
+      request(
+        'console.log("start");' +
+          String.fromCharCode(10) +
+          'void Promise.reject(new Error("trailing"));',
+      ),
+    );
+    expect(trailing.lines).toEqual(['start']);
+    expect(trailing.error).toBe('trailing');
+    expect(trailing.errorLine).toBe(2);
+    const timer = await new NodeRuntime().run(
+      request(
+        'const timer = setTimeout(() => { throw new Error("in a timer"); }, 5); await new Promise((r) => setTimeout(r, 100)); console.log("not reached");',
+      ),
+    );
+    expect(timer.lines).toEqual([]);
+    expect(timer.error).toBe('in a timer');
+    const handled = await new NodeRuntime().run(
+      request('void Promise.reject(new Error("caught")).catch(() => console.log("handled"));'),
+    );
+    expect(handled.error).toBeUndefined();
+    expect(handled.lines).toEqual(['handled']);
+  });
+
   it('does not inherit arbitrary host environment variables', async () => {
     vi.stubEnv('JSGOAPP_TEST_SECRET', 'host-only');
     try {
