@@ -1,4 +1,4 @@
-/** Binds the RunJS-style Run and Stop keyboard shortcuts, overriding the browser's reload keys. */
+/** Binds the Run and Stop keyboard shortcuts, overriding the browser's reload keys. */
 import { useEffect } from 'react';
 
 export interface RunShortcutsOptions {
@@ -11,7 +11,7 @@ export interface RunShortcutsOptions {
 }
 
 /**
- * Listens on the whole window, like RunJS's own app-wide shortcuts, since the browser's own
+ * Listens on the whole window, so the shortcuts work regardless of focus, since the browser's own
  * reload (Ctrl+R) and hard-reload (Ctrl+Shift+R) must be caught before they act on any focus.
  * @param options Enablement and the two actions to trigger.
  */

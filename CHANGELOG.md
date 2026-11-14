@@ -5,6 +5,12 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.21.2] - 2026-11-14
+
+- Rename the execution-environments doc's environment-selection section and tidy
+  its wording; update the two historical changelog entries and two source comments
+  that referenced it.
+
 ## [0.21.1] - 2026-11-14
 
 - Rename the README's workbench-capabilities section and tidy its surrounding text.
@@ -71,8 +77,8 @@ commits are grouped under the original baseline without rewriting Git history.
 - Build the table in a shared module used by the Browser page and the Node runner. Getters
   in cells are named, not invoked. Tables keep 50 rows and 12 data columns; long cells are
   shortened, and nested values are summarized.
-- With Match lines, a table opens the same way any expandable value does, and finishes
-  item 15 from the RunJS comparison.
+- With Match lines, a table opens the same way any expandable value does, completing
+  the console-output work started earlier.
 - Add table-building, transport, and rendering coverage, bringing the suite to 171 tests.
 
 ## [0.16.1] - 2026-11-14
@@ -195,7 +201,7 @@ commits are grouped under the original baseline without rewriting Git history.
 
 ## [0.9.0] - 2026-11-13
 
-- Add a RunJS-style workbench shared by the web and desktop apps. Each capability
+- Add a workbench shared by the web and desktop apps. Each capability
   has its own feature flag and is open on every plan; removing a flag's name from
   a plan list paywalls it.
 - Match lines (`matchLines`): show each expression result and console call beside
@@ -303,8 +309,8 @@ commits are grouped under the original baseline without rewriting Git history.
 - A standard app protocol for built desktop assets and a smoke check covering
   actual Node execution, infinite-loop termination, and asset loading.
 - Environment-specific Monaco libraries and lazy Node type definitions.
-- Execution architecture, startup instructions, and RunJS UI reference notes in
-  `docs/execution-environments.md`.
+- Execution architecture, startup instructions, and environment-selection notes
+  in `docs/execution-environments.md`.
 
 ### Changed
 

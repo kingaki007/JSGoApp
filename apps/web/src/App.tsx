@@ -44,7 +44,7 @@ const initialTabs: ScratchTab[] = [
 // Matches the workspace.css breakpoint below which the editor and results are stacked.
 const sideBySideQuery = '(min-width: 1001px)';
 
-// Labels the Run/Stop shortcuts with the platform's own modifier key, as RunJS's docs do.
+// Labels the Run/Stop shortcuts with the platform's own modifier key.
 const shortcutModifier = /Mac|iPhone|iPad/.test(navigator.userAgent) ? 'Cmd' : 'Ctrl';
 
 /** Reports whether the editor and results are side by side, where aligning lines is meaningful. */
