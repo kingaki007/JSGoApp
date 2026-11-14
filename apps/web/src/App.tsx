@@ -24,6 +24,7 @@ import { useAutoRun } from './useAutoRun';
 import { useRunShortcuts } from './useRunShortcuts';
 import { useClearShortcut } from './useClearShortcut';
 import { useReopenShortcut } from './useReopenShortcut';
+import { useTabShortcuts } from './useTabShortcuts';
 import { useSettings } from './settings';
 import { useEnvVars } from './environmentVariables';
 import './styles/workspace.css';
@@ -122,6 +123,42 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     enabled: features.reopenClosedTab && ready,
     onReopen: drafts.reopenClosedTab,
   });
+  /** Creates a new tab in the active tab's language, same as the +JS/+TS buttons. */
+  const addTab = useCallback(
+    (language: Language) => {
+      autoRun.stop();
+      drafts.addTab(language);
+    },
+    [autoRun.stop, drafts.addTab],
+  );
+  /** Closes a tab, confirming first unless Confirm close is turned off; same as the × button. */
+  const closeTab = useCallback(
+    (id: string) => {
+      const tab = drafts.tabs.find((candidate) => candidate.id === id);
+      const title = tab && (features.autoTabTitles ? tabTitle(tab) : tab.name);
+      if (
+        settings.confirmClose &&
+        tab?.code.trim() &&
+        !window.confirm(`Close ${title} and discard its code?`)
+      )
+        return;
+      if (id === active.id) autoRun.stop();
+      drafts.closeTab(id);
+    },
+    [
+      active.id,
+      autoRun.stop,
+      drafts.closeTab,
+      drafts.tabs,
+      features.autoTabTitles,
+      settings.confirmClose,
+    ],
+  );
+  useTabShortcuts({
+    enabled: features.tabShortcuts && ready,
+    onNewTab: () => addTab(language),
+    onCloseTab: () => closeTab(active.id),
+  });
 
   // A page cannot move between containers, so showing or hiding the Web view starts a fresh run
   // in the new location. With Auto run off the user starts it, as for any other change.
@@ -208,25 +245,9 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
               drafts.selectTab(id);
             }
           }}
-          onAdd={(next) => {
-            autoRun.stop();
-            drafts.addTab(next);
-          }}
+          onAdd={addTab}
           onReopen={drafts.reopenClosedTab}
-          onClose={(id) => {
-            const tab = drafts.tabs.find((candidate) => candidate.id === id);
-            const title = tab && (features.autoTabTitles ? tabTitle(tab) : tab.name);
-            // Closing discards the tab's code, so non-empty tabs need an explicit confirmation
-            // unless the user has turned that off in Settings.
-            if (
-              settings.confirmClose &&
-              tab?.code.trim() &&
-              !window.confirm(`Close ${title} and discard its code?`)
-            )
-              return;
-            if (id === active.id) autoRun.stop();
-            drafts.closeTab(id);
-          }}
+          onClose={closeTab}
           onRename={drafts.renameTab}
         />
         <div className="sidebar-note">
