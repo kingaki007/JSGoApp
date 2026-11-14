@@ -15,6 +15,8 @@ export interface WorkspaceSettings {
   fontSize: number;
   wordWrap: boolean;
   lineNumbers: boolean;
+  /** Asks for confirmation before closing a tab that has code in it. */
+  confirmClose: boolean;
 }
 
 export const defaultSettings: WorkspaceSettings = {
@@ -24,6 +26,7 @@ export const defaultSettings: WorkspaceSettings = {
   fontSize: 14,
   wordWrap: false,
   lineNumbers: true,
+  confirmClose: true,
 };
 
 /**
@@ -34,7 +37,14 @@ export function parseSettings(value: unknown): WorkspaceSettings {
   const settings = { ...defaultSettings };
   if (!value || typeof value !== 'object') return settings;
   const stored = value as Record<string, unknown>;
-  for (const key of ['autoRun', 'matchLines', 'showUndefined', 'wordWrap', 'lineNumbers'] as const)
+  for (const key of [
+    'autoRun',
+    'matchLines',
+    'showUndefined',
+    'wordWrap',
+    'lineNumbers',
+    'confirmClose',
+  ] as const)
     if (typeof stored[key] === 'boolean') settings[key] = stored[key];
   const size = stored.fontSize;
   if (typeof size === 'number' && Number.isFinite(size))

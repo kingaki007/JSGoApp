@@ -22,6 +22,12 @@ describe('workspace preferences', () => {
     expect(parseSettings(null)).toEqual(defaultSettings);
   });
 
+  it('keeps confirmClose true by default and honors a stored false value', () => {
+    expect(defaultSettings.confirmClose).toBe(true);
+    expect(parseSettings({ confirmClose: false }).confirmClose).toBe(false);
+    expect(parseSettings({ confirmClose: 'no' }).confirmClose).toBe(true);
+  });
+
   it('limits font size to the supported range', () => {
     expect(parseSettings({ fontSize: 2 }).fontSize).toBe(10);
     expect(parseSettings({ fontSize: 400 }).fontSize).toBe(28);

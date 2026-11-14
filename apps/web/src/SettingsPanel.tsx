@@ -12,6 +12,11 @@ const toggles = [
   },
   { key: 'wordWrap', label: 'Word wrap', description: 'Wrap long lines in the editor' },
   { key: 'lineNumbers', label: 'Line numbers', description: 'Show the editor line-number gutter' },
+  {
+    key: 'confirmClose',
+    label: 'Confirm close',
+    description: 'Ask before closing a tab that has code in it',
+  },
 ] as const;
 
 /**

@@ -84,16 +84,18 @@ plan; see [subscription feature configuration](docs/feature-access.md).
   bottom of the pane. The list view is used when Match lines is off or when the
   panes are stacked on narrow windows.
 - **Settings** (`workspaceSettings`): Auto run, Match lines, Show undefined, Word
-  wrap, Line numbers, and Font size. Preferences persist on this device in the
-  `jsgoapp.settings` local-storage entry. Show undefined reports expression
-  statements that evaluate to `undefined`; console calls are never reported twice.
+  wrap, Line numbers, Confirm close, and Font size. Preferences persist on this
+  device in the `jsgoapp.settings` local-storage entry. Show undefined reports
+  expression statements that evaluate to `undefined`; console calls are never
+  reported twice.
 - **Format** (`codeFormatting`): the Format button and Shift+Alt+F format the draft
   with Prettier's default style as one undoable edit. Prettier loads on first use.
   A draft with a syntax error is left unchanged.
 - **Tabs** (`multipleTabs`): create JavaScript or TypeScript tabs with +JS and
   +TS, double-click a name to rename it, and close a tab with ×. Closing a tab
-  that contains code asks for confirmation because its code is discarded. Up to
-  30 tabs are stored. Existing two-scratchpad drafts are migrated automatically.
+  that contains code asks for confirmation because its code is discarded, unless
+  the Confirm close setting is turned off. Up to 30 tabs are stored. Existing
+  two-scratchpad drafts are migrated automatically.
 
 - **Expandable values** (`objectInspection`): objects, arrays, Maps, Sets, class
   instances, and errors appear as a one-line preview that opens into a tree of

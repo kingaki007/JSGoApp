@@ -5,6 +5,12 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.22.0] - 2026-11-15
+
+- Add a Confirm close setting (under `workspaceSettings`, open on every plan).
+  Closing a tab that has code in it still asks for confirmation by default;
+  turning the setting off closes it immediately instead.
+
 ## [0.21.2] - 2026-11-14
 
 - Rename the execution-environments doc's environment-selection section and tidy
