@@ -15,7 +15,7 @@ The selected view lasts for the session and is kept while Node.js is selected.
 
 Browser runs every snippet in a fresh, hidden, sandboxed page. There is no
 separate worker mode and no mechanism selector: Browser always means a real
-`document` and `window`, as in RunJS.
+`document` and `window`.
 
 ```text
 App -> creates <iframe sandbox="allow-scripts" srcdoc=...> -> page posts "ready"
@@ -59,16 +59,12 @@ Page -> posts output messages, then completion -> App removes the page
   loops (for example deep recursion) is not interrupted by this check.
 - The editor offers DOM types (`lib.dom.d.ts`) for Browser.
 
-## RunJS reference
+## Environment selection
 
-RunJS separates runtime selection from output layout. Its environment choice
-changes runtime globals and editor types. It offers Browser, Node.js, and a
-combined mode; JSGoApp currently implements only the first two. RunJS places
-environment selection in its status bar; our owner requested the Env dropdown
-in the editor toolbar.
-
-- [RunJS interface](https://runjs.app/docs/introduction/user-interface)
-- [RunJS runtime environments](https://runjs.app/docs/features/running-code)
+The environment choice changes runtime globals and editor types. JSGoApp
+currently offers Browser and Node.js; a combined mode is not implemented.
+Environment selection lives in the editor toolbar's Env dropdown, by the
+owner's choice.
 
 Auto run now executes non-empty drafts after a two-second editing pause, once
 the editor is ready. It works with both environments and both languages through
@@ -77,7 +73,7 @@ checkbox switches to manual execution; Run bypasses the delay and Stop prevents
 rescheduling until another edit or context change. Empty drafts clear output.
 Errors and completed executions are not automatically retried.
 
-Package installation and showing the Browser page remain separate capabilities.
+Package installation remains a separate capability.
 
 ## One runner, two transports
 
