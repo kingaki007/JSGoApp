@@ -1,4 +1,4 @@
-/** Composes the explorer, shared editor, execution controls, draft recovery, and results pane. */
+/** Composes the header, explorer, shared editor, execution controls, and results pane. */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CodeEditor, type CodeEditorHandle } from '@code-editor/editor';
 import {
@@ -9,22 +9,17 @@ import {
   type Environment,
   type Language,
 } from '@code-editor/core';
-import EnvironmentPicker from './EnvironmentPicker';
+import AppHeader from './AppHeader';
 import { useTheme } from './theme';
-import ThemeSwitcher from './ThemeSwitcher';
+import EditorToolbar from './EditorToolbar';
 import ResultsPane, { type ResultView } from './ResultsPane';
-import SettingsPanel from './SettingsPanel';
-import EnvironmentVariablesPanel from './EnvironmentVariablesPanel';
 import TabList from './TabList';
-import type { LineAlignment } from './OutputPanel';
 import type { ScratchTab } from './draftStorage';
 import { useExecution } from './useExecution';
 import { useDrafts, tabTitle } from './useDrafts';
 import { useAutoRun } from './useAutoRun';
-import { useRunShortcuts } from './useRunShortcuts';
-import { useClearShortcut } from './useClearShortcut';
-import { useReopenShortcut } from './useReopenShortcut';
-import { useTabShortcuts } from './useTabShortcuts';
+import { useWorkbenchShortcuts } from './useWorkbenchShortcuts';
+import { useLineAlignment } from './useLineAlignment';
 import { useSettings } from './settings';
 import { useEnvVars } from './environmentVariables';
 import './styles/workspace.css';
@@ -44,25 +39,8 @@ const initialTabs: ScratchTab[] = [
   },
 ];
 
-// Matches the workspace.css breakpoint below which the editor and results are stacked.
-const sideBySideQuery = '(min-width: 1001px)';
-
 // Labels the Run/Stop shortcuts with the platform's own modifier key.
 const shortcutModifier = /Mac|iPhone|iPad/.test(navigator.userAgent) ? 'Cmd' : 'Ctrl';
-
-/** Reports whether the editor and results are side by side, where aligning lines is meaningful. */
-function useSideBySide(): boolean {
-  const [matches, setMatches] = useState(() => window.matchMedia(sideBySideQuery).matches);
-  useEffect(() => {
-    const query = window.matchMedia(sideBySideQuery);
-    /** Follows window resizing across the stacked-layout breakpoint. */
-    const update = () => setMatches(query.matches);
-    query.addEventListener('change', update);
-    update();
-    return () => query.removeEventListener('change', update);
-  }, []);
-  return matches;
-}
 
 /** @param props Optional API-owned account subject; anonymous visitors currently receive Max access. */
 export default function App({ subject = anonymousSubject }: { subject?: AccessSubject }) {
@@ -103,61 +81,14 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     cancelExecution: execution.cancelActive,
     clearOutput: execution.clear,
   });
-  useRunShortcuts({
-    enabled: features.runShortcuts && ready,
-    onRun: autoRun.runNow,
-    onStop: autoRun.stop,
-  });
-  /** Clears the active tab's code, confirming first unless Confirm close is turned off. */
-  const clearActiveTab = useCallback(() => {
-    if (!active.code.trim()) return;
-    if (settings.confirmClose && !window.confirm(`Clear ${activeTitle} and discard its code?`))
-      return;
-    drafts.updateCode(active.id, '');
-  }, [active.id, active.code, activeTitle, drafts.updateCode, settings.confirmClose]);
-  useClearShortcut({
-    enabled: features.clearEditor && ready,
-    onClear: clearActiveTab,
-  });
-  useReopenShortcut({
-    enabled: features.reopenClosedTab && ready,
-    onReopen: drafts.reopenClosedTab,
-  });
-  /** Creates a new tab in the active tab's language, same as the +JS/+TS buttons. */
-  const addTab = useCallback(
-    (language: Language) => {
-      autoRun.stop();
-      drafts.addTab(language);
-    },
-    [autoRun.stop, drafts.addTab],
-  );
-  /** Closes a tab, confirming first unless Confirm close is turned off; same as the × button. */
-  const closeTab = useCallback(
-    (id: string) => {
-      const tab = drafts.tabs.find((candidate) => candidate.id === id);
-      const title = tab && (features.autoTabTitles ? tabTitle(tab) : tab.name);
-      if (
-        settings.confirmClose &&
-        tab?.code.trim() &&
-        !window.confirm(`Close ${title} and discard its code?`)
-      )
-        return;
-      if (id === active.id) autoRun.stop();
-      drafts.closeTab(id);
-    },
-    [
-      active.id,
-      autoRun.stop,
-      drafts.closeTab,
-      drafts.tabs,
-      features.autoTabTitles,
-      settings.confirmClose,
-    ],
-  );
-  useTabShortcuts({
-    enabled: features.tabShortcuts && ready,
-    onNewTab: () => addTab(language),
-    onCloseTab: () => closeTab(active.id),
+  const { addTab, closeTab, clearActiveTab } = useWorkbenchShortcuts({
+    features,
+    settings,
+    ready,
+    language,
+    activeTitle,
+    drafts,
+    autoRun,
   });
 
   // A page cannot move between containers, so showing or hiding the Web view starts a fresh run
@@ -176,59 +107,29 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
       ? { line: failure.errorLine, message: failure.error ?? '', id: failure.id }
       : null;
 
-  const sideBySide = useSideBySide();
-  const matchLines = features.matchLines && settings.matchLines && sideBySide && ready;
-  // Scrolling and layout changes move editor lines, so aligned results are re-rendered with them.
-  const [, setViewportRevision] = useState(0);
-  const onViewportChange = useCallback(() => setViewportRevision((revision) => revision + 1), []);
-  const lineHeight = matchLines ? editorRef.current?.lineHeight() : null;
-  const alignment: LineAlignment | undefined = lineHeight
-    ? {
-        lineTop: (line) => editorRef.current?.lineTop(line) ?? null,
-        lineHeight,
-        fontSize: settings.fontSize,
-      }
-    : undefined;
+  const { matchLines, alignment, onViewportChange } = useLineAlignment({
+    matchLinesEnabled: features.matchLines,
+    matchLinesPreferred: settings.matchLines,
+    ready,
+    fontSize: settings.fontSize,
+    editorRef,
+  });
 
   return (
     <div className="workspace">
-      <header className="app-header">
-        {/* The desktop app opens straight into the playground and has no separate home page to
-            navigate to, so the logo is inert there instead of leaving the workbench. */}
-        <a
-          className="brand"
-          href={window.desktop ? undefined : '/'}
-          aria-label={window.desktop ? 'JSGoApp' : 'JSGoApp home'}
-        >
-          <span className="brand-mark" aria-hidden="true">
-            JS
-          </span>
-          <span>
-            JSGoApp<span className="brand-caption">PLAYGROUND</span>
-          </span>
-        </a>
-        <div className="header-actions">
-          <span className="environment-label">
-            <span className="status-dot ready" />
-            {environment === 'node' ? 'Node.js environment' : 'Browser environment'}
-          </span>
-          {features.environmentVariables && (
-            <EnvironmentVariablesPanel
-              vars={envVars.vars}
-              onSet={envVars.set}
-              onRemove={envVars.remove}
-            />
-          )}
-          {features.workspaceSettings && (
-            <SettingsPanel
-              settings={settings}
-              onChange={updateSettings}
-              matchLinesAvailable={features.matchLines}
-            />
-          )}
-          <ThemeSwitcher value={preference} onChange={setPreference} />
-        </div>
-      </header>
+      <AppHeader
+        environment={environment}
+        showEnvVars={features.environmentVariables}
+        vars={envVars.vars}
+        onSetVar={envVars.set}
+        onRemoveVar={envVars.remove}
+        showSettings={features.workspaceSettings}
+        settings={settings}
+        onSettingsChange={updateSettings}
+        matchLinesAvailable={features.matchLines}
+        preference={preference}
+        onPreferenceChange={setPreference}
+      />
 
       <aside className="sidebar" aria-label="Workspace">
         <p className="section-label">EXPLORER</p>
@@ -257,69 +158,28 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
       </aside>
 
       <main className="editor-panel">
-        <div className="editor-toolbar">
-          <div>
-            <h1>
-              <span className={`language-badge ${language}`} aria-hidden="true">
-                {language === 'typescript' ? 'TS' : 'JS'}
-              </span>{' '}
-              {activeTitle}
-            </h1>
-          </div>
-          <div className="run-actions">
-            {features.codeFormatting && (
-              <button
-                type="button"
-                className="run-button stop-button"
-                disabled={!ready}
-                title="Format with Prettier (Shift+Alt+F)"
-                onClick={() => void editorRef.current?.format()}
-              >
-                Format
-              </button>
-            )}
-            {features.clearEditor && (
-              <button
-                type="button"
-                className="run-button stop-button"
-                disabled={!ready || !active.code.trim()}
-                title="Clear editor contents (Ctrl+Shift+K)"
-                onClick={clearActiveTab}
-              >
-                Clear
-              </button>
-            )}
-            <EnvironmentPicker
-              value={environment}
-              onChange={(next) => {
-                if (next !== environment) {
-                  autoRun.stop();
-                  setEnvironment(next);
-                }
-              }}
-            />
-            {execution.isRunning ? (
-              <button
-                type="button"
-                className="run-button stop-button"
-                title={features.runShortcuts ? `Stop (${shortcutModifier}+Shift+R)` : undefined}
-                onClick={autoRun.stop}
-              >
-                <span aria-hidden="true">■</span> Stop
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="run-button"
-                disabled={!ready}
-                title={features.runShortcuts ? `Run (${shortcutModifier}+R)` : undefined}
-                onClick={autoRun.runNow}
-              >
-                <span aria-hidden="true">▶</span> Run
-              </button>
-            )}
-          </div>
-        </div>
+        <EditorToolbar
+          language={language}
+          activeTitle={activeTitle}
+          ready={ready}
+          showFormat={features.codeFormatting}
+          onFormat={() => void editorRef.current?.format()}
+          showClear={features.clearEditor}
+          canClear={ready && Boolean(active.code.trim())}
+          onClear={clearActiveTab}
+          environment={environment}
+          onEnvironmentChange={(next) => {
+            if (next !== environment) {
+              autoRun.stop();
+              setEnvironment(next);
+            }
+          }}
+          isRunning={execution.isRunning}
+          onRun={autoRun.runNow}
+          onStop={autoRun.stop}
+          showRunShortcuts={features.runShortcuts}
+          shortcutModifier={shortcutModifier}
+        />
         <div className="editor-breadcrumb">
           Scratchpads <span aria-hidden="true">/</span> {activeTitle}
           <label className="auto-run-toggle" title="Run 2 seconds after typing stops">
