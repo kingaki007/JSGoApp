@@ -8,6 +8,7 @@ import {
   type RunResult,
 } from '@code-editor/core';
 import { readLevel, type ConsoleLevel } from '@code-editor/core/console';
+import { readEnv } from '@code-editor/core/env';
 import { readErrorFrames, type ErrorFrame } from '@code-editor/core/errors';
 import { readInspectedValues, type InspectedValue } from '@code-editor/core/inspect';
 
@@ -58,7 +59,8 @@ export function validRequest(value: unknown): value is RunRequest {
     typeof request.code === 'string' &&
     request.code.length <= 100_000 &&
     (request.showUndefined === undefined || typeof request.showUndefined === 'boolean') &&
-    (request.inspect === undefined || typeof request.inspect === 'boolean')
+    (request.inspect === undefined || typeof request.inspect === 'boolean') &&
+    (request.env === undefined || readEnv(request.env) !== null)
   );
 }
 

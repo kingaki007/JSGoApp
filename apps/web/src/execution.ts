@@ -106,6 +106,8 @@ export interface ExecutionOptions {
   timeoutMs?: number;
   /** Reports failures outside the top-level code; without it only top-level errors fail the run. */
   failures?: FailureWatch;
+  /** Values exposed to the snippet as `process.env.NAME`. The page has no real `process` otherwise. */
+  env?: Record<string, string>;
 }
 
 /**
@@ -124,6 +126,7 @@ export async function executeCode(
     inspect: inspectValues = false,
     timeoutMs,
     failures,
+    env,
   }: ExecutionOptions = {},
 ): Promise<RunResult> {
   const lines: string[] = [];
@@ -180,11 +183,15 @@ export async function executeCode(
       timeoutMs,
     );
     const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+    // A local parameter named `process` shadows any outer binding of that name, so this never
+    // touches a real global `process` — important when this runs inside a Node test process.
+    const processShim = { env: { ...env } };
     const finished: Promise<unknown> = new AsyncFunction(
       'console',
       transformed.captureName,
+      'process',
       `"use strict";\n${transformed.code}\n//# sourceURL=${scriptName}`,
-    )(capturedConsole, capture);
+    )(capturedConsole, capture, processShim);
     if (failures) {
       // A rejection caused by the last statements is only reported after the code returns, and
       // browsers deliver that report on a later turn of the event loop than a zero-delay timer.

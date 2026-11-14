@@ -238,6 +238,30 @@ describe('scratchpad execution', () => {
     expect(result.details?.[1]).toBeNull();
   });
 
+  it('exposes custom variables through process.env without touching the real global process', async () => {
+    const realProcessEnv = process.env;
+    const result = await executeCode(
+      'env',
+      'console.log(typeof process, process.env.API_KEY, process.env.MISSING);',
+      () => {},
+      { env: { API_KEY: 'secret-value' } },
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.lines).toEqual(['object secret-value undefined']);
+    // The real Node process used by the test runner itself is untouched.
+    expect(process.env).toBe(realProcessEnv);
+    expect(process.env.API_KEY).toBeUndefined();
+  });
+
+  it('still provides an empty process.env when no variables are given', async () => {
+    const result = await executeCode(
+      'noenv',
+      'console.log(typeof process, typeof process.env, process.env.ANYTHING);',
+      () => {},
+    );
+    expect(result.lines).toEqual(['object object undefined']);
+  });
+
   it('keeps earlier output when execution throws', async () => {
     const result = await executeCode(
       'error',

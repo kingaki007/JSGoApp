@@ -5,6 +5,21 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.18.0] - 2026-11-14
+
+- Add an Env vars panel (`environmentVariables`, open on every plan) in the header,
+  where custom key/value pairs are added, edited, and removed. They persist on this
+  device and are shared by every tab.
+- Expose custom variables to executed code as `process.env.NAME` in both environments.
+  In Node, variables are merged onto the real `process.env` of the disposable
+  per-run process, so `process.versions` and other built-ins keep working. In the
+  Browser page, which has no real `process`, a minimal `process.env` object is
+  provided as a local function parameter, never touching any global.
+- Validate variable keys (conventional identifiers) and bound their count, key
+  length, value length, and total size in a shared module, reused by storage, the
+  wire protocol, and both runtimes.
+- Add validation, transport, and storage coverage, bringing the suite to 187 tests.
+
 ## [0.17.0] - 2026-11-14
 
 - Draw `console.table` data as a real table (`consoleTable`, open on every plan): array,

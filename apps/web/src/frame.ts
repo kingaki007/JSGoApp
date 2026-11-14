@@ -1,4 +1,5 @@
 /** Runs inside the sandboxed execution page: accepts one run request and posts its output to the app. */
+import { readEnv } from '@code-editor/core/env';
 import { executeCode, watchFailures, type FrameMessage, type FrameRequest } from './execution';
 
 /** @param message Output, completion, or readiness notice for the app that owns this page. */
@@ -46,6 +47,7 @@ window.addEventListener('message', (event: MessageEvent<Partial<FrameRequest> | 
           inspect: request.inspect === true,
           timeoutMs: typeof request.timeoutMs === 'number' ? request.timeoutMs : undefined,
           failures: watchFailures(window),
+          env: readEnv(request.env) ?? undefined,
         },
       ),
     )
