@@ -5,6 +5,15 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.21.0] - 2026-11-14
+
+- Name untitled tabs from their first code line (`autoTabTitles`, open on every plan),
+  live, until the tab is explicitly renamed, which locks the name permanently.
+- Add an `autoTitled` flag to each saved tab; existing saved tabs and the two example
+  scratchpads keep their current names unaffected.
+- Add tabTitle derivation, storage validation, and rename-locking coverage, bringing
+  the suite to 211 tests.
+
 ## [0.20.1] - 2026-11-14
 
 - Fix the header logo navigating to the landing page when clicked in the desktop app,

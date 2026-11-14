@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { Language } from '@code-editor/core';
 import { maxTabNameLength, type ScratchTab } from './draftStorage';
+import { tabTitle } from './useDrafts';
 
 interface TabListProps {
   tabs: readonly ScratchTab[];
@@ -10,6 +11,8 @@ interface TabListProps {
   editable: boolean;
   /** False once the tab limit is reached. */
   canAdd: boolean;
+  /** Whether an untitled tab's displayed name tracks its first code line. */
+  titleFromCode: boolean;
   /** @param id Tab to show in the editor. */
   onSelect(id: string): void;
   /** @param language Language of the tab to create. */
@@ -29,6 +32,7 @@ export default function TabList({
   activeId,
   editable,
   canAdd,
+  titleFromCode,
   onSelect,
   onAdd,
   onClose,
@@ -65,53 +69,59 @@ export default function TabList({
         )}
       </div>
       <nav aria-label="Select scratchpad">
-        {tabs.map((tab) => (
-          <div className="file-row" key={tab.id}>
-            {renaming?.id === tab.id ? (
-              <input
-                className="tab-rename"
-                aria-label={`Rename ${tab.name}`}
-                autoFocus
-                maxLength={maxTabNameLength}
-                value={renaming.name}
-                onChange={(event) => setRenaming({ id: tab.id, name: event.target.value })}
-                onFocus={(event) => event.target.select()}
-                onBlur={() => finishRename(true)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') finishRename(true);
-                  else if (event.key === 'Escape') finishRename(false);
-                }}
-              />
-            ) : (
-              <button
-                type="button"
-                className={`file-button ${activeId === tab.id ? 'selected' : ''}`}
-                aria-pressed={activeId === tab.id}
-                title={editable ? 'Double-click to rename' : undefined}
-                onClick={() => onSelect(tab.id)}
-                onDoubleClick={() => {
-                  if (editable) setRenaming({ id: tab.id, name: tab.name });
-                }}
-              >
-                <span className={`language-badge ${tab.language}`} aria-hidden="true">
-                  {tab.language === 'typescript' ? 'TS' : 'JS'}
-                </span>
-                <span className="file-name">{tab.name}</span>
-              </button>
-            )}
-            {editable && tabs.length > 1 && renaming?.id !== tab.id && (
-              <button
-                type="button"
-                className="tab-action tab-close"
-                aria-label={`Close ${tab.name}`}
-                title="Close tab"
-                onClick={() => onClose(tab.id)}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        ))}
+        {tabs.map((tab) => {
+          // The raw stored name is the fallback and the rename starting point; the displayed
+          // title additionally tracks the first code line while the plan allows it and the tab
+          // has not been explicitly renamed.
+          const title = titleFromCode ? tabTitle(tab) : tab.name;
+          return (
+            <div className="file-row" key={tab.id}>
+              {renaming?.id === tab.id ? (
+                <input
+                  className="tab-rename"
+                  aria-label={`Rename ${title}`}
+                  autoFocus
+                  maxLength={maxTabNameLength}
+                  value={renaming.name}
+                  onChange={(event) => setRenaming({ id: tab.id, name: event.target.value })}
+                  onFocus={(event) => event.target.select()}
+                  onBlur={() => finishRename(true)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') finishRename(true);
+                    else if (event.key === 'Escape') finishRename(false);
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className={`file-button ${activeId === tab.id ? 'selected' : ''}`}
+                  aria-pressed={activeId === tab.id}
+                  title={editable ? 'Double-click to rename' : undefined}
+                  onClick={() => onSelect(tab.id)}
+                  onDoubleClick={() => {
+                    if (editable) setRenaming({ id: tab.id, name: title });
+                  }}
+                >
+                  <span className={`language-badge ${tab.language}`} aria-hidden="true">
+                    {tab.language === 'typescript' ? 'TS' : 'JS'}
+                  </span>
+                  <span className="file-name">{title}</span>
+                </button>
+              )}
+              {editable && tabs.length > 1 && renaming?.id !== tab.id && (
+                <button
+                  type="button"
+                  className="tab-action tab-close"
+                  aria-label={`Close ${title}`}
+                  title="Close tab"
+                  onClick={() => onClose(tab.id)}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          );
+        })}
       </nav>
     </>
   );
