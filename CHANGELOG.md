@@ -5,6 +5,12 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.25.0] - 2026-11-15
+
+- Add Ctrl+T and Ctrl+W keyboard shortcuts (`tabShortcuts`, open on every plan).
+  Ctrl+T creates a new tab in the active tab's language, same as +JS/+TS; Ctrl+W
+  closes the active tab, with the same Confirm close behavior as the × button.
+
 ## [0.24.0] - 2026-11-15
 
 - Add a Reopen closed tab button (↺) and Ctrl+Shift+T shortcut (`reopenClosedTab`,

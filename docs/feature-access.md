@@ -26,11 +26,12 @@ required. This change provides feature gates, without adding billing or checkout
 | `autoTabTitles`        | Name untitled tabs from their first code line   | On   | On   | On  |
 | `clearEditor`          | Clear the active tab's code                     | On   | On   | On  |
 | `reopenClosedTab`      | Reopen the most recently closed tab             | On   | On   | On  |
+| `tabShortcuts`         | New Tab and Close Tab keyboard shortcuts        | On   | On   | On  |
 | `openFile`             | Open a file from disk                           | Off  | On   | On  |
 | `saveFile`             | Save the active tab to disk                     | Off  | On   | On  |
 | `saveFileAs`           | Save the active tab to a new file               | Off  | On   | On  |
 
-The fifteen workbench features are implemented and open on every plan. To put one
+The sixteen workbench features are implemented and open on every plan. To put one
 behind the paywall, remove its name from `featurePolicy.plans.free` (and from
 `.plus` to make it Max-only). No other code changes are needed.
 
@@ -124,6 +125,9 @@ code can still be deleted by hand.
 
 Without `reopenClosedTab`, there is no ↺ button or Ctrl+Shift+T shortcut; a
 closed tab's code is gone for good.
+
+Without `tabShortcuts`, Ctrl+T and Ctrl+W behave as the browser's own new-tab
+and close-tab; only the +JS/+TS buttons and the × on each tab work.
 
 Without `environmentVariables`, the Env vars control is hidden and `process.env`
 holds no custom values; built-in `process` fields such as `process.versions`

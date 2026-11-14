@@ -20,6 +20,7 @@ export const featureCatalog = {
   autoTabTitles: { label: 'Name untitled tabs from their first code line', enabled: true },
   clearEditor: { label: 'Clear the active tab’s code', enabled: true },
   reopenClosedTab: { label: 'Reopen the most recently closed tab', enabled: true },
+  tabShortcuts: { label: 'New Tab and Close Tab keyboard shortcuts', enabled: true },
   // Reserved for when file-system Open/Save/Save As is built; paywalled like RunJS's own.
   openFile: { label: 'Open a file from disk', enabled: true },
   saveFile: { label: 'Save the active tab to disk', enabled: true },
@@ -61,6 +62,7 @@ export const featurePolicy: FeaturePolicy = {
       'autoTabTitles',
       'clearEditor',
       'reopenClosedTab',
+      'tabShortcuts',
     ],
     plus: [
       'autocomplete',
@@ -80,6 +82,7 @@ export const featurePolicy: FeaturePolicy = {
       'autoTabTitles',
       'clearEditor',
       'reopenClosedTab',
+      'tabShortcuts',
       'openFile',
       'saveFile',
       'saveFileAs',
@@ -103,6 +106,7 @@ export const featurePolicy: FeaturePolicy = {
       'autoTabTitles',
       'clearEditor',
       'reopenClosedTab',
+      'tabShortcuts',
       'openFile',
       'saveFile',
       'saveFileAs',
