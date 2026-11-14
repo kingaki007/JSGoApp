@@ -19,9 +19,12 @@ the planned Electron renderer.
   line of each emitted line. `format()` runs Format Document. `lineTop(line)`
   and `lineHeight()` report on-screen line geometry so a host can align content
   with editor lines. Call after `onReady`.
-- `EditorTheme`: `'light' | 'dark'`.
+- `themeCatalog`: the 16 named Monaco themes (`NamedTheme[]`), each with an
+  `id`, `label`, `premium` flag, and the `appChrome` ('light' or 'dark') the
+  host should show while it is selected. `defaultThemeId` names the initial
+  theme. `theme` on `CodeEditor` takes one of these ids.
 
-The application owns its drafts, project paths, layout, theme preference,
+The application owns its drafts, project paths, layout, theme selection,
 execution lifecycle, output panel, and storage. It should import the public
 package instead of accessing Monaco or this package's internal files.
 
@@ -31,21 +34,23 @@ package instead of accessing Monaco or this package's internal files.
 | ------------------------ | ----------------------------------------------------------------- |
 | `src/CodeEditor.tsx`     | Component lifecycle, editor defaults, and public handle           |
 | `src/setup.ts`           | Local worker factory, loader, and compiler configuration          |
-| `src/theme.ts`           | Semantic CSS token mapping and typography                         |
+| `src/theme.ts`           | Editor typography resolved from the host's font tokens            |
+| `src/themes.ts`          | Named theme catalog and Monaco theme activation                   |
 | `src/compile.ts`         | Source snapshots, syntax errors, TypeScript emission, and cleanup |
 | `src/formatting.ts`      | Gated Prettier formatter for Format Document                      |
 | `src/errorLine.ts`       | Decoration that marks the line where a run failed                 |
 | `src/environment.ts`     | Environment-specific compiler libraries and declarations          |
 | `src/nodeDefinitions.ts` | Lazy Node and fetch declaration bundle                            |
 | `tests/compile.test.ts`  | Compiler boundary and snapshot lifecycle checks                   |
+| `tests/themes.test.ts`   | Named theme catalog shape and Monaco activation checks            |
 
 The package ships no stylesheet. The host styles the error marker's classes,
 `editor-error-line` (whole line) and `editor-error-line-marker` (gutter strip).
 
-The host loads the JSGoApp CSS token definitions before mounting the editor
-and applies the resolved theme to the document. `theme.ts` reads `--editor-*`,
-`--syntax-*`, `--color-focus`, `--font-family-code`, `--font-size-body`, and
-`--line-height-code`. It does not maintain a second palette.
+Named themes are self-contained: `themes.ts` defines each one's own Monaco
+colors and does not read CSS custom properties. `theme.ts` still reads
+`--font-family-code`, `--font-size-body`, and `--line-height-code` from the
+host for typography, independent of which named theme is active.
 
 Vite's `?worker` imports bundle Monaco workers locally. No CDN or service
 worker registration is involved. Execution workers belong to the app runtime,

@@ -52,7 +52,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
   const { settings, update: updateSettings } = useSettings(features.workspaceSettings);
   const envVars = useEnvVars(features.environmentVariables);
   const [ready, setReady] = useState(false);
-  const { preference, setPreference, resolved } = useTheme();
+  const { themeId, setThemeId } = useTheme();
   const editorRef = useRef<CodeEditorHandle | null>(null);
   const [environment, setEnvironment] = useState<Environment>('browser');
   const [resultView, setResultView] = useState<ResultView>('console');
@@ -127,8 +127,9 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
         settings={settings}
         onSettingsChange={updateSettings}
         matchLinesAvailable={features.matchLines}
-        preference={preference}
-        onPreferenceChange={setPreference}
+        themeId={themeId}
+        onThemeChange={setThemeId}
+        premiumThemesAvailable={features.premiumThemes}
       />
 
       <aside className="sidebar" aria-label="Workspace">
@@ -196,7 +197,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
           <CodeEditor
             features={features}
             ref={editorRef}
-            theme={resolved}
+            theme={themeId}
             language={language}
             environment={environment}
             path={`file:///${active.id}.${languages[language].extension}`}

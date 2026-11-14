@@ -5,6 +5,21 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.26.0] - 2026-11-15
+
+- Replace the System/Light/Dark switch with RunJS's 16 named editor themes
+  (`packages/editor/src/themes.ts`), verified by name from its menu screenshots:
+  12 open to everyone, 4 gated by the new `premiumThemes` flag (open on every
+  plan for now, reserved for pricing parity with RunJS's own paywalled themes).
+- Selecting a theme now recolors the whole app, not only the editor: the
+  header, sidebar, and results pane derive their colors from that theme's own
+  background and text via `color-mix()`, instead of a single shared dark/light
+  palette. Brand accent/focus/success colors still follow a light/dark bucket
+  so JSGoApp's own identity stays recognizable across all 16 themes.
+- Extract the shared trigger/menu popover styling into `popover.css` so the
+  landing page's Theme control can use it without pulling in the workbench's
+  own grid layout, which had been collapsing the Results pane's column.
+
 ## [0.25.1] - 2026-11-15
 
 - Refactor: split App.tsx (405 lines) into smaller pieces with no behavior change —

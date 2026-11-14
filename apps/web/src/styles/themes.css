@@ -1,16 +1,25 @@
-/* Supplies semantic shell/editor colors for dark and light themes. */
+/* Supplies semantic shell/editor colors. Background/text/editor colors are set per-theme by
+   theme.ts (see NamedTheme in @code-editor/editor); most shell surfaces are derived from them
+   here with color-mix so every theme recolors the whole app, not only the editor. Brand accent,
+   success, and switch colors stay fixed per light/dark bucket, since they are JSGoApp's own
+   identity rather than part of the chosen syntax theme. */
 :root,
 :root[data-theme='dark'] {
   color-scheme: dark;
+  /* Fallback until theme.ts sets these from the selected theme, before first paint. */
   --color-background: #101216;
-  --color-surface: #13161b;
-  --color-surface-hover: #1c2028;
-  --color-surface-selected: #232a35;
-  --color-border: #292c33;
-  --color-border-strong: #424e61;
   --color-text: #e7e9ef;
-  --color-text-muted: #a1a9b7;
-  --color-text-selected: #edf1f7;
+  --editor-background: #1e1e1e;
+  --editor-foreground: #e7e9ef;
+  --editor-line-number: #8a94a5;
+  --editor-line-number-active: #e7e9ef;
+  --editor-selection: #34517d;
+  --syntax-comment: #92aa80;
+  --syntax-keyword: #8eb9ff;
+  --syntax-string: #e7ad91;
+  --syntax-number: #b5cea8;
+  --syntax-type: #71cfbf;
+
   --color-accent: #bedb88;
   --color-on-accent: #182410;
   --color-focus: #96b5ff;
@@ -20,41 +29,31 @@
   --color-success-border: #405337;
   --color-language-typescript: #8eb9ff;
   --color-language-javascript: #e6d776;
-  --color-divider: #657085;
   --shadow-control: 0 1px 3px #00000033;
   --color-switch-track: #0b0e12;
   --color-switch-selected: #263329;
   --color-switch-selected-text: #d7ecb5;
   --color-switch-selected-border: #42553c;
   --color-action-hover: #d2e9a9;
-
-  --editor-background: #1e1e1e;
-  --editor-foreground: #e7e9ef;
-  --editor-line-number: #8a94a5;
-  --editor-line-number-active: #e7e9ef;
-  --editor-line-highlight: #ffffff08;
-  --editor-selection: #34517d;
-  --editor-selection-inactive: #2e3b50;
   --editor-error: #ff8e98;
   --editor-warning: #e6c878;
-  --syntax-comment: #92aa80;
-  --syntax-keyword: #8eb9ff;
-  --syntax-string: #e7ad91;
-  --syntax-number: #b5cea8;
-  --syntax-type: #71cfbf;
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
   --color-background: #f6f7fa;
-  --color-surface: #eef1f6;
-  --color-surface-hover: #e5eaf2;
-  --color-surface-selected: #dce7f8;
-  --color-border: #ccd3df;
-  --color-border-strong: #91a5c5;
   --color-text: #202938;
-  --color-text-muted: #536176;
-  --color-text-selected: #182e50;
+  --editor-background: #ffffff;
+  --editor-foreground: #202938;
+  --editor-line-number: #6b7789;
+  --editor-line-number-active: #202938;
+  --editor-selection: #c3d9fa;
+  --syntax-comment: #52713b;
+  --syntax-keyword: #2259a7;
+  --syntax-string: #a53e19;
+  --syntax-number: #3a6929;
+  --syntax-type: #096b60;
+
   --color-accent: #466c24;
   --color-on-accent: #ffffff;
   --color-focus: #245ac0;
@@ -64,26 +63,33 @@
   --color-success-border: #a7be8c;
   --color-language-typescript: #2259a7;
   --color-language-javascript: #785900;
-  --color-divider: #68768c;
   --shadow-control: 0 1px 3px #1c294017;
   --color-switch-track: #e6eaf1;
   --color-switch-selected: #ffffff;
   --color-switch-selected-text: #35571c;
   --color-switch-selected-border: #ccd7bd;
   --color-action-hover: #35571c;
-
-  --editor-background: #ffffff;
-  --editor-foreground: #202938;
-  --editor-line-number: #6b7789;
-  --editor-line-number-active: #202938;
-  --editor-line-highlight: #edf2fa;
-  --editor-selection: #c3d9fa;
-  --editor-selection-inactive: #e2e8f1;
   --editor-error: #bb2236;
   --editor-warning: #876100;
-  --syntax-comment: #52713b;
-  --syntax-keyword: #2259a7;
-  --syntax-string: #a53e19;
-  --syntax-number: #3a6929;
-  --syntax-type: #096b60;
+}
+
+:root {
+  /* Shell surfaces: each theme's own background/text, blended toward one another, so every
+     theme gives the whole app a distinct look instead of a single shared dark/light palette. */
+  --color-surface: color-mix(in srgb, var(--color-background) 94%, var(--color-text) 6%);
+  --color-surface-hover: color-mix(in srgb, var(--color-background) 88%, var(--color-text) 12%);
+  --color-surface-selected: color-mix(in srgb, var(--color-background) 80%, var(--color-text) 20%);
+  --color-border: color-mix(in srgb, var(--color-background) 72%, var(--color-text) 28%);
+  --color-border-strong: color-mix(in srgb, var(--color-background) 55%, var(--color-text) 45%);
+  --color-text-muted: color-mix(in srgb, var(--color-text) 60%, var(--color-background) 40%);
+  --color-text-selected: var(--color-text);
+  --color-divider: color-mix(in srgb, var(--color-background) 50%, var(--color-text) 50%);
+
+  /* Editor-adjacent surfaces not given an exact value per theme: derived from its editor colors. */
+  --editor-line-highlight: color-mix(in srgb, var(--editor-foreground) 6%, transparent);
+  --editor-selection-inactive: color-mix(
+    in srgb,
+    var(--editor-selection) 60%,
+    var(--editor-background) 40%
+  );
 }

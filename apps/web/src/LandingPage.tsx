@@ -1,12 +1,17 @@
 /** Introduces JSGoApp, links to the playground, and presents truthful desktop installer availability. */
+import { anonymousSubject, resolveFeatureAccess } from '@code-editor/core';
 import { useTheme } from './theme';
-import ThemeSwitcher from './ThemeSwitcher';
+import ThemeGallery from './ThemeGallery';
 import { desktopDownloads } from './desktopDownloads';
+// Reuses the Theme gallery's popover styling, shared with the playground, without pulling in
+// the workbench's own grid layout rules.
+import './styles/popover.css';
 import './styles/landing.css';
 
-/** Renders the lightweight product home using the same tokens and theme preference as the editor. */
+/** Renders the lightweight product home using the same tokens and theme choice as the editor. */
 export default function LandingPage() {
-  const { preference, setPreference } = useTheme();
+  const { themeId, setThemeId } = useTheme();
+  const features = resolveFeatureAccess(anonymousSubject);
   return (
     <div className="landing">
       <a className="landing-skip" href="#main">
@@ -23,7 +28,11 @@ export default function LandingPage() {
           <a href="/playground">Playground</a>
           <a href="#desktop">Desktop app</a>
         </nav>
-        <ThemeSwitcher value={preference} onChange={setPreference} />
+        <ThemeGallery
+          themeId={themeId}
+          onChange={setThemeId}
+          premiumUnlocked={features.premiumThemes}
+        />
       </header>
       <main id="main">
         <section className="landing-hero" aria-labelledby="hero-heading">

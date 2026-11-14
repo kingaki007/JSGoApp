@@ -88,6 +88,7 @@ describe('subscription feature policy', () => {
       'clearEditor',
       'reopenClosedTab',
       'tabShortcuts',
+      'premiumThemes',
     ] as const;
     for (const tier of ['free', 'plus', 'max'] as const)
       for (const feature of workbench)

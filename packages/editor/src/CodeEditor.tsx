@@ -21,7 +21,8 @@ import {
   closeRestrictedWidgets,
   registerFeatureProviders,
 } from './features';
-import { applyEditorTheme, readEditorTypography, type EditorTheme } from './theme';
+import { readEditorTypography } from './theme';
+import { applyNamedTheme } from './themes';
 
 export interface CodeEditorHandle {
   /**
@@ -55,7 +56,8 @@ export interface CodeEditorProps {
   environment?: Environment;
   path: string;
   value: string;
-  theme: EditorTheme;
+  /** Named theme id from `themeCatalog`. */
+  theme: string;
   /** @param value Complete edited text; an empty string is a valid draft. */
   onChange(value: string): void;
   /** Notifies the host when the editor and compilation handle are ready to use. */
@@ -217,7 +219,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
   );
 
   useEffect(() => {
-    if (monacoRef.current) applyEditorTheme(monacoRef.current, theme);
+    if (monacoRef.current) applyNamedTheme(monacoRef.current, theme);
   }, [theme, ready]);
 
   useEffect(() => {
@@ -235,9 +237,9 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
   return (
     <MonacoEditor
       height="100%"
-      theme="jsgoapp"
+      theme={theme}
       beforeMount={(monaco) => {
-        applyEditorTheme(monaco, theme);
+        applyNamedTheme(monaco, theme);
         configureLanguageFeatures(monaco);
       }}
       language={language}

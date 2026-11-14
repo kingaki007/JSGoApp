@@ -108,6 +108,14 @@ plan; see [subscription feature configuration](docs/feature-access.md).
   code, name, and id. Up to 10 closed tabs are kept for this session only; they
   are not saved to disk and are gone after a reload.
 
+- **Theme gallery**: the header's Theme control picks one of 16 named editor
+  color themes (12 open to everyone; 4 gated by `premiumThemes`, open to
+  everyone for now). The choice recolors the whole app, not only the editor:
+  the header, sidebar, and results pane derive their colors from the same
+  theme's background and text, instead of a shared light/dark pair. The
+  choice persists locally. Colors are each theme's well-known public palette,
+  not pixel-matched against RunJS's own rendering.
+
 - **Expandable values** (`objectInspection`): objects, arrays, Maps, Sets, class
   instances, and errors appear as a one-line preview that opens into a tree of
   their entries. In the list view each value expands in place; with Match lines
@@ -336,9 +344,11 @@ needed language features and splitting the editor bundle are follow-up work.
 
 ## Styling and formatting
 
-The app uses plain CSS and its own token-based design system, with System,
-Light, and Dark themes shared by the shell and Monaco. The theme preference
-persists locally. See [the design system guide](docs/design-system.md).
+The app uses plain CSS and its own token-based design system. The header's
+Theme control picks one of 16 named editor color themes; the choice sets
+Monaco's colors and, through `color-mix()`-derived shell tokens, the whole
+app's background, text, and surface colors, and persists locally. See
+[the design system guide](docs/design-system.md).
 
 Run `pnpm format` to format maintained files. Prettier and EditorConfig define
 the shared style, and VS Code formats on save when the recommended Prettier

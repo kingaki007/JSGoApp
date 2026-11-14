@@ -2,8 +2,7 @@
 import type { Environment } from '@code-editor/core';
 import EnvironmentVariablesPanel from './EnvironmentVariablesPanel';
 import SettingsPanel from './SettingsPanel';
-import ThemeSwitcher from './ThemeSwitcher';
-import type { ThemePreference } from './theme';
+import ThemeGallery from './ThemeGallery';
 import type { WorkspaceSettings } from './settings';
 
 interface AppHeaderProps {
@@ -18,8 +17,10 @@ interface AppHeaderProps {
   settings: WorkspaceSettings;
   onSettingsChange(patch: Partial<WorkspaceSettings>): void;
   matchLinesAvailable: boolean;
-  preference: ThemePreference;
-  onPreferenceChange(preference: ThemePreference): void;
+  themeId: string;
+  onThemeChange(themeId: string): void;
+  /** Whether the account's plan includes the 4 premium themes. */
+  premiumThemesAvailable: boolean;
 }
 
 /** @param props Environment status, the two optional popovers, and the theme switch. */
@@ -33,8 +34,9 @@ export default function AppHeader({
   settings,
   onSettingsChange,
   matchLinesAvailable,
-  preference,
-  onPreferenceChange,
+  themeId,
+  onThemeChange,
+  premiumThemesAvailable,
 }: AppHeaderProps) {
   return (
     <header className="app-header">
@@ -67,7 +69,11 @@ export default function AppHeader({
             matchLinesAvailable={matchLinesAvailable}
           />
         )}
-        <ThemeSwitcher value={preference} onChange={onPreferenceChange} />
+        <ThemeGallery
+          themeId={themeId}
+          onChange={onThemeChange}
+          premiumUnlocked={premiumThemesAvailable}
+        />
       </div>
     </header>
   );
