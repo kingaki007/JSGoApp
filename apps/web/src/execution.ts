@@ -8,7 +8,12 @@ import {
 import { createConsole, type ConsoleLevel } from '@code-editor/core/console';
 import { traceError } from '@code-editor/core/errors';
 import { captureExpressions } from '@code-editor/core/expressions';
-import { createInspector, type InspectedValue } from '@code-editor/core/inspect';
+import {
+  createInspector,
+  inspectValues,
+  summarize,
+  type InspectedValue,
+} from '@code-editor/core/inspect';
 import { createTableBuilder } from '@code-editor/core/table';
 
 /** Run request sent to the page, with the limit its loops enforce from inside. */
@@ -35,23 +40,33 @@ export type ExecutionMessage =
   | { type: 'complete'; result: RunResult };
 
 /**
- * Produces display text without failing on bigint values or circular object references.
+ * Produces bounded display text without calling getters or JSON serialization hooks.
  * @param value One console argument to represent as plain text.
  */
 function format(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (value instanceof Error) return `${value.name}: ${value.message}`;
-  const seen = new WeakSet<object>();
-  return (
-    JSON.stringify(value, (_key, item: unknown) => {
-      if (typeof item === 'bigint') return `${item}n`;
-      if (item && typeof item === 'object') {
-        if (seen.has(item)) return '[Circular]';
-        seen.add(item);
-      }
-      return item;
-    }) ?? String(value)
-  );
+  try {
+    return formatInspected(inspectValues([value])[0]);
+  } catch {
+    return '[Uninspectable]';
+  }
+}
+
+/** @param value Safe inspection snapshot. @param nested Whether strings need quotes. */
+function formatInspected(value: InspectedValue, nested = false): string {
+  if (value.type === 'string') return nested ? JSON.stringify(value.text) : value.text;
+  if (value.type === 'error') return value.text;
+  if (
+    value.entries &&
+    (value.type === 'array' || (value.type === 'object' && value.text === 'Object'))
+  ) {
+    const parts = value.entries.map(
+      (entry) =>
+        `${value.type === 'array' ? '' : `${JSON.stringify(entry.key)}:`}${formatInspected(entry.value, true)}`,
+    );
+    if (value.omitted) parts.push('…');
+    return value.type === 'array' ? `[${parts.join(',')}]` : `{${parts.join(',')}}`;
+  }
+  return summarize(value, nested);
 }
 
 export interface FailureWatch {

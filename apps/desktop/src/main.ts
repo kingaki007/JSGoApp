@@ -12,6 +12,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { NodeRuntime, RunnerProcess } from '@code-editor/runtime-node';
 import { checkRendererThemes } from '../tests/themeSmoke';
+import { checkBrowserConsole } from '../tests/browserConsoleSmoke';
 
 // A standard app origin lets bundled Monaco workers and local storage work without file-origin exceptions.
 protocol.registerSchemesAsPrivileged([
@@ -102,12 +103,14 @@ async function start() {
       path.join(__dirname, 'preload.js'),
       handleAppRequest,
     );
+    await checkBrowserConsole();
     console.log(
       JSON.stringify({
         execution: result,
         expressions,
         timeout: timeout.error,
         assets: validAsset,
+        browserConsole: true,
       }),
     );
     app.exit(
@@ -204,5 +207,6 @@ app
   });
 app.on('before-quit', () => activeRuntime?.stop());
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  // Smoke checks create successive hidden windows and explicitly exit after all checks finish.
+  if (process.platform !== 'darwin' && !process.argv.includes('--smoke-test')) app.quit();
 });

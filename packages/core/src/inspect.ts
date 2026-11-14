@@ -17,6 +17,7 @@ export type InspectedType =
   | 'map'
   | 'set'
   | 'object'
+  | 'dom'
   | 'circular'
   | 'table';
 
@@ -76,6 +77,7 @@ const typeNames: readonly InspectedType[] = [
   'map',
   'set',
   'object',
+  'dom',
   'circular',
   'table',
 ];
@@ -129,6 +131,7 @@ export function isComposite(value: InspectedValue): boolean {
  * @param nested Whether the value sits inside another value, where strings are quoted.
  */
 export function summarize(value: InspectedValue, nested = false): string {
+  if (value.type === 'dom') return value.text;
   if (!value.entries) {
     if (value.type === 'string' && nested) return JSON.stringify(value.text);
     return value.omitted ? `${value.text} …` : value.text;
@@ -269,6 +272,81 @@ function inspect(
   const object = value as object;
   try {
     if (ancestors.has(object)) return { type: 'circular', text: '[Circular]' };
+    if (typeof Node !== 'undefined' && object instanceof Node) {
+      let text = object.nodeName;
+      if (object.nodeType === Node.ELEMENT_NODE) {
+        const element = object as Element;
+        const attributes = Array.from(element.attributes)
+          .slice(0, limits.entries)
+          .map(
+            (attribute) =>
+              ` ${attribute.name}=${JSON.stringify(attribute.value.slice(0, limits.text))}`,
+          )
+          .join('');
+        text = `<${element.localName}${attributes}>`;
+      } else if (object.nodeType === Node.TEXT_NODE) {
+        text = JSON.stringify(object.nodeValue?.slice(0, limits.text) ?? '');
+      } else if (object.nodeType === Node.COMMENT_NODE) {
+        text = `<!--${object.nodeValue?.slice(0, limits.text) ?? ''}-->`;
+      } else if (object.nodeType === Node.DOCUMENT_TYPE_NODE) {
+        text = `<!DOCTYPE ${object.nodeName}>`;
+      }
+      const children = object.childNodes;
+      const pairs: Array<[string, () => unknown]> = Array.from(
+        { length: Math.min(children.length, limits.entries) },
+        (_, index) => [String(index), () => children[index]],
+      );
+      return composite(
+        'dom',
+        text.slice(0, limits.text),
+        pairs,
+        children.length,
+        limits,
+        budget,
+        ancestors,
+        depth,
+        object,
+      );
+    }
+    if (typeof window !== 'undefined' && object === window) {
+      // These browser-owned accessors provide useful values without invoking arbitrary user getters.
+      const browserKeys = [
+        'document',
+        'name',
+        'location',
+        'innerWidth',
+        'innerHeight',
+        'closed',
+        'length',
+      ];
+      const keys = [...new Set([...browserKeys, ...Object.keys(object)])];
+      const pairs: Array<[string, () => unknown]> = keys.slice(0, limits.entries).map((key) => [
+        key,
+        () => {
+          const descriptor = Object.getOwnPropertyDescriptor(object, key);
+          if (descriptor && 'value' in descriptor) return descriptor.value;
+          if (
+            browserKeys.includes(key) &&
+            descriptor?.get &&
+            Function.prototype.toString.call(descriptor.get).includes('[native code]')
+          ) {
+            return descriptor.get.call(object);
+          }
+          return getterMarker;
+        },
+      ]);
+      return composite(
+        'object',
+        'Window',
+        pairs,
+        keys.length,
+        limits,
+        budget,
+        ancestors,
+        depth,
+        object,
+      );
+    }
     if (object instanceof Date)
       return {
         type: 'date',
@@ -384,14 +462,18 @@ function composite(
   ancestors.add(object);
   for (const [key, read] of pairs.slice(0, limits.entries)) {
     if (budget.nodes <= 0) break;
-    const child = read();
-    entries.push({
-      key,
-      value:
-        child === getterMarker
-          ? { type: 'function', text: '[Getter]' }
-          : inspect(child, limits, budget, ancestors, depth + 1),
-    });
+    try {
+      const child = read();
+      entries.push({
+        key,
+        value:
+          child === getterMarker
+            ? { type: 'function', text: '[Getter]' }
+            : inspect(child, limits, budget, ancestors, depth + 1),
+      });
+    } catch {
+      entries.push({ key, value: { type: 'object', text: '[Uninspectable]' } });
+    }
   }
   ancestors.delete(object);
   return {

@@ -55,7 +55,11 @@ export default function ValueTree({
         <ul className="value-children">
           {value.entries.map((entry, index) => (
             <li key={index}>
-              <ValueTree value={entry.value} name={entry.key} nested />
+              <ValueTree
+                value={entry.value}
+                name={value.type === 'dom' ? undefined : entry.key}
+                nested
+              />
             </li>
           ))}
           {value.omitted ? (

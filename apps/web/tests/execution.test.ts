@@ -3,6 +3,48 @@ import { describe, expect, it, vi } from 'vitest';
 import { executeCode, watchFailures } from '../src/execution';
 
 describe('scratchpad execution', () => {
+  it.each([false, true])(
+    'continues after logging inaccessible frame references (inspect=%s)',
+    async (inspect) => {
+      const output = vi.fn();
+      const result = await executeCode(
+        'window',
+        `const frame = new Proxy({}, {
+        get() { throw new Error("Blocked cross-origin property read"); },
+        getPrototypeOf() { throw new Error("Blocked cross-origin prototype read"); }
+      });
+      const window = { parent: frame };
+      void (window.self = window);
+      console.log(window);
+      console.log(frame);
+      console.log("continued");`,
+        output,
+        { inspect },
+      );
+      expect(result.error).toBeUndefined();
+      expect(result.lines).toEqual([
+        '{"parent":[Uninspectable],"self":[Circular]}',
+        '[Uninspectable]',
+        'continued',
+      ]);
+      expect(output).toHaveBeenCalledTimes(3);
+      if (inspect) expect(result.details?.[0]?.[0].entries?.[0].value.text).toBe('[Uninspectable]');
+    },
+  );
+
+  it('does not invoke getters or toJSON hooks while logging', async () => {
+    const result = await executeCode(
+      'hooks',
+      `let calls = 0;
+      console.log({ get secret() { calls++; throw new Error("getter"); } });
+      console.log({ toJSON() { calls++; throw new Error("hook"); } });
+      console.log(calls);`,
+      () => {},
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.lines).toEqual(['{"secret":[Getter]}', '{"toJSON":ƒ toJSON()}', '0']);
+  });
+
   it('streams expression results alongside logs, without duplicate output or repeated side effects', async () => {
     const output = vi.fn();
     const result = await executeCode(
