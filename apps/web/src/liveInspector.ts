@@ -1,5 +1,10 @@
 /** Retains Browser values behind run-scoped handles and reads children only on expansion. */
-import { inspectValues, type InspectedEntry, type InspectedValue } from '@code-editor/core/inspect';
+import {
+  inspectValues,
+  summarize,
+  type InspectedEntry,
+  type InspectedValue,
+} from '@code-editor/core/inspect';
 
 const pageSize = 100;
 interface Inventory {
@@ -11,6 +16,7 @@ interface Inventory {
 /** Creates one inspection registry per sandbox run; destroying the frame releases all references. */
 export function createLiveInspector() {
   const handles = new Map<string, () => InspectedValue>();
+  const getters = new Map<string, () => InspectedValue>();
   const objects = new WeakMap<object, string>();
   let nextHandle = 0;
 
@@ -19,6 +25,27 @@ export function createLiveInspector() {
     const reference = String(++nextHandle);
     handles.set(reference, read);
     return reference;
+  }
+
+  /** @param getter Accessor captured during expansion. @param receiver Original inspected instance. */
+  function retainGetter(getter: () => unknown, receiver: object): string {
+    const handle = String(++nextHandle);
+    let result: InspectedValue | undefined;
+    getters.set(handle, () => {
+      // Retries and duplicate transport requests must not repeat getter side effects.
+      if (!result) {
+        try {
+          result = describe(getter.call(receiver));
+        } catch (error) {
+          result = {
+            type: 'error',
+            text: `Getter threw: ${summarize(describe(error))}`.slice(0, 2000),
+          };
+        }
+      }
+      return result;
+    });
+    return handle;
   }
 
   /** @param inventory Property inventory. @param start First index. @param end Exclusive last index. */
@@ -41,7 +68,7 @@ export function createLiveInspector() {
   }
 
   /** @param object Target whose own keys are enumerated now, but property values are read by range. */
-  function inventory(object: object): Inventory {
+  function inventory(object: object, receiver = object): Inventory {
     if (typeof Node !== 'undefined' && object instanceof Node) {
       const children = object.childNodes;
       return {
@@ -80,7 +107,8 @@ export function createLiveInspector() {
       read: (start, end) =>
         Array.from({ length: end - start }, (_, index) => {
           const key = keys[start + index];
-          if (key === undefined) return { key: '[[Prototype]]', value: describe(prototype) };
+          if (key === undefined)
+            return { key: '[[Prototype]]', value: describe(prototype, receiver) };
           let value: InspectedValue;
           try {
             const descriptor = Object.getOwnPropertyDescriptor(object, key);
@@ -92,7 +120,13 @@ export function createLiveInspector() {
               Function.prototype.toString.call(descriptor.get).includes('[native code]')
             ) {
               value = describe(descriptor.get.call(object));
-            } else value = { type: 'function', text: descriptor ? '[Getter/Setter]' : '[Deleted]' };
+            } else if (descriptor?.get)
+              value = {
+                type: 'function',
+                text: descriptor.set ? '[Getter/Setter]' : '[Getter]',
+                getter: retainGetter(descriptor.get, receiver),
+              };
+            else value = { type: 'function', text: descriptor?.set ? '[Setter]' : '[Deleted]' };
           } catch {
             value = { type: 'object', text: '[Uninspectable]' };
           }
@@ -102,7 +136,7 @@ export function createLiveInspector() {
   }
 
   /** @param value Console argument or one requested property; never traverses its child values. */
-  function describe(value: unknown): InspectedValue {
+  function describe(value: unknown, receiver?: object): InspectedValue {
     try {
       if (value === null || typeof value !== 'object') return inspectValues([value])[0];
       if (value instanceof Date || value instanceof RegExp || value instanceof Promise) {
@@ -144,14 +178,14 @@ export function createLiveInspector() {
           prototype && Object.getOwnPropertyDescriptor(prototype, 'constructor')?.value;
         if (typeof constructor === 'function') text = constructor.name || 'Object';
       }
-      let reference = objects.get(value);
+      let reference = receiver ? undefined : objects.get(value);
       if (!reference) {
         let properties: Inventory | undefined;
         reference = retain(() => {
-          properties ??= inventory(value);
+          properties ??= inventory(value, receiver);
           return { type, text, entries: entries(properties, 0, properties.length) };
         });
-        objects.set(value, reference);
+        if (!receiver) objects.set(value, reference);
       }
       return { type, text, reference };
     } catch {
@@ -163,12 +197,18 @@ export function createLiveInspector() {
     /** @param values Console arguments; initial output contains previews and handles only. */
     inspect(values: readonly unknown[]): InspectedValue[] | null {
       if (!values.some((value) => value !== null && typeof value === 'object')) return null;
-      return values.slice(0, 50).map(describe);
+      return values.slice(0, 50).map((value) => describe(value));
     },
     /** @param reference Handle owned by this run, including handles for property ranges. */
     expand(reference: string): InspectedValue {
       const read = handles.get(reference);
       if (!read) throw new Error('This value is no longer available. Run the code again.');
+      return read();
+    },
+    /** @param handle Getter handle; this method is called only for an explicit evaluation request. */
+    evaluate(handle: string): InspectedValue {
+      const read = getters.get(handle);
+      if (!read) throw new Error('This getter is no longer available. Run the code again.');
       return read();
     },
   };

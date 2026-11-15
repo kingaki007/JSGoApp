@@ -61,11 +61,24 @@ describe('browser page lifecycle', () => {
     host.send({ type: 'inspection', id: 'old', requestId: sent.requestId, value });
     host.send({ type: 'inspection', id: 'live', requestId: sent.requestId, value });
     expect(await branch).toEqual(value);
+    const evaluated = runtime.inspect('live', 'getter', 'getter');
+    const evaluationRequest = host.post.mock.calls.at(-1)![0];
+    expect(evaluationRequest).toMatchObject({ type: 'evaluate', id: 'live', reference: 'getter' });
+    host.send({
+      type: 'inspection',
+      id: 'live',
+      requestId: evaluationRequest.requestId,
+      value: { type: 'number', text: '42' },
+    });
+    expect(await evaluated).toEqual({ type: 'number', text: '42' });
     const pending = runtime.inspect('live', '2');
     const rejected = expect(pending).rejects.toThrow('no longer available');
     runtime.stop();
     await rejected;
     await expect(runtime.inspect('live', '1')).rejects.toThrow('no longer available');
+    await expect(runtime.inspect('live', 'getter', 'getter')).rejects.toThrow(
+      'no longer available',
+    );
     expect(vi.getTimerCount()).toBe(0);
   });
 

@@ -32,6 +32,8 @@ export interface InspectedValue {
   text: string;
   /** Run-scoped handle whose children are requested only when the user expands it. */
   reference?: string;
+  /** Explicit getter-evaluation handle; never requested by ordinary object expansion. */
+  getter?: string;
   /** Children of a composite value; absent for leaves and for composites cut off by a limit. */
   entries?: InspectedEntry[];
   /** Number of children left out because of the entry, depth, or node limits. */
@@ -217,6 +219,9 @@ function readInspected(
   };
   if (typeof node.reference === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(node.reference)) {
     value.reference = node.reference;
+  }
+  if (typeof node.getter === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(node.getter)) {
+    value.getter = node.getter;
   }
   if (node.type === 'table') {
     const table = readTable(node.table);

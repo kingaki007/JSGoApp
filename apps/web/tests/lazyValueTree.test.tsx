@@ -5,6 +5,55 @@ import { createRoot } from 'react-dom/client';
 import { expect, it, vi } from 'vitest';
 import ValueTree from '../src/ValueTree';
 import type { InspectedValue } from '@code-editor/core';
+import { StrictMode } from 'react';
+
+it('evaluates a getter only on click even in StrictMode, and leaves returned objects lazy', async () => {
+  const container = document.createElement('div');
+  document.body.append(container);
+  const root = createRoot(container);
+  const load = vi
+    .fn()
+    .mockResolvedValueOnce({ type: 'object', text: 'Object', reference: 'object' })
+    .mockResolvedValueOnce({
+      type: 'object',
+      text: 'Object',
+      entries: [{ key: 'answer', value: { type: 'number', text: '42' } }],
+    });
+  try {
+    await act(async () =>
+      root.render(
+        <StrictMode>
+          <ValueTree
+            value={{ type: 'function', text: '[Getter]', getter: 'getter' }}
+            name="result"
+            loadValue={load}
+            defaultOpen
+          />
+        </StrictMode>,
+      ),
+    );
+    expect(load).not.toHaveBeenCalled();
+    await act(async () => {
+      const button = container.querySelector<HTMLButtonElement>(
+        '[aria-label="Evaluate getter result"]',
+      )!;
+      button.click();
+      button.click();
+      await Promise.resolve();
+    });
+    expect(load.mock.calls).toEqual([['getter', 'getter']]);
+    expect(container.textContent).not.toContain('42');
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('.value-toggle')!.click();
+      await Promise.resolve();
+    });
+    expect(load.mock.calls).toEqual([['getter', 'getter'], ['object']]);
+    expect(container.textContent).toContain('42');
+  } finally {
+    act(() => root.unmount());
+    container.remove();
+  }
+});
 
 it('requests each branch only when opened, caches it locally, and supports retry', async () => {
   const container = document.createElement('div');

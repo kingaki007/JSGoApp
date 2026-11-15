@@ -36,7 +36,7 @@ window.addEventListener('message', (event: MessageEvent<Partial<FrameRequest> | 
   // Only the embedding app may start a run, and each page runs exactly one snippet.
   if (event.source !== parent || !request) return;
   const command = request as Record<string, unknown>;
-  if (command.type === 'inspect') {
+  if (command.type === 'inspect' || command.type === 'evaluate') {
     if (
       !inspectionEnabled ||
       command.id !== runId ||
@@ -51,7 +51,10 @@ window.addEventListener('message', (event: MessageEvent<Partial<FrameRequest> | 
         type: 'inspection',
         id: runId!,
         requestId: command.requestId,
-        value: inspector.expand(command.reference),
+        value:
+          command.type === 'evaluate'
+            ? inspector.evaluate(command.reference)
+            : inspector.expand(command.reference),
       });
     } catch {
       post({

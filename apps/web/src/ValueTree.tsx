@@ -1,5 +1,5 @@
 /** Renders an inspected value as text or as an expandable tree of its properties and items. */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   isComposite,
   summarize,
@@ -7,7 +7,78 @@ import {
   type TableData,
 } from '@code-editor/core/inspect';
 
-export type LoadInspectedValue = (reference: string) => Promise<InspectedValue>;
+export type LoadInspectedValue = (reference: string, action?: 'getter') => Promise<InspectedValue>;
+
+/**
+ * Evaluates a getter only on a click, then renders the result in the same property row.
+ * @param props.value Getter descriptor. @param props.name Property label.
+ * @param props.loadValue Run-scoped request callback.
+ */
+function GetterValue({
+  value,
+  name,
+  loadValue,
+}: {
+  value: InspectedValue;
+  name?: string;
+  loadValue?: LoadInspectedValue;
+}) {
+  const [result, setResult] = useState<InspectedValue>();
+  const [error, setError] = useState<string>();
+  const [busy, setBusy] = useState(false);
+  const pending = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  /** Runs this getter on request, suppressing duplicate clicks while its response is pending. */
+  const evaluate = async () => {
+    if (pending.current) return;
+    if (!loadValue) {
+      setError('This run is no longer available.');
+      return;
+    }
+    pending.current = true;
+    setBusy(true);
+    setError(undefined);
+    try {
+      const valueResult = await loadValue(value.getter!, 'getter');
+      if (mounted.current) setResult(valueResult);
+    } catch (reason) {
+      if (mounted.current)
+        setError(reason instanceof Error ? reason.message : 'Could not evaluate this getter.');
+    } finally {
+      pending.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  };
+  if (result) return <ValueTree value={result} name={name} nested loadValue={loadValue} />;
+  return (
+    <span className="value-leaf">
+      {name === undefined ? null : <span className="value-key">{name}: </span>}
+      <span className="value value-function">{value.text}</span>{' '}
+      <button
+        type="button"
+        className="value-toggle"
+        disabled={busy}
+        onClick={() => void evaluate()}
+        aria-label={`Evaluate getter ${name ?? ''}`.trim()}
+        title="Evaluate getter (may run code)"
+      >
+        {busy ? 'Evaluating…' : '(…)'}
+      </button>
+      {error ? (
+        <span role="status" className="value-error">
+          {' '}
+          {error}
+        </span>
+      ) : null}
+    </span>
+  );
+}
 
 /**
  * Renders one value; composites start collapsed and load nothing until opened.
@@ -57,6 +128,8 @@ export default function ValueTree({
       current = false;
     };
   }, [open, reference, loadValue, loaded?.reference, attempt]);
+  if (value.getter)
+    return <GetterValue key={value.getter} value={value} name={name} loadValue={loadValue} />;
   if (value.type === 'table' && value.table) return <TableView table={value.table} />;
   const label = name === undefined ? null : <span className="value-key">{name}: </span>;
 

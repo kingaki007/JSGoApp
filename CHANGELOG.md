@@ -5,6 +5,15 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.28.0] - 2026-11-15
+
+- Add click-to-evaluate getters in Browser object inspection. A getter shows a
+  `(…)` button that evaluates it only on click, memoized so retries or
+  duplicate requests never repeat side effects; the result expands using the
+  same handle system as any other value, and a thrown error appears inline
+  beside the property instead of failing the run. Setters never get an
+  evaluate action. Node's getter labels are unchanged and still never invoke.
+
 ## [0.27.0] - 2026-11-15
 
 - Let multiple Match lines result rows stay expanded independently. Show expanded
