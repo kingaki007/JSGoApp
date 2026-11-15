@@ -5,6 +5,13 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.29.0] - 2026-11-15
+
+- Add Font ligatures and Invisibles settings to the Settings popover (under
+  `workspaceSettings`, open on every plan). Font ligatures renders adjacent
+  characters the editor font defines ligatures for (such as `=>` and `!=`) as
+  one glyph; Invisibles shows spaces, tabs, and line-ending markers.
+
 ## [0.28.0] - 2026-11-15
 
 - Add click-to-evaluate getters in Browser object inspection. A getter shows a
