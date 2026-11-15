@@ -19,7 +19,7 @@ import { createTableBuilder } from '@code-editor/core/table';
 /** Run request sent to the page, with the limit its loops enforce from inside. */
 export type FrameRequest = RunRequest & { timeoutMs: number };
 export interface InspectionRequest {
-  type: 'inspect';
+  type: 'inspect' | 'evaluate';
   id: string;
   requestId: string;
   reference: string;

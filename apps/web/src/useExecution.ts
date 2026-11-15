@@ -13,7 +13,7 @@ import { NodeRuntime } from './nodeRuntime';
 
 export interface ExecutionView extends RunResult {
   /** Fetches one Browser object branch from this run, only when expanded. */
-  loadValue?: (reference: string) => Promise<InspectedValue>;
+  loadValue?: (reference: string, action?: 'getter') => Promise<InspectedValue>;
   /** Draft that produced this output; output is hidden once another draft is shown. */
   documentId: string;
   language: Language;
@@ -99,7 +99,7 @@ export function useExecution(
       const id = crypto.randomUUID();
       const loadValue =
         environment === 'browser' && inspect
-          ? (reference: string) => browser.inspect(id, reference)
+          ? (reference: string, action?: 'getter') => browser.inspect(id, reference, action)
           : undefined;
       requestId.current = id;
       setRunning(true);

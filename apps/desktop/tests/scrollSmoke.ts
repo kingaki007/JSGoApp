@@ -9,6 +9,7 @@ export async function checkIndependentScrolling(host: BrowserWindow, url: string
     language: 'javascript', code: Array.from({ length: 120 }, (_, i) => i < 2
       ? 'console.table([{ name: "first" }, { name: "second" }, { name: "third" }]);'
       : i === 2 ? 'console.log(Object.fromEntries(Array.from({ length: 238 }, (_, j) => ["field" + j, j])));'
+      : i === 3 ? 'console.log((() => { let calls = 0; return { get answer() { return { count: ++calls }; }, get calls() { return calls; }, get broken() { throw new Error("getter failed"); }, set writeOnly(value) {} }; })());'
       : 'console.log(' + i + ');').join('\\n') }]
   }));`);
   await host.loadURL(url);
@@ -119,4 +120,27 @@ export async function checkIndependentScrolling(host: BrowserWindow, url: string
     findRange();
   })`);
   if (!lazyProperties) throw new Error('Browser property ranges were not requested on expansion');
+  const getters = await host.webContents.executeJavaScript(`(async () => {
+    // Expanding a row remounts its DOM node, so every check re-queries .output-row fresh
+    // instead of reusing a reference captured before the click.
+    const row = () => document.querySelectorAll('.output-row')[3];
+    document.querySelector('[aria-label="Expand result of line 4"]').click();
+    async function waitFor(read) {
+      const deadline = Date.now() + 4000;
+      while (Date.now() < deadline) { const value = read(); if (value) return value; await new Promise(resolve => setTimeout(resolve, 30)); }
+      throw new Error('Getter smoke timed out');
+    }
+    const calls = await waitFor(() => document.querySelector('[aria-label="Evaluate getter calls"]'));
+    if (row().querySelector('[aria-label="Evaluate getter writeOnly"]')) return false;
+    calls.click();
+    await waitFor(() => row().textContent.includes('calls: 0'));
+    document.querySelector('[aria-label="Evaluate getter answer"]').click();
+    const object = await waitFor(() => [...row().querySelectorAll('.value-toggle')].find(button => button.textContent.includes('answer:')));
+    object.click();
+    await waitFor(() => row().textContent.includes('count: 1'));
+    document.querySelector('[aria-label="Evaluate getter broken"]').click();
+    await waitFor(() => row().textContent.includes('Getter threw: Error: getter failed'));
+    return row().textContent.includes('[Setter]') && row().textContent.includes('count: 1');
+  })()`);
+  if (!getters) throw new Error('Browser getters did not evaluate only on explicit clicks');
 }

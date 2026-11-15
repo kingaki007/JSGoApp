@@ -215,7 +215,7 @@ export class BrowserRuntime implements RuntimeAdapter {
   }
 
   /** @param run Run owning the handle. @param reference Object or property-range handle to expand. */
-  inspect(run: string, reference: string): Promise<InspectedValue> {
+  inspect(run: string, reference: string, action?: 'getter'): Promise<InspectedValue> {
     const host = this.inspectionHost;
     if (!host || this.inspectionRun !== run)
       return Promise.reject(
@@ -228,7 +228,12 @@ export class BrowserRuntime implements RuntimeAdapter {
         reject(new Error('Inspection timed out. Try expanding the value again.'));
       }, 3000);
       this.inspections.set(requestId, { resolve, reject, timer });
-      host.post({ type: 'inspect', id: run, requestId, reference });
+      host.post({
+        type: action === 'getter' ? 'evaluate' : 'inspect',
+        id: run,
+        requestId,
+        reference,
+      });
     });
   }
 }

@@ -134,8 +134,13 @@ plan; see [subscription feature configuration](docs/feature-access.md).
   property inventory, not array lengths. Opened branches are cached in the view.
   References expire on the next run, Clear, Stop, or a tab/environment/view change.
   Node output still uses bounded log-time snapshots (5 levels, 100 entries per
-  value). Custom getters are labelled rather than invoked. Strings and other
-  primitives stay plain text. Console tables remain bounded snapshots.
+  value); its getters are labelled `[Getter]`/`[Getter/Setter]` and never
+  invoked. In the Browser environment, a getter shows a `(…)` button that
+  evaluates it only on click, so inspecting a value never runs code by itself;
+  the result expands like any other value, and a thrown error appears inline
+  beside the property instead of failing the run. A setter-only property is
+  labelled `[Setter]` with no evaluate action. Strings and other primitives
+  stay plain text. Console tables remain bounded snapshots.
 
 - **Web view** (`webView`): in the Browser environment the results pane offers
   Web, Console, and Split. Web shows the page your code renders (`document`,
