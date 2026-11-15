@@ -28,6 +28,16 @@ describe('workspace preferences', () => {
     expect(parseSettings({ confirmClose: 'no' }).confirmClose).toBe(true);
   });
 
+  it('keeps fontLigatures and showInvisibles off by default and honors stored true values', () => {
+    expect(defaultSettings.fontLigatures).toBe(false);
+    expect(defaultSettings.showInvisibles).toBe(false);
+    expect(parseSettings({ fontLigatures: true, showInvisibles: true })).toMatchObject({
+      fontLigatures: true,
+      showInvisibles: true,
+    });
+    expect(parseSettings({ fontLigatures: 'yes' }).fontLigatures).toBe(false);
+  });
+
   it('limits font size to the supported range', () => {
     expect(parseSettings({ fontSize: 2 }).fontSize).toBe(10);
     expect(parseSettings({ fontSize: 400 }).fontSize).toBe(28);

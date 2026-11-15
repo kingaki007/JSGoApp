@@ -17,6 +17,10 @@ export interface WorkspaceSettings {
   lineNumbers: boolean;
   /** Asks for confirmation before closing a tab that has code in it. */
   confirmClose: boolean;
+  /** Renders ligatures for adjacent characters the editor font defines them for. */
+  fontLigatures: boolean;
+  /** Shows spaces, tabs, and line-ending markers in the editor. */
+  showInvisibles: boolean;
 }
 
 export const defaultSettings: WorkspaceSettings = {
@@ -27,6 +31,8 @@ export const defaultSettings: WorkspaceSettings = {
   wordWrap: false,
   lineNumbers: true,
   confirmClose: true,
+  fontLigatures: false,
+  showInvisibles: false,
 };
 
 /**
@@ -44,6 +50,8 @@ export function parseSettings(value: unknown): WorkspaceSettings {
     'wordWrap',
     'lineNumbers',
     'confirmClose',
+    'fontLigatures',
+    'showInvisibles',
   ] as const)
     if (typeof stored[key] === 'boolean') settings[key] = stored[key];
   const size = stored.fontSize;

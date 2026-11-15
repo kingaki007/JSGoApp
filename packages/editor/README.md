@@ -10,7 +10,8 @@ the planned Electron renderer.
 
 - `CodeEditor`: controlled component accepting `value`, `language`, `path`,
   `theme`, `onChange`, optional `environment` (Browser by default), optional
-  `onReady`, optional `preferences` (font size, word wrap, line numbers),
+  `onReady`, optional `preferences` (font size, word wrap, line numbers, font
+  ligatures, invisibles),
   optional `onViewportChange`, optional `errorMarker` (line, message, and run
   identifier of the latest failure), and optional `loading` content.
 - `CodeEditorHandle`: the ref exposes `compile(source, language)`, returning

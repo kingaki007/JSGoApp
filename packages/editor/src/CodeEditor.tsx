@@ -48,6 +48,8 @@ export interface EditorPreferences {
   fontSize: number;
   wordWrap: boolean;
   lineNumbers: boolean;
+  fontLigatures: boolean;
+  showInvisibles: boolean;
 }
 
 export interface CodeEditorProps {
@@ -147,8 +149,17 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
       ...readEditorTypography(preferences?.fontSize),
       wordWrap: preferences?.wordWrap ? 'on' : 'off',
       lineNumbers: preferences?.lineNumbers === false ? 'off' : 'on',
+      fontLigatures: Boolean(preferences?.fontLigatures),
+      renderWhitespace: preferences?.showInvisibles ? 'all' : 'none',
     });
-  }, [ready, preferences?.fontSize, preferences?.wordWrap, preferences?.lineNumbers]);
+  }, [
+    ready,
+    preferences?.fontSize,
+    preferences?.wordWrap,
+    preferences?.lineNumbers,
+    preferences?.fontLigatures,
+    preferences?.showInvisibles,
+  ]);
 
   useEffect(() => {
     const host = editorRef.current;

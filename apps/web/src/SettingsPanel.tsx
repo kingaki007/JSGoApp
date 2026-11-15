@@ -17,6 +17,16 @@ const toggles = [
     label: 'Confirm close',
     description: 'Ask before closing a tab that has code in it',
   },
+  {
+    key: 'fontLigatures',
+    label: 'Font ligatures',
+    description: 'Render ligatures the editor font defines, such as => and !=',
+  },
+  {
+    key: 'showInvisibles',
+    label: 'Invisibles',
+    description: 'Show spaces, tabs, and line endings in the editor',
+  },
 ] as const;
 
 /**
