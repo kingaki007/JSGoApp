@@ -133,6 +133,22 @@ export default function SettingsPanel({
               <small>Execution environment a new session starts in</small>
             </span>
           </label>
+          <label className="settings-row">
+            <select
+              className="settings-select"
+              value={settings.defaultLanguage}
+              onChange={(event) =>
+                onChange({ defaultLanguage: event.target.value as 'javascript' | 'typescript' })
+              }
+            >
+              <option value="javascript">JavaScript</option>
+              <option value="typescript">TypeScript</option>
+            </select>
+            <span>
+              <strong>Default language</strong>
+              <small>Language a new tab gets from Ctrl+T (Cmd+T)</small>
+            </span>
+          </label>
         </div>
       )}
     </div>

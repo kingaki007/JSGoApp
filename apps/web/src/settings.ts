@@ -1,6 +1,6 @@
 /** Validates, stores, and exposes workspace preferences shared by the web and desktop UI. */
 import { useCallback, useState } from 'react';
-import type { Environment } from '@code-editor/core';
+import type { Environment, Language } from '@code-editor/core';
 
 export const settingsStorageKey = 'jsgoapp.settings';
 export const fontSizeRange = { min: 10, max: 28 } as const;
@@ -24,6 +24,8 @@ export interface WorkspaceSettings {
   showInvisibles: boolean;
   /** Execution environment a new session starts in. */
   defaultEnvironment: Environment;
+  /** Language a new tab is created with via Ctrl+T, which does not pick one explicitly. */
+  defaultLanguage: Language;
 }
 
 export const defaultSettings: WorkspaceSettings = {
@@ -37,6 +39,7 @@ export const defaultSettings: WorkspaceSettings = {
   fontLigatures: false,
   showInvisibles: false,
   defaultEnvironment: 'browser',
+  defaultLanguage: 'typescript',
 };
 
 /**
@@ -63,6 +66,8 @@ export function parseSettings(value: unknown): WorkspaceSettings {
     settings.fontSize = Math.min(fontSizeRange.max, Math.max(fontSizeRange.min, Math.round(size)));
   if (stored.defaultEnvironment === 'browser' || stored.defaultEnvironment === 'node')
     settings.defaultEnvironment = stored.defaultEnvironment;
+  if (stored.defaultLanguage === 'javascript' || stored.defaultLanguage === 'typescript')
+    settings.defaultLanguage = stored.defaultLanguage;
   return settings;
 }
 

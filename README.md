@@ -92,13 +92,16 @@ plan; see [subscription feature configuration](docs/feature-access.md).
   panes are stacked on narrow windows.
 - **Settings** (`workspaceSettings`): Auto run, Match lines, Show undefined, Word
   wrap, Line numbers, Confirm close, Font ligatures, Invisibles, Default
-  environment, and Font size. Preferences persist on this device in the
-  `jsgoapp.settings` local-storage entry. Show undefined reports expression
-  statements that evaluate to `undefined`; console calls are never reported
-  twice. Font ligatures renders adjacent characters the editor font defines
-  ligatures for (such as `=>` and `!=`) as one glyph; Invisibles shows spaces,
-  tabs, and line-ending markers. Default environment picks Browser or Node.js
-  for a new session to start in; it does not change the current session.
+  environment, Default language, and Font size. Preferences persist on this
+  device in the `jsgoapp.settings` local-storage entry. Show undefined reports
+  expression statements that evaluate to `undefined`; console calls are never
+  reported twice. Font ligatures renders adjacent characters the editor font
+  defines ligatures for (such as `=>` and `!=`) as one glyph; Invisibles shows
+  spaces, tabs, and line-ending markers. Default environment picks Browser or
+  Node.js for a new session to start in; it does not change the current
+  session. Default language picks the language Ctrl+T (Cmd+T) creates a tab
+  in, instead of mirroring the active tab; +JS and +TS are unaffected since
+  they already pick a language explicitly.
 - **Format** (`codeFormatting`): the Format button and Shift+Alt+F format the draft
   with Prettier's default style as one undoable edit. Prettier loads on first use.
   A draft with a syntax error is left unchanged.
@@ -110,10 +113,11 @@ plan; see [subscription feature configuration](docs/feature-access.md).
   that contains code asks for confirmation because its code is discarded, unless
   the Confirm close setting is turned off. Up to 30 tabs are stored. Existing
   two-scratchpad drafts are migrated automatically.
-- **Tab shortcuts** (`tabShortcuts`): Ctrl+T (Cmd+T on macOS) creates a new tab in
-  the active tab's language, same as +JS/+TS; Ctrl+W (Cmd+W) closes the active
-  tab, with the same Confirm close behavior as the × button. Some browsers do not
-  let a page override these keys at all.
+- **Tab shortcuts** (`tabShortcuts`): Ctrl+T (Cmd+T on macOS) creates a new tab
+  in the Default language setting, same language the +JS/+TS buttons would need
+  picked explicitly; Ctrl+W (Cmd+W) closes the active tab, with the same
+  Confirm close behavior as the × button. Some browsers do not let a page
+  override these keys at all.
 - **Reopen closed tab** (`reopenClosedTab`): the ↺ button and Ctrl+Shift+T
   (Cmd+Shift+T on macOS) restore the most recently closed tab with its original
   code, name, and id. Up to 10 closed tabs are kept for this session only; they

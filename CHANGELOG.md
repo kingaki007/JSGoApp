@@ -5,6 +5,13 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.31.0] - 2026-11-17
+
+- Add a Default language setting (JavaScript/TypeScript) to the Settings
+  popover. It picks the language Ctrl+T (Cmd+T) creates a tab in, instead of
+  mirroring the active tab; the +JS/+TS buttons are unaffected since they
+  already pick a language explicitly.
+
 ## [0.30.0] - 2026-11-17
 
 - Add a Default environment setting (Browser/Node.js) to the Settings popover.
