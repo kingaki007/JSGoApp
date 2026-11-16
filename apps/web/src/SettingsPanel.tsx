@@ -117,6 +117,22 @@ export default function SettingsPanel({
               </small>
             </span>
           </label>
+          <label className="settings-row">
+            <select
+              className="settings-select"
+              value={settings.defaultEnvironment}
+              onChange={(event) =>
+                onChange({ defaultEnvironment: event.target.value as 'browser' | 'node' })
+              }
+            >
+              <option value="browser">Browser</option>
+              <option value="node">Node.js</option>
+            </select>
+            <span>
+              <strong>Default environment</strong>
+              <small>Execution environment a new session starts in</small>
+            </span>
+          </label>
         </div>
       )}
     </div>
