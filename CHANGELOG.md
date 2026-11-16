@@ -5,6 +5,12 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.32.0] - 2026-11-17
+
+- Add an Auto-format on run setting to the Settings popover (requires
+  `codeFormatting`; off by default). When on, Prettier formats the draft
+  immediately before every run, manual or Auto run.
+
 ## [0.31.0] - 2026-11-17
 
 - Add a Default language setting (JavaScript/TypeScript) to the Settings

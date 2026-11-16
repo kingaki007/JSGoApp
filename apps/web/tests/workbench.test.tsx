@@ -50,6 +50,12 @@ describe('workspace preferences', () => {
     expect(parseSettings({ defaultLanguage: 'python' }).defaultLanguage).toBe('typescript');
   });
 
+  it('keeps auto-format-on-run off by default and honors a stored true value', () => {
+    expect(defaultSettings.autoFormatOnRun).toBe(false);
+    expect(parseSettings({ autoFormatOnRun: true }).autoFormatOnRun).toBe(true);
+    expect(parseSettings({ autoFormatOnRun: 'yes' }).autoFormatOnRun).toBe(false);
+  });
+
   it('limits font size to the supported range', () => {
     expect(parseSettings({ fontSize: 2 }).fontSize).toBe(10);
     expect(parseSettings({ fontSize: 400 }).fontSize).toBe(28);

@@ -17,6 +17,8 @@ interface AppHeaderProps {
   settings: WorkspaceSettings;
   onSettingsChange(patch: Partial<WorkspaceSettings>): void;
   matchLinesAvailable: boolean;
+  /** Whether the account's plan includes code formatting. */
+  codeFormattingAvailable: boolean;
   themeId: string;
   onThemeChange(themeId: string): void;
   /** Whether the account's plan includes the 4 premium themes. */
@@ -34,6 +36,7 @@ export default function AppHeader({
   settings,
   onSettingsChange,
   matchLinesAvailable,
+  codeFormattingAvailable,
   themeId,
   onThemeChange,
   premiumThemesAvailable,
@@ -67,6 +70,7 @@ export default function AppHeader({
             settings={settings}
             onChange={onSettingsChange}
             matchLinesAvailable={matchLinesAvailable}
+            codeFormattingAvailable={codeFormattingAvailable}
           />
         )}
         <ThemeGallery
