@@ -32,6 +32,11 @@ const toggles = [
     label: 'Auto-format on run',
     description: 'Format with Prettier immediately before every run',
   },
+  {
+    key: 'showSidebar',
+    label: 'Sidebar',
+    description: 'Show the scratchpad explorer sidebar',
+  },
 ] as const;
 
 /**

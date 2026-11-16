@@ -3,6 +3,9 @@
 .workspace {
   grid-template-columns: var(--layout-sidebar-width) minmax(0, 1.15fr) minmax(0, 1fr);
 }
+.workspace.sidebar-hidden {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
 .sidebar {
   padding: var(--space-5) var(--space-2);
 }
@@ -700,6 +703,12 @@
   }
   .header-actions > .environment-label {
     display: none;
+  }
+  .workspace.sidebar-hidden {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace.sidebar-hidden .results-pane {
+    grid-column: 1;
   }
 }
 @media (max-width: 700px) {
