@@ -92,19 +92,21 @@ plan; see [subscription feature configuration](docs/feature-access.md).
   panes are stacked on narrow windows.
 - **Settings** (`workspaceSettings`): Auto run, Match lines, Show undefined, Word
   wrap, Line numbers, Confirm close, Font ligatures, Invisibles, Default
-  environment, Default language, and Font size. Preferences persist on this
-  device in the `jsgoapp.settings` local-storage entry. Show undefined reports
-  expression statements that evaluate to `undefined`; console calls are never
-  reported twice. Font ligatures renders adjacent characters the editor font
-  defines ligatures for (such as `=>` and `!=`) as one glyph; Invisibles shows
-  spaces, tabs, and line-ending markers. Default environment picks Browser or
-  Node.js for a new session to start in; it does not change the current
-  session. Default language picks the language Ctrl+T (Cmd+T) creates a tab
-  in, instead of mirroring the active tab; +JS and +TS are unaffected since
-  they already pick a language explicitly.
+  environment, Default language, Auto-format on run, and Font size. Preferences
+  persist on this device in the `jsgoapp.settings` local-storage entry. Show
+  undefined reports expression statements that evaluate to `undefined`; console
+  calls are never reported twice. Font ligatures renders adjacent characters
+  the editor font defines ligatures for (such as `=>` and `!=`) as one glyph;
+  Invisibles shows spaces, tabs, and line-ending markers. Default environment
+  picks Browser or Node.js for a new session to start in; it does not change
+  the current session. Default language picks the language Ctrl+T (Cmd+T)
+  creates a tab in, instead of mirroring the active tab; +JS and +TS are
+  unaffected since they already pick a language explicitly. Auto-format on run
+  requires `codeFormatting`; off by default.
 - **Format** (`codeFormatting`): the Format button and Shift+Alt+F format the draft
-  with Prettier's default style as one undoable edit. Prettier loads on first use.
-  A draft with a syntax error is left unchanged.
+  with Prettier's default style as one undoable edit. Prettier loads on first
+  use. A draft with a syntax error is left unchanged. With Auto-format on run
+  turned on in Settings, every run — manual or Auto run — formats first.
 - **Clear** (`clearEditor`): the Clear button and Ctrl+Shift+K (Cmd+Shift+K on macOS)
   empty the active tab's code. Asks for confirmation under the same Confirm close
   setting as closing a tab, since both discard the code.

@@ -27,6 +27,11 @@ const toggles = [
     label: 'Invisibles',
     description: 'Show spaces, tabs, and line endings in the editor',
   },
+  {
+    key: 'autoFormatOnRun',
+    label: 'Auto-format on run',
+    description: 'Format with Prettier immediately before every run',
+  },
 ] as const;
 
 /**
@@ -34,15 +39,18 @@ const toggles = [
  * @param props.settings Current preferences.
  * @param props.onChange Receives only the changed preferences.
  * @param props.matchLinesAvailable Whether the account's plan includes line-aligned results.
+ * @param props.codeFormattingAvailable Whether the account's plan includes code formatting.
  */
 export default function SettingsPanel({
   settings,
   onChange,
   matchLinesAvailable,
+  codeFormattingAvailable,
 }: {
   settings: WorkspaceSettings;
   onChange(patch: Partial<WorkspaceSettings>): void;
   matchLinesAvailable: boolean;
+  codeFormattingAvailable: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -86,6 +94,7 @@ export default function SettingsPanel({
           <p className="env-menu-heading">PREFERENCES</p>
           {toggles
             .filter((toggle) => toggle.key !== 'matchLines' || matchLinesAvailable)
+            .filter((toggle) => toggle.key !== 'autoFormatOnRun' || codeFormattingAvailable)
             .map((toggle) => (
               <label className="settings-row" key={toggle.key}>
                 <input

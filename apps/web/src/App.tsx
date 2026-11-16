@@ -69,10 +69,17 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     webMount,
     envVars.vars,
   );
-  /** Runs the latest editor snapshot without coupling debounce timers to output-state renders. */
+  /**
+   * Runs the latest editor snapshot without coupling debounce timers to output-state renders.
+   * Formatting first is cosmetic only, so running before or after its edit lands produces the
+   * same output; no need to wait for the formatted text to reach React state.
+   */
   const runCode = useCallback(() => {
-    void execution.run(editorRef.current);
-  }, [execution.run]);
+    const triggerRun = () => void execution.run(editorRef.current);
+    if (settings.autoFormatOnRun && features.codeFormatting)
+      void editorRef.current?.format().then(triggerRun);
+    else triggerRun();
+  }, [execution.run, settings.autoFormatOnRun, features.codeFormatting]);
   const autoRun = useAutoRun({
     source: active.code,
     ready,
@@ -126,6 +133,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
         settings={settings}
         onSettingsChange={updateSettings}
         matchLinesAvailable={features.matchLines}
+        codeFormattingAvailable={features.codeFormatting}
         themeId={themeId}
         onThemeChange={setThemeId}
         premiumThemesAvailable={features.premiumThemes}

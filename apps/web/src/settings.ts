@@ -26,6 +26,8 @@ export interface WorkspaceSettings {
   defaultEnvironment: Environment;
   /** Language a new tab is created with via Ctrl+T, which does not pick one explicitly. */
   defaultLanguage: Language;
+  /** Formats the draft with Prettier immediately before every run, manual or automatic. */
+  autoFormatOnRun: boolean;
 }
 
 export const defaultSettings: WorkspaceSettings = {
@@ -40,6 +42,7 @@ export const defaultSettings: WorkspaceSettings = {
   showInvisibles: false,
   defaultEnvironment: 'browser',
   defaultLanguage: 'typescript',
+  autoFormatOnRun: false,
 };
 
 /**
@@ -59,6 +62,7 @@ export function parseSettings(value: unknown): WorkspaceSettings {
     'confirmClose',
     'fontLigatures',
     'showInvisibles',
+    'autoFormatOnRun',
   ] as const)
     if (typeof stored[key] === 'boolean') settings[key] = stored[key];
   const size = stored.fontSize;
