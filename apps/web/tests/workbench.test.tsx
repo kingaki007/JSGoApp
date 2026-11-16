@@ -56,6 +56,12 @@ describe('workspace preferences', () => {
     expect(parseSettings({ autoFormatOnRun: 'yes' }).autoFormatOnRun).toBe(false);
   });
 
+  it('keeps the sidebar visible by default and honors a stored false value', () => {
+    expect(defaultSettings.showSidebar).toBe(true);
+    expect(parseSettings({ showSidebar: false }).showSidebar).toBe(false);
+    expect(parseSettings({ showSidebar: 'no' }).showSidebar).toBe(true);
+  });
+
   it('limits font size to the supported range', () => {
     expect(parseSettings({ fontSize: 2 }).fontSize).toBe(10);
     expect(parseSettings({ fontSize: 400 }).fontSize).toBe(28);

@@ -28,6 +28,8 @@ export interface WorkspaceSettings {
   defaultLanguage: Language;
   /** Formats the draft with Prettier immediately before every run, manual or automatic. */
   autoFormatOnRun: boolean;
+  /** Shows the scratchpad explorer sidebar. */
+  showSidebar: boolean;
 }
 
 export const defaultSettings: WorkspaceSettings = {
@@ -43,6 +45,7 @@ export const defaultSettings: WorkspaceSettings = {
   defaultEnvironment: 'browser',
   defaultLanguage: 'typescript',
   autoFormatOnRun: false,
+  showSidebar: true,
 };
 
 /**
@@ -63,6 +66,7 @@ export function parseSettings(value: unknown): WorkspaceSettings {
     'fontLigatures',
     'showInvisibles',
     'autoFormatOnRun',
+    'showSidebar',
   ] as const)
     if (typeof stored[key] === 'boolean') settings[key] = stored[key];
   const size = stored.fontSize;

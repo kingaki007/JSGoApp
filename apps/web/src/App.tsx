@@ -122,7 +122,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
   });
 
   return (
-    <div className="workspace">
+    <div className={settings.showSidebar ? 'workspace' : 'workspace sidebar-hidden'}>
       <AppHeader
         environment={environment}
         showEnvVars={features.environmentVariables}
@@ -139,31 +139,33 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
         premiumThemesAvailable={features.premiumThemes}
       />
 
-      <aside className="sidebar" aria-label="Workspace">
-        <p className="section-label">EXPLORER</p>
-        <TabList
-          tabs={drafts.tabs}
-          activeId={active.id}
-          editable={features.multipleTabs}
-          canAdd={drafts.canAddTab}
-          canReopen={features.reopenClosedTab && drafts.canReopenClosedTab}
-          titleFromCode={features.autoTabTitles}
-          onSelect={(id) => {
-            if (id !== active.id) {
-              autoRun.stop();
-              drafts.selectTab(id);
-            }
-          }}
-          onAdd={addTab}
-          onReopen={drafts.reopenClosedTab}
-          onClose={closeTab}
-          onRename={drafts.renameTab}
-        />
-        <div className="sidebar-note">
-          <span className="section-label">START SMALL. BUILD ANYTHING.</span>
-          <p>A little space for your next idea.</p>
-        </div>
-      </aside>
+      {settings.showSidebar && (
+        <aside className="sidebar" aria-label="Workspace">
+          <p className="section-label">EXPLORER</p>
+          <TabList
+            tabs={drafts.tabs}
+            activeId={active.id}
+            editable={features.multipleTabs}
+            canAdd={drafts.canAddTab}
+            canReopen={features.reopenClosedTab && drafts.canReopenClosedTab}
+            titleFromCode={features.autoTabTitles}
+            onSelect={(id) => {
+              if (id !== active.id) {
+                autoRun.stop();
+                drafts.selectTab(id);
+              }
+            }}
+            onAdd={addTab}
+            onReopen={drafts.reopenClosedTab}
+            onClose={closeTab}
+            onRename={drafts.renameTab}
+          />
+          <div className="sidebar-note">
+            <span className="section-label">START SMALL. BUILD ANYTHING.</span>
+            <p>A little space for your next idea.</p>
+          </div>
+        </aside>
+      )}
 
       <main className="editor-panel">
         <EditorToolbar
