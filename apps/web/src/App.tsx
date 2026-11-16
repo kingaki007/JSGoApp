@@ -85,7 +85,6 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
     features,
     settings,
     ready,
-    language,
     activeTitle,
     drafts,
     autoRun,

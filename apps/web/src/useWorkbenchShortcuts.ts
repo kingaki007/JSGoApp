@@ -14,7 +14,6 @@ interface WorkbenchShortcutsOptions {
   features: FeatureAccess;
   settings: WorkspaceSettings;
   ready: boolean;
-  language: Language;
   /** The active tab's displayed title, used in its own Clear confirmation. */
   activeTitle: string;
   drafts: ReturnType<typeof useDrafts>;
@@ -30,7 +29,6 @@ export function useWorkbenchShortcuts({
   features,
   settings,
   ready,
-  language,
   activeTitle,
   drafts,
   autoRun,
@@ -93,7 +91,7 @@ export function useWorkbenchShortcuts({
   });
   useTabShortcuts({
     enabled: features.tabShortcuts && ready,
-    onNewTab: () => addTab(language),
+    onNewTab: () => addTab(settings.defaultLanguage),
     onCloseTab: () => closeTab(active.id),
   });
 

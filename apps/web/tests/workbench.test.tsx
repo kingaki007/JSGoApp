@@ -44,6 +44,12 @@ describe('workspace preferences', () => {
     expect(parseSettings({ defaultEnvironment: 'deno' }).defaultEnvironment).toBe('browser');
   });
 
+  it('defaults new-tab language to TypeScript and honors a stored JavaScript value', () => {
+    expect(defaultSettings.defaultLanguage).toBe('typescript');
+    expect(parseSettings({ defaultLanguage: 'javascript' }).defaultLanguage).toBe('javascript');
+    expect(parseSettings({ defaultLanguage: 'python' }).defaultLanguage).toBe('typescript');
+  });
+
   it('limits font size to the supported range', () => {
     expect(parseSettings({ fontSize: 2 }).fontSize).toBe(10);
     expect(parseSettings({ fontSize: 400 }).fontSize).toBe(28);
