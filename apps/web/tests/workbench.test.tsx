@@ -38,6 +38,12 @@ describe('workspace preferences', () => {
     expect(parseSettings({ fontLigatures: 'yes' }).fontLigatures).toBe(false);
   });
 
+  it('defaults the starting environment to browser and honors a stored node value', () => {
+    expect(defaultSettings.defaultEnvironment).toBe('browser');
+    expect(parseSettings({ defaultEnvironment: 'node' }).defaultEnvironment).toBe('node');
+    expect(parseSettings({ defaultEnvironment: 'deno' }).defaultEnvironment).toBe('browser');
+  });
+
   it('limits font size to the supported range', () => {
     expect(parseSettings({ fontSize: 2 }).fontSize).toBe(10);
     expect(parseSettings({ fontSize: 400 }).fontSize).toBe(28);

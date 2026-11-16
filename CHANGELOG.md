@@ -5,6 +5,12 @@
 Every new milestone commit updates this file and the workspace version. Earlier
 commits are grouped under the original baseline without rewriting Git history.
 
+## [0.30.0] - 2026-11-17
+
+- Add a Default environment setting (Browser/Node.js) to the Settings popover.
+  It picks the execution environment a new session starts in; it does not
+  change the environment of the session already running.
+
 ## [0.29.0] - 2026-11-15
 
 - Add Font ligatures and Invisibles settings to the Settings popover (under

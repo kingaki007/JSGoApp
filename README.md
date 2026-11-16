@@ -91,12 +91,14 @@ plan; see [subscription feature configuration](docs/feature-access.md).
   end of the results. The list view is used when Match lines is off or when the
   panes are stacked on narrow windows.
 - **Settings** (`workspaceSettings`): Auto run, Match lines, Show undefined, Word
-  wrap, Line numbers, Confirm close, Font ligatures, Invisibles, and Font size.
-  Preferences persist on this device in the `jsgoapp.settings` local-storage
-  entry. Show undefined reports expression statements that evaluate to
-  `undefined`; console calls are never reported twice. Font ligatures renders
-  adjacent characters the editor font defines ligatures for (such as `=>` and
-  `!=`) as one glyph; Invisibles shows spaces, tabs, and line-ending markers.
+  wrap, Line numbers, Confirm close, Font ligatures, Invisibles, Default
+  environment, and Font size. Preferences persist on this device in the
+  `jsgoapp.settings` local-storage entry. Show undefined reports expression
+  statements that evaluate to `undefined`; console calls are never reported
+  twice. Font ligatures renders adjacent characters the editor font defines
+  ligatures for (such as `=>` and `!=`) as one glyph; Invisibles shows spaces,
+  tabs, and line-ending markers. Default environment picks Browser or Node.js
+  for a new session to start in; it does not change the current session.
 - **Format** (`codeFormatting`): the Format button and Shift+Alt+F format the draft
   with Prettier's default style as one undoable edit. Prettier loads on first use.
   A draft with a syntax error is left unchanged.

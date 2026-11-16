@@ -54,7 +54,7 @@ export default function App({ subject = anonymousSubject }: { subject?: AccessSu
   const [ready, setReady] = useState(false);
   const { themeId, setThemeId } = useTheme();
   const editorRef = useRef<CodeEditorHandle | null>(null);
-  const [environment, setEnvironment] = useState<Environment>('browser');
+  const [environment, setEnvironment] = useState<Environment>(() => settings.defaultEnvironment);
   const [resultView, setResultView] = useState<ResultView>('console');
   // The Web view's container; the Browser page is created inside it while it exists.
   const [webMount, setWebMount] = useState<HTMLElement | null>(null);

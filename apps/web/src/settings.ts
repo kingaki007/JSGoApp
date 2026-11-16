@@ -1,5 +1,6 @@
 /** Validates, stores, and exposes workspace preferences shared by the web and desktop UI. */
 import { useCallback, useState } from 'react';
+import type { Environment } from '@code-editor/core';
 
 export const settingsStorageKey = 'jsgoapp.settings';
 export const fontSizeRange = { min: 10, max: 28 } as const;
@@ -21,6 +22,8 @@ export interface WorkspaceSettings {
   fontLigatures: boolean;
   /** Shows spaces, tabs, and line-ending markers in the editor. */
   showInvisibles: boolean;
+  /** Execution environment a new session starts in. */
+  defaultEnvironment: Environment;
 }
 
 export const defaultSettings: WorkspaceSettings = {
@@ -33,6 +36,7 @@ export const defaultSettings: WorkspaceSettings = {
   confirmClose: true,
   fontLigatures: false,
   showInvisibles: false,
+  defaultEnvironment: 'browser',
 };
 
 /**
@@ -57,6 +61,8 @@ export function parseSettings(value: unknown): WorkspaceSettings {
   const size = stored.fontSize;
   if (typeof size === 'number' && Number.isFinite(size))
     settings.fontSize = Math.min(fontSizeRange.max, Math.max(fontSizeRange.min, Math.round(size)));
+  if (stored.defaultEnvironment === 'browser' || stored.defaultEnvironment === 'node')
+    settings.defaultEnvironment = stored.defaultEnvironment;
   return settings;
 }
 
